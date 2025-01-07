@@ -21,9 +21,14 @@ use zkos_verifier::verifier_common::non_determinism_source::NonDeterminismSource
 
 mod prover_structs;
 mod verifier_traits;
+mod transcript;
+mod blake2s_reduced;
+
 
 use prover_structs::*;
 use verifier_traits::*;
+use transcript::*;
+use blake2s_reduced::*;
 
 pub unsafe fn verify<
     F: SmallField,
