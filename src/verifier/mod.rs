@@ -15,8 +15,12 @@ use zkos_verifier::field::*;
 use zkos_verifier::verifier_common::{ProofPublicInputs, ProofOutput};
 
 mod prover_structs;
+mod transcript;
+mod blake2s_reduced;
 
 use prover_structs::*;
+use transcript::*;
+use blake2s_reduced::*;
 
 pub unsafe fn verify<
     F: SmallField,
