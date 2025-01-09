@@ -173,7 +173,7 @@ impl Blake2sWrappedTranscript {
         }
     }
 
-    fn verify_pow_using_hasher<F: SmallField, CS: ConstraintSystem<F>>(
+    pub fn verify_pow_using_hasher<F: SmallField, CS: ConstraintSystem<F>>(
         cs: &mut CS,
         hasher: &mut Blake2sStateGate<F>,
         seed: &mut SeedWrapped<F>,

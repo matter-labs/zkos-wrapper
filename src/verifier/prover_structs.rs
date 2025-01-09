@@ -32,6 +32,16 @@ pub struct WrappedMerkleTreeCap<F: SmallField, const N: usize> {
     pub cap: [[UInt32<F>; DIGEST_SIZE_U32_WORDS]; N],
 }
 
+impl<F: SmallField, const N: usize> WrappedMerkleTreeCap<F, N> {
+    pub(crate) fn to_slice(&self) -> &[UInt32<F>] {
+        let (head, middle, tail) = unsafe {
+            self.cap.align_to::<UInt32<F>>()
+        };
+        assert!(head.is_empty() && tail.is_empty());
+        middle
+    }
+}
+
 impl<F: SmallField, const N: usize> CSAllocatable<F> for WrappedMerkleTreeCap<F, N> {
     type Witness = MerkleTreeCap<N>;
 
@@ -58,6 +68,17 @@ pub struct WrappedExternalMemoryArgumentChallenges<F: SmallField> {
     pub memory_argument_linearization_challenges:
         [MersenneQuartic<F>; NUM_MEM_ARGUMENT_LINEARIZATION_CHALLENGES],
     pub memory_argument_gamma: MersenneQuartic<F>,
+}
+
+impl<F: SmallField> WrappedExternalMemoryArgumentChallenges<F> {
+    pub(crate) fn to_uint32_vec(&self) -> Vec<UInt32<F>> {
+        let mut result = Vec::with_capacity(NUM_MEM_ARGUMENT_LINEARIZATION_CHALLENGES * 4 + 4);
+        for i in 0..NUM_MEM_ARGUMENT_LINEARIZATION_CHALLENGES {
+            result.extend_from_slice(&self.memory_argument_linearization_challenges[i].into_uint32s());
+        }
+        result.extend_from_slice(&self.memory_argument_gamma.into_uint32s());
+        result
+    }
 }
 
 impl<F: SmallField> CSAllocatable<F> for WrappedExternalMemoryArgumentChallenges<F> {
@@ -92,6 +113,17 @@ pub struct WrappedExternalDelegationArgumentChallenges<F: SmallField> {
     pub delegation_argument_gamma: MersenneQuartic<F>,
 }
 
+impl<F: SmallField> WrappedExternalDelegationArgumentChallenges<F> {
+    pub(crate) fn to_uint32_vec(&self) -> Vec<UInt32<F>> {
+        let mut result = Vec::with_capacity(NUM_DELEGATION_ARGUMENT_LINEARIZATION_CHALLENGES * 4 + 4);
+        for i in 0..NUM_DELEGATION_ARGUMENT_LINEARIZATION_CHALLENGES {
+            result.extend_from_slice(&self.delegation_argument_linearization_challenges[i].into_uint32s());
+        }
+        result.extend_from_slice(&self.delegation_argument_gamma.into_uint32s());
+        result
+    }
+}
+
 impl<F: SmallField> CSAllocatable<F> for WrappedExternalDelegationArgumentChallenges<F> {
     type Witness = ExternalDelegationArgumentChallenges;
 
@@ -121,6 +153,15 @@ impl<F: SmallField> CSAllocatable<F> for WrappedExternalDelegationArgumentChalle
 pub struct WrappedAuxArgumentsBoundaryValues<F: SmallField> {
     pub lazy_init_first_row: [MersenneField<F>; REGISTER_SIZE],
     pub lazy_init_one_before_last_row: [MersenneField<F>; REGISTER_SIZE],
+}
+
+impl<F: SmallField> WrappedAuxArgumentsBoundaryValues<F> {
+    pub(crate) fn to_uint32_vec(&self) -> Vec<UInt32<F>> {
+        let mut result = Vec::with_capacity(REGISTER_SIZE * 2);
+        result.extend_from_slice(&self.lazy_init_first_row.map(|x| x.into_uint32()));
+        result.extend_from_slice(&self.lazy_init_one_before_last_row.map(|x| x.into_uint32()));
+        result
+    }
 }
 
 impl<F: SmallField> CSAllocatable<F> for WrappedAuxArgumentsBoundaryValues<F> {
@@ -231,7 +272,7 @@ pub(crate) const SKELETON_PADDING: usize = const {
     required_padding_bytes / core::mem::size_of::<u32>()
 };
 
-pub(crate) type WrappedProofSkeletonInstance<F: SmallField> = WrappedProofSkeleton<
+pub(crate) type WrappedProofSkeletonInstance<F> = WrappedProofSkeleton<
     F,
     TREE_CAP_SIZE,
     NUM_COSETS,
@@ -378,15 +419,113 @@ impl<
 }
 
 impl<F: SmallField> WrappedProofSkeletonInstance<F> {
-    fn from_non_determinism_source<CS: ConstraintSystem<F>, I: CircuitNonDeterminismSource<F>>(
+    pub(crate) fn from_non_determinism_source<CS: ConstraintSystem<F>, I: CircuitNonDeterminismSource<F>>(
         cs: &mut CS,
         source: &mut I,
     ) -> Self {
         todo!()
     }
+
+    pub(crate) fn transcript_elements_before_stage2(&self) -> Vec<UInt32<F>> {
+        let mut result = vec![];
+
+        result.push(self.circuit_sequence_idx.clone());
+        result.push(self.delegation_type.clone());
+        result.extend_from_slice(&self.public_inputs.map(|x| x.into_uint32()));
+        for cap in &self.setup_caps {
+            result.extend_from_slice(&cap.to_slice());
+        }
+        result.extend_from_slice(&self.memory_argument_challenges.to_uint32_vec());
+        for challenge in &self.delegation_argument_challenges {
+            result.extend_from_slice(&challenge.to_uint32_vec());
+        }
+        for boundary_values in &self.aux_boundary_values {
+            result.extend_from_slice(&boundary_values.to_uint32_vec());
+        }
+        for cap in &self.witness_caps {
+            result.extend_from_slice(&cap.to_slice());
+        }
+        for cap in &self.memory_caps {
+            result.extend_from_slice(&cap.to_slice());
+        }
+
+        result
+    }
+
+    pub fn transcript_elements_stage2_to_stage3(&self) -> Vec<UInt32<F>> {
+        let mut result = vec![];
+        for cap in &self.stage_2_caps {
+            result.extend_from_slice(&cap.to_slice());
+        }
+        result.extend_from_slice(&self.memory_grand_product_accumulator.into_uint32s());
+        for acc in &self.delegation_argument_accumulator {
+            result.extend_from_slice(&acc.into_uint32s());
+        }
+
+        result
+    }
+
+    pub fn transcript_elements_stage3_to_stage4(&self) -> Vec<UInt32<F>> {
+        let mut result = vec![];
+
+        for cap in &self.quotient_caps {
+            result.extend_from_slice(&cap.to_slice());
+        }
+
+        result
+    }
+
+    pub fn transcript_elements_evaluations_at_z(&self) -> Vec<UInt32<F>> {
+        let mut result = vec![];
+
+        for opening in &self.openings_at_z {
+            result.extend_from_slice(&opening.into_uint32s());
+        }
+        for opening in &self.openings_at_z_omega {
+            result.extend_from_slice(&opening.into_uint32s());
+        }
+
+        result
+    }
+
+    pub fn transcript_elements_fri_intermediate_oracles(
+        &self,
+    ) -> [Vec<UInt32<F>>; NUM_FRI_STEPS_WITH_ORACLES] {
+        self.fri_intermediate_oracles
+            .each_ref()
+            .map(|current_step| {
+                let mut result = vec![];
+                for coset in current_step {
+                    result.extend_from_slice(&coset.to_slice());
+                }
+                result
+            })
+    }
+
+    pub fn transcript_elements_last_fri_step_leaf_values(&self) -> Vec<UInt32<F>> {
+        let mut result = vec![];
+
+        for coset in &self.fri_final_step_leafs {
+            for leaf in coset {
+                result.extend_from_slice(&leaf.into_uint32s());
+            }
+        }
+
+        result
+    }
+
+    pub fn transcript_elements_monomial_coefficients(&self) -> Vec<UInt32<F>> {
+        let mut result = vec![];
+
+        for coeff in &self.monomial_coeffs {
+            result.extend_from_slice(&coeff.into_uint32s());
+        }
+
+        result
+    }
 }
 
-pub(crate) type WrappedQueryValuesInstance<F: SmallField> = WrappedQueryValues<
+pub(crate) type WrappedQueryValuesInstance<F> = WrappedQueryValues<
     F,
     BITS_FOR_QUERY_INDEX,
     DEFAULT_MERKLE_PATH_LENGTH,
