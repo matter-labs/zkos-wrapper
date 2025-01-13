@@ -1,6 +1,7 @@
-use std::cell::Ref;
+// use std::cell::Ref;
 
 use super::*;
+use boojum::cs::implementations::pow;
 use zkos_verifier::blake2s_u32::{
     BLAKE2S_DIGEST_SIZE_U32_WORDS,
     BLAKE2S_BLOCK_SIZE_U32_WORDS,
@@ -9,8 +10,8 @@ use zkos_verifier::blake2s_u32::{
 const USE_REDUCED_BLAKE2_ROUNDS: bool = true;
 
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct SeedWrapped<F: SmallField>(pub [UInt32<F>; BLAKE2S_DIGEST_SIZE_U32_WORDS]);
+#[derive(Clone, Copy, Debug)]//, PartialEq, Eq)]
+pub struct SeedWrapped<F: SmallField>(pub [Word<F>; BLAKE2S_DIGEST_SIZE_U32_WORDS]);
 
 
 #[derive(Clone, Copy, Debug, Default)]
@@ -24,11 +25,9 @@ impl Blake2sWrappedTranscript {
         input: &[UInt32<F>],
     ) -> SeedWrapped<F> {
         let mut offset = 0;
-        unsafe {
-            hasher.reset(cs);
-            Self::commit_inner(cs, hasher, input, &mut offset);
-            Self::flush(cs, hasher, offset);
-        }
+        hasher.reset();
+        Self::commit_inner(cs, hasher, input, &mut offset);
+        Self::flush(cs, hasher, offset);
 
         SeedWrapped(hasher.read_state_for_output())
     }
@@ -40,14 +39,22 @@ impl Blake2sWrappedTranscript {
         input: &[UInt32<F>],
     ) {
         let mut offset = 0;
-        unsafe {
-            hasher.reset(cs);
-            Self::commit_inner(cs, hasher, &seed.0, &mut offset);
-            Self::commit_inner(cs, hasher, input, &mut offset);
-            Self::flush(cs, hasher, offset);
-        }
+        hasher.reset();
+        Self::commit_seed_inner(hasher, &seed, &mut offset);
+        Self::commit_inner(cs, hasher, input, &mut offset);
+        Self::flush(cs, hasher, offset);
 
         *seed = SeedWrapped(hasher.read_state_for_output());
+    }
+
+    fn commit_seed_inner<F: SmallField>(
+        hasher: &mut Blake2sStateGate<F>,
+        seed: &SeedWrapped<F>,
+        offset: &mut usize,
+    ) {
+        debug_assert!(offset == &0);
+        hasher.input_buffer[..BLAKE2S_DIGEST_SIZE_U32_WORDS].copy_from_slice(&seed.0);
+        *offset = BLAKE2S_DIGEST_SIZE_U32_WORDS;
     }
 
     fn commit_inner<F: SmallField, CS: ConstraintSystem<F>>(
@@ -69,25 +76,26 @@ impl Blake2sWrappedTranscript {
         let mut buffer_offset = *offset;
         unsafe {
             for _ in 0..num_rounds {
-                let mut dst_ptr: *mut UInt32<F> = hasher
-                    .input_buffer
-                    .as_mut_ptr()
-                    .add(buffer_offset);
-                
                 let words_to_use =
                     core::cmp::min(remaining, BLAKE2S_BLOCK_SIZE_U32_WORDS - buffer_offset);
-                
-                core::ptr::copy_nonoverlapping(input_ptr, dst_ptr, words_to_use);
+
+                let input_slice = core::slice::from_raw_parts(input_ptr, words_to_use);
+                hasher.input_buffer[buffer_offset..(buffer_offset + words_to_use)]
+                    .iter_mut()
+                    .zip(input_slice)
+                    .for_each(|(dst, src)| {
+                        *dst = Word { inner: src.to_le_bytes(cs) };
+                    });
 
                 remaining -= words_to_use;
                 buffer_offset += words_to_use;
                 input_ptr = input_ptr.add(words_to_use);
-                dst_ptr = dst_ptr.add(words_to_use);
                 // zero out the rest
-                while dst_ptr < hasher.input_buffer.as_mut_ptr_range().end {
-                    dst_ptr.write(UInt32::zero(cs));
-                    dst_ptr = dst_ptr.add(1);
-                }
+                hasher.input_buffer[buffer_offset..].iter_mut().for_each(|el| {
+                    *el = Word {
+                        inner: [UInt8::zero(cs); 4],
+                    };
+                });
                 if remaining > 0 {
                     debug_assert_eq!(buffer_offset, BLAKE2S_BLOCK_SIZE_U32_WORDS);
                     hasher.run_round_function::<CS, USE_REDUCED_BLAKE2_ROUNDS>(
@@ -126,13 +134,19 @@ impl Blake2sWrappedTranscript {
         unsafe {
             let mut dst_ptr: *mut UInt32<F> = dst.as_mut_ptr();
             // first we can just take values from the seed
-            core::ptr::copy_nonoverlapping(seed.0.as_ptr(), dst_ptr, BLAKE2S_DIGEST_SIZE_U32_WORDS);
+            let dst_slice = core::slice::from_raw_parts_mut(dst_ptr, BLAKE2S_DIGEST_SIZE_U32_WORDS);
+            dst_slice.iter_mut().zip(seed.0.iter()).for_each(|(dst, src)| {
+                *dst = UInt32::from_le_bytes(cs, src.inner);
+            });
 
             dst_ptr = dst_ptr.add(BLAKE2S_DIGEST_SIZE_U32_WORDS);
             // and if we need more - we will hash it with the increasing sequence counter
             for _ in 1..(num_rounds as u32) {
                 Self::draw_randomness_inner(cs, hasher, seed);
-                core::ptr::copy_nonoverlapping(seed.0.as_ptr(), dst_ptr, BLAKE2S_DIGEST_SIZE_U32_WORDS);
+                let dst_slice = core::slice::from_raw_parts_mut(dst_ptr, BLAKE2S_DIGEST_SIZE_U32_WORDS);
+                dst_slice.iter_mut().zip(seed.0.iter()).for_each(|(dst, src)| {
+                    *dst = UInt32::from_le_bytes(cs, src.inner);
+                });
                 dst_ptr = dst_ptr.add(BLAKE2S_DIGEST_SIZE_U32_WORDS);
             }
         }
@@ -143,24 +157,23 @@ impl Blake2sWrappedTranscript {
         hasher: &mut Blake2sStateGate<F>, 
         seed: &mut SeedWrapped<F>
     ) {
-        unsafe {
-            hasher.reset(cs);
-            core::ptr::copy_nonoverlapping(seed.0.as_ptr(), hasher.input_buffer.as_mut_ptr(), BLAKE2S_DIGEST_SIZE_U32_WORDS);
-            let mut dst_ptr = hasher.input_buffer.as_mut_ptr().add(BLAKE2S_DIGEST_SIZE_U32_WORDS);
-            while dst_ptr < hasher.input_buffer.as_mut_ptr_range().end {
-                dst_ptr.write(UInt32::zero(cs));
-                dst_ptr = dst_ptr.add(1);
+        hasher.reset();
+        hasher.input_buffer[..BLAKE2S_DIGEST_SIZE_U32_WORDS].copy_from_slice(&seed.0);
+        hasher.input_buffer[BLAKE2S_DIGEST_SIZE_U32_WORDS..].iter_mut().for_each(|el| {
+            *el = Word {
+                inner: [UInt8::zero(cs); 4],
             }
-        }
+        });
 
         if Blake2sStateGate::<F>::SUPPORT_SPEC_SINGLE_ROUND {
-            unsafe {
-                hasher.spec_run_sinlge_round_into_destination::<CS, USE_REDUCED_BLAKE2_ROUNDS>(
-                    cs, 
-                    BLAKE2S_DIGEST_SIZE_U32_WORDS,
-                    &mut seed.0 as *mut _,
-                );
-            }
+            unimplemented!()
+            // unsafe {
+            //     hasher.spec_run_sinlge_round_into_destination::<CS, USE_REDUCED_BLAKE2_ROUNDS>(
+            //         cs, 
+            //         BLAKE2S_DIGEST_SIZE_U32_WORDS,
+            //         &mut seed.0 as *mut _,
+            //     );
+            // }
         } else {
             // we take the seed + sequence id, and produce hash
             hasher.run_round_function::<CS, USE_REDUCED_BLAKE2_ROUNDS>(
@@ -173,45 +186,42 @@ impl Blake2sWrappedTranscript {
         }
     }
 
-    fn verify_pow_using_hasher<F: SmallField, CS: ConstraintSystem<F>>(
+    pub fn verify_pow_using_hasher<F: SmallField, CS: ConstraintSystem<F>, const POW_BITS: u32>(
         cs: &mut CS,
         hasher: &mut Blake2sStateGate<F>,
         seed: &mut SeedWrapped<F>,
         nonce: [UInt32<F>; 2],
-        pow_bits: UInt32<F>,
+        // pow_bits: u32,
     ) {
-        // assert!(pow_bits <= 32);
-        unsafe {
-            hasher.reset(cs);
-            // first we can just take values from the seed
-            core::ptr::copy_nonoverlapping(seed.0.as_ptr(), hasher.input_buffer.as_mut_ptr(), BLAKE2S_DIGEST_SIZE_U32_WORDS);
-
-            // LE words of nonce
-            hasher.input_buffer[8] = nonce[0];
-            hasher.input_buffer[9] = nonce[1];
-            let mut dst_ptr = hasher.input_buffer.as_mut_ptr().add(BLAKE2S_DIGEST_SIZE_U32_WORDS + 2);
-            while dst_ptr < hasher.input_buffer.as_mut_ptr_range().end {
-                dst_ptr.write(UInt32::zero(cs));
-                dst_ptr = dst_ptr.add(1);
+        hasher.reset();
+        // first we can just take values from the seed
+        hasher.input_buffer[..BLAKE2S_DIGEST_SIZE_U32_WORDS].copy_from_slice(&seed.0);
+        // LE words of nonce
+        hasher.input_buffer[8] = Word { inner: nonce[0].to_le_bytes(cs) };
+        hasher.input_buffer[9] = Word { inner: nonce[1].to_le_bytes(cs) };
+        hasher.input_buffer[BLAKE2S_DIGEST_SIZE_U32_WORDS + 2..].iter_mut().for_each(|el| {
+            *el = Word {
+                inner: [UInt8::zero(cs); 4],
             }
+        });
 
-            hasher.run_round_function::<CS, USE_REDUCED_BLAKE2_ROUNDS>(
-                cs,
-                BLAKE2S_DIGEST_SIZE_U32_WORDS + 2,
-                true,
-            );
-        }
+        hasher.run_round_function::<CS, USE_REDUCED_BLAKE2_ROUNDS>(
+            cs,
+            BLAKE2S_DIGEST_SIZE_U32_WORDS + 2,
+            true,
+        );
 
-        // check that first element is small enough
-        // assert!(
-        //     hasher.state[0] <= (0xffffffff >> pow_bits),
-        //     "we expect {} bits of PoW using nonce {}, but top word is 0x{:08x} and full state is {:?}",
-        //     pow_bits,
-        //     nonce,
-        //     hasher.state[0],
-        //     &hasher.state,
-        // );
-        
+        // check that first element is small enough assert!(hasher.state[0] <= (0xffffffff >> pow_bits));
+        assert!(POW_BITS > 16);
+        let zero = UInt8::zero(cs);
+        let first_el_high_0 = hasher.extended_state[0].inner[2];
+        let first_el_high_1 = hasher.extended_state[0].inner[3];
+        let _ = zero.sub_no_overflow(cs, first_el_high_0);
+        let _ = zero.sub_no_overflow(cs, first_el_high_1);
+        let first_el_low = UInt16::from_le_bytes(cs, hasher.extended_state[0].inner[..2].try_into().unwrap());
+        let pow_bits_mask = (0xffffffff as u32 >> POW_BITS) as u16;
+        let pow_bits_mask = UInt16::allocated_constant(cs, pow_bits_mask);
+        let _ = pow_bits_mask.sub_no_overflow(cs, first_el_low);
 
         // copy it out
         *seed = SeedWrapped(hasher.read_state_for_output());

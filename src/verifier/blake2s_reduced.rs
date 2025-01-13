@@ -19,6 +19,7 @@ use zkos_verifier::blake2s_u32::{
     BLAKE2S_BLOCK_SIZE_U32_WORDS,
     BLAKE2S_DIGEST_SIZE_U32_WORDS,
     CONFIGURED_IV,
+    BLAKE2S_STATE_WIDTH_IN_U32_WORDS,
 };
 
 const BLAKE2S_REDUCED_ROUNDS: usize = 7;
@@ -27,9 +28,9 @@ const BLAKE2S_REDUCED_ROUNDS: usize = 7;
 #[derive(Clone, Copy, Debug)]
 #[repr(C)]
 pub struct Blake2sStateGate<F: SmallField> {
-    pub state: [UInt32<F>; BLAKE2S_EXTENDED_STATE_WIDTH_IN_U32_WORDS],
-    pub input_buffer: [UInt32<F>; BLAKE2S_BLOCK_SIZE_U32_WORDS],
-    pub round_bitmask: UInt32<F>,
+    pub preconfigured_state: [Word<F>; BLAKE2S_STATE_WIDTH_IN_U32_WORDS],
+    pub extended_state: [Word<F>; BLAKE2S_EXTENDED_STATE_WIDTH_IN_U32_WORDS],
+    pub input_buffer: [Word<F>; BLAKE2S_BLOCK_SIZE_U32_WORDS],
     pub t: u32, // we limit ourselves to <4Gb inputs
 }
 
@@ -37,58 +38,52 @@ impl<F: SmallField> Blake2sStateGate<F> {
     pub const SUPPORT_SPEC_SINGLE_ROUND: bool = true;
 
     pub fn new<CS: ConstraintSystem<F>>(cs: &mut CS) -> Self {
-        let state: [UInt32<F>; BLAKE2S_EXTENDED_STATE_WIDTH_IN_U32_WORDS] = std::array::from_fn(|idx| {
-            if idx < 8 {
-                UInt32::allocate(cs, CONFIGURED_IV[idx])
+        let preconfigured_state: [UInt32<F>; BLAKE2S_STATE_WIDTH_IN_U32_WORDS] = std::array::from_fn(|idx| {
+            UInt32::allocate(cs, CONFIGURED_IV[idx])
+        });
+        let preconfigured_state = preconfigured_state.map(|el| Word { inner: el.to_le_bytes(cs) });
+
+        let extended_state: [Word<F>; BLAKE2S_EXTENDED_STATE_WIDTH_IN_U32_WORDS] = std::array::from_fn(|idx| {
+            if idx < BLAKE2S_STATE_WIDTH_IN_U32_WORDS {
+                preconfigured_state[idx]
             } else {
-                UInt32::allocate_without_value(cs)
+                Word {
+                    inner: [UInt8::zero(cs); 4],
+                }
             }
         });
-        let input_buffer: [UInt32<F>; BLAKE2S_BLOCK_SIZE_U32_WORDS] = std::array::from_fn(|idx| {
-            UInt32::allocate_without_value(cs)
+        let input_buffer: [Word<F>; BLAKE2S_BLOCK_SIZE_U32_WORDS] = std::array::from_fn(|idx| {
+            Word {
+                inner: [UInt8::zero(cs); 4],
+            }
         });
-        let round_bitmask = UInt32::allocate_without_value(cs);
-        let t = 0u32;// UInt32::allocate_constant(cs, 0u32);
+        let t = 0u32;
 
         Self {
-            state,
+            preconfigured_state,
+            extended_state,
             input_buffer,
-            round_bitmask,
             t,
         }
     }
 
-    pub fn read_state_for_output(&self) -> [UInt32<F>; BLAKE2S_DIGEST_SIZE_U32_WORDS] {
-        self.state[..BLAKE2S_DIGEST_SIZE_U32_WORDS].try_into().unwrap()
+    pub fn read_state_for_output(&mut self) -> [Word<F>; BLAKE2S_DIGEST_SIZE_U32_WORDS] {
+        // self.extended_state[..BLAKE2S_DIGEST_SIZE_U32_WORDS]
+        //     .iter()
+        //     .map(|el| UInt32::from_le_bytes(cs,el.inner))
+        //     .collect::<Vec<_>>()
+        //     .try_into().unwrap()
+        self.extended_state[..BLAKE2S_DIGEST_SIZE_U32_WORDS].try_into().unwrap()
     }
 
-    pub fn reset<CS: ConstraintSystem<F>>(&mut self, cs: &mut CS) {
+    pub fn reset(&mut self) {
         self.t = 0;
-        if <CS::Config as CSConfig>::WitnessConfig::EVALUATE_WITNESS {
-            let value_fn = move |_inputs| { 
-                // let t = F::ZERO; 
-                let configured_iv = CONFIGURED_IV.map(|x| F::from_u64_unchecked(x as u64));
-                [
-                    // t, 
-                    configured_iv[0], configured_iv[1], configured_iv[2], configured_iv[3], 
-                    configured_iv[4], configured_iv[5], configured_iv[6], configured_iv[7]
-                ]
-            };
-
-            let dependencies = [];
-
-            cs.set_values_with_dependencies(
-                &dependencies,
-                &Place::from_variables([
-                    // self.t.get_variable(),
-                    self.state[0].get_variable(), self.state[1].get_variable(), 
-                    self.state[2].get_variable(), self.state[3].get_variable(),
-                    self.state[4].get_variable(), self.state[5].get_variable(), 
-                    self.state[6].get_variable(), self.state[7].get_variable(),
-                ]),
-                value_fn,
-            );
-        }
+        self.extended_state[..BLAKE2S_STATE_WIDTH_IN_U32_WORDS]
+            .iter_mut()
+            .zip(self.preconfigured_state.iter())
+            .for_each(|(dst, src)| {
+                dst.inner = src.inner;
+        });
     }
 
     pub fn run_round_function<CS: ConstraintSystem<F>, const REDUCED_ROUNDS: bool>(
@@ -98,17 +93,15 @@ impl<F: SmallField> Blake2sStateGate<F> {
         last_round: bool,
     ) {
         self.t += input_size_words as u32 * core::mem::size_of::<u32>() as u32;
-        let mut state = self.state.map(|el| Word { inner: el.to_le_bytes(cs) });
-        let input_buffer = self.input_buffer.map(|el| Word { inner: el.to_le_bytes(cs) });
         blake2s_reduced_round_function(
             cs,
-            &mut state,
-            &input_buffer,
+            &mut self.extended_state,
+            &self.input_buffer,
             Blake2sControl::FixedLength {
                 offset: self.t,
                 is_last_block: last_round,
             },
-        )
+        );
     }
 
     pub fn spec_run_sinlge_round_into_destination<CS: ConstraintSystem<F>, const REDUCED_ROUNDS: bool>(
