@@ -1,7 +1,7 @@
 use crate::verifier::transcript::*;
 use boojum::{
     blake2::*, config::CSConfig, cs::{gates::{
-        ConstantsAllocatorGate, ReductionGate, U32TriAddCarryAsChunkGate
+        ConstantsAllocatorGate, ReductionGate, U32TriAddCarryAsChunkGate, UIntXAddGate,
     }, traits::{cs::ConstraintSystem, gate::GatePlacementStrategy}, CSGeometry}, dag::CircuitResolverOpts, gadgets::{blake2s::blake2s, tables::{
         byte_split::{create_byte_split_table, ByteSplitTable},
         xor8::{create_xor8_table, Xor8Table},
@@ -153,7 +153,6 @@ fn test_transcript_circuit(len: usize) {
         input.push(byte);
     }
 
-    // let pow_nonce: u64 = zkos_verifier::field::Mersenne31Field::ORDER as u64; //192720620;// rng.r#gen();
     const POW_BITS: u32 = 28;
 
     let mut transcript_hasher = zkos_verifier::blake2s_u32::Blake2sState::new();
@@ -178,9 +177,11 @@ fn test_transcript_circuit(len: usize) {
         &mut transcript_challenges,
     );
 
-    let worker = zkos_verifier_worker::Worker::new_with_num_threads(8);
-    let (mut seed, pow_nonce) = zkos_verifier::transcript::Blake2sTranscript::search_pow(&seed, POW_BITS, &worker);
-    let mut transcript_hasher = zkos_verifier::blake2s_u32::Blake2sState::new();
+    // let worker = zkos_verifier_worker::Worker::new_with_num_threads(8);
+    // let (mut _seed, pow_nonce) = zkos_verifier::transcript::Blake2sTranscript::search_pow(&seed, POW_BITS, &worker);
+    let pow_nonce: u64 = 280946043;
+    println!("pow_nonce: {}", pow_nonce);
+    // let mut transcript_hasher = zkos_verifier::blake2s_u32::Blake2sState::new();
     zkos_verifier::transcript::Blake2sTranscript::verify_pow_using_hasher(
         &mut transcript_hasher,
         &mut seed,
@@ -224,6 +225,14 @@ fn test_transcript_circuit(len: usize) {
         builder,
         GatePlacementStrategy::UseGeneralPurposeColumns,
     );
+    let builder = UIntXAddGate::<16>::configure_builder(
+        builder,
+        GatePlacementStrategy::UseGeneralPurposeColumns,
+    );
+    let builder = UIntXAddGate::<8>::configure_builder(
+        builder,
+        GatePlacementStrategy::UseGeneralPurposeColumns,
+    );
 
     let mut owned_cs = builder.build(CircuitResolverOpts::new(1 << 20));
 
@@ -255,7 +264,10 @@ fn test_transcript_circuit(len: usize) {
         circuit_input.push(pair);
     }
 
-    let pow_nonce = [UInt32::allocate_checked(cs, pow_nonce as u32), UInt32::zero(cs)];
+    let pow_nonce = [
+        UInt32::allocate_checked(cs, pow_nonce as u32),
+        UInt32::allocate_checked(cs, (pow_nonce >> 32) as u32),
+        ];
 
     // let output = blake2s(cs, &circuit_input);
     let mut transcript_hasher = Blake2sStateGate::new(cs);
@@ -278,6 +290,7 @@ fn test_transcript_circuit(len: usize) {
         &mut seed,
         &mut transcript_challenges,
     );
+
     Blake2sWrappedTranscript::verify_pow_using_hasher::<_, _, POW_BITS>(
         cs,
         &mut transcript_hasher,
