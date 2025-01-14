@@ -107,6 +107,7 @@ impl<F: SmallField> CSAllocatable<F> for WrappedExternalMemoryArgumentChallenges
     }
 }
 
+#[derive(Clone, Copy)]
 pub struct WrappedExternalDelegationArgumentChallenges<F: SmallField> {
     pub delegation_argument_linearization_challenges:
         [MersenneQuartic<F>; NUM_DELEGATION_ARGUMENT_LINEARIZATION_CHALLENGES],
@@ -150,6 +151,7 @@ impl<F: SmallField> CSAllocatable<F> for WrappedExternalDelegationArgumentChalle
     }
 }
 
+#[derive(Clone, Copy)]
 pub struct WrappedAuxArgumentsBoundaryValues<F: SmallField> {
     pub lazy_init_first_row: [MersenneField<F>; REGISTER_SIZE],
     pub lazy_init_one_before_last_row: [MersenneField<F>; REGISTER_SIZE],
@@ -632,5 +634,50 @@ impl<F: SmallField> WrappedQueryValuesInstance<F> {
         source: &mut I,
     ) -> Self {
         todo!()
+    }
+}
+
+pub struct WrappedProofAuxValues<F: SmallField> {
+    pub memory_grand_product_accumulator_final_value: MersenneQuartic<F>,
+    pub delegation_argument_accumulator_sum: MersenneQuartic<F>,
+}
+
+pub struct WrappedBitSource<F: SmallField> {
+    bytes: Vec<UInt8<F>>,
+    rest: Vec<Boolean<F>>,
+}
+
+impl<F: SmallField> WrappedBitSource<F> {
+    pub fn new<CS: ConstraintSystem<F>>(cs: &mut CS, uint32_values: &[UInt32<F>]) -> Self {
+        let mut bytes = uint32_values
+            .iter()
+            .flat_map(|value| value.decompose_into_bytes(cs))
+            .rev() // we are going to take from the top
+            .collect();
+
+        Self {
+            bytes,
+            rest: vec![],
+        }
+    }
+
+    pub fn get_next_bit<CS: ConstraintSystem<F>>(&mut self, cs: &mut CS) -> Boolean<F> {
+        if let Some(bit) = self.rest.pop() {
+            return bit;
+        }
+
+        let next_byte = self.bytes.pop().expect("Must have enough bits");
+
+        self.rest = next_byte.into_num().spread_into_bits::<CS, 8>(cs).into_iter().rev().collect();
+        
+        self.rest.pop().unwrap()
+    }
+
+    pub fn get_next_bits<CS: ConstraintSystem<F>>(&mut self, cs: &mut CS, num_bits: usize) -> Vec<Boolean<F>> {
+        let mut result = Vec::with_capacity(num_bits);
+        for _ in 0..num_bits {
+            result.push(self.get_next_bit(cs));
+        }
+        result
     }
 }
