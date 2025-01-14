@@ -153,7 +153,7 @@ fn test_transcript_circuit(len: usize) {
         input.push(byte);
     }
 
-    const POW_BITS: u32 = 28;
+    const POW_BITS: usize = 28;
 
     let mut transcript_hasher = zkos_verifier::blake2s_u32::Blake2sState::new();
     let mut seed = zkos_verifier::transcript::Blake2sTranscript::commit_initial_using_hasher(
@@ -390,4 +390,14 @@ fn test_decompose() {
 
     drop(cs);
     let _owned_cs = owned_cs.into_assembly::<Global>();
+}
+
+
+#[test]
+fn allocate_verifier_structs() {
+    // allocate CS
+    // get out of circuit structs
+    // allocate circuit structs
+
+    todo!()
 }

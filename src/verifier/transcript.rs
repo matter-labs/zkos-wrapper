@@ -186,7 +186,7 @@ impl Blake2sWrappedTranscript {
         }
     }
 
-    pub fn verify_pow_using_hasher<F: SmallField, CS: ConstraintSystem<F>, const POW_BITS: u32>(
+    pub fn verify_pow_using_hasher<F: SmallField, CS: ConstraintSystem<F>, const POW_BITS: usize>(
         cs: &mut CS,
         hasher: &mut Blake2sStateGate<F>,
         seed: &mut SeedWrapped<F>,
