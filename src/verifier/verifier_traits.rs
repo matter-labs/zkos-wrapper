@@ -2,53 +2,31 @@ use super::*;
 
 use zkos_verifier::prover::nd_source_std::ThreadLocalBasedSource;
 
-pub trait CircuitNonDeterminismSource<F: SmallField> {
-    type OutOfCircuitVersion: NonDeterminismSource;
-
-    fn read_word<CS: ConstraintSystem<F>>(&mut self, cs: &mut CS) -> UInt32<F>;
-    fn read_reduced_field_element<CS: ConstraintSystem<F>>(&mut self, cs: &mut CS, modulus: UInt32<F>) -> UInt32<F>;
+// wrapping NonDeterminismSource functions:
+pub(crate) fn read_word<
+    F: SmallField,
+    CS: ConstraintSystem<F>,
+    I: NonDeterminismSource,
+>(cs: &mut CS) -> UInt32<F> {
+    UInt32::allocate_checked(cs, I::read_word())
 }
 
-impl<F: SmallField> CircuitNonDeterminismSource<F> for ThreadLocalBasedSource {
-    type OutOfCircuitVersion = ThreadLocalBasedSource;
-
-    fn read_word<CS: ConstraintSystem<F>>(&mut self, cs: &mut CS) -> UInt32<F> {
-        UInt32::allocate_checked(cs, <ThreadLocalBasedSource as NonDeterminismSource>::read_word())
-    }
-
-    fn read_reduced_field_element<CS: ConstraintSystem<F>>(&mut self, cs: &mut CS, modulus: UInt32<F>) -> UInt32<F> {
-        // TODO change result to MersenneField<F>
-        let result_unreduced_value = <ThreadLocalBasedSource as NonDeterminismSource>::read_word();
-
-        let result = UInt32::allocate_from_closure_and_dependencies(
-            cs,
-            move |inputs: &[F]| {
-                let modulus = inputs[0].as_u64_reduced() as u32;
-                let result = result_unreduced_value % modulus;
-                result
-            },
-            &[Place::from_variable(modulus.get_variable())],
-        );
-
-        // check that result is less than modulus
-        let one = Num::allocate_constant(cs, F::ONE);
-        let mut check = modulus.into_num();
-        check = check.sub(cs, &result.into_num());
-        check = check.sub(cs, &one);
-        let _ = UInt32::from_variable_checked(cs, check.get_variable());
-
-        result
-    }
+pub(crate) fn read_mersenne_element<
+    F: SmallField,
+    CS: ConstraintSystem<F>,
+    I: NonDeterminismSource,
+>(cs: &mut CS) -> MersenneField<F> {
+    let modulus = Mersenne31Field::CHARACTERISTICS as u32;
+    let witness = Mersenne31Field::from_nonreduced_u32(I::read_reduced_field_element(modulus));
+    MersenneField::allocate_checked(cs, witness, false)
 }
 
 pub trait CircuitLeafInclusionVerifier<F: SmallField> {
-    type OutOfCircuitVersion: LeafInclusionVerifier;
-
     fn new<CS: ConstraintSystem<F>>(cs: &mut CS) -> Self;
 
-    unsafe fn verify_leaf_inclusion<
+    fn verify_leaf_inclusion<
         CS: ConstraintSystem<F>,
-        I: CircuitNonDeterminismSource<F>,
+        I: NonDeterminismSource,
         const CAP_SIZE: usize,
         const NUM_COSETS: usize,
     >(
@@ -59,6 +37,268 @@ pub trait CircuitLeafInclusionVerifier<F: SmallField> {
         depth: usize,
         leaf_encoding: &[UInt32<F>],
         merkle_cap: &[WrappedMerkleTreeCap<F, CAP_SIZE>; NUM_COSETS],
-    ) -> Boolean<F>;
+    );
 }
 
+use zkos_verifier::blake2s_u32::{BLAKE2S_BLOCK_SIZE_U32_WORDS, BLAKE2S_DIGEST_SIZE_U32_WORDS};
+
+#[derive(Debug)]
+pub struct CircuitBlake2sForEverythingVerifier<F: SmallField> {
+    hasher: Blake2sStateGate<F>,
+}
+
+impl<F: SmallField> CircuitLeafInclusionVerifier<F> for CircuitBlake2sForEverythingVerifier<F> {
+    fn new<CS: ConstraintSystem<F>>(cs: &mut CS) -> Self {
+        Self {
+            hasher: Blake2sStateGate::new(cs),
+        }
+    }
+
+    fn verify_leaf_inclusion<
+        CS: ConstraintSystem<F>,
+        I: NonDeterminismSource,
+        const CAP_SIZE: usize,
+        const NUM_COSETS: usize,
+    >(
+        &mut self,
+        cs: &mut CS,
+        coset_index: UInt32<F>,
+        leaf_index: UInt32<F>,
+        depth: usize,
+        leaf_encoding: &[UInt32<F>],
+        merkle_cap: &[WrappedMerkleTreeCap<F, CAP_SIZE>; NUM_COSETS],
+    ) {
+    //     // our strategy is:
+    //     // - since leaf is used for other purposes, we have to copy it into the buffer, no options here
+    //     // - but when we output the leaf hash, we will put it into the input buffer of our first of `merkle_path_hashers`,
+    //     // and then alternate between them
+    //     self.hasher.reset();
+
+    //     let input_len_words = leaf_encoding.len();
+    //     let mut num_full_rounds = input_len_words / BLAKE2S_BLOCK_SIZE_U32_WORDS;
+    //     let mut last_round_len = input_len_words % BLAKE2S_BLOCK_SIZE_U32_WORDS;
+    //     if last_round_len == 0 {
+    //         if num_full_rounds > 1 {
+    //             num_full_rounds -= 1;
+    //         }
+    //         last_round_len = BLAKE2S_BLOCK_SIZE_U32_WORDS;
+    //     }
+
+    //     // full rounds, unrolled
+    //     let mut src_ptr = leaf_encoding
+    //         .as_ptr()
+    //         .cast::<[u32; BLAKE2S_BLOCK_SIZE_U32_WORDS]>();
+    //     for _ in 0..num_full_rounds {
+    //         let dst = self.hasher.input_buffer.as_mut_ptr().cast::<u32>();
+    //         blake2s_u32::spec_memcopy_u32_nonoverlapping(
+    //             src_ptr.cast::<u32>(),
+    //             dst,
+    //             BLAKE2S_BLOCK_SIZE_U32_WORDS,
+    //         );
+    //         self.hasher.run_round_function::<USE_REDUCED_BLAKE2_ROUNDS>(
+    //             BLAKE2S_BLOCK_SIZE_U32_WORDS,
+    //             false,
+    //         );
+    //         src_ptr = src_ptr.add(1);
+    //     }
+
+    //     // last round unrolled padding
+    //     {
+    //         let src_ptr = src_ptr.cast::<u32>();
+    //         let mut dst_ptr = self.hasher.input_buffer.as_mut_ptr().cast::<u32>();
+    //         blake2s_u32::spec_memcopy_u32_nonoverlapping(src_ptr, dst_ptr, last_round_len);
+    //         dst_ptr = dst_ptr.add(last_round_len);
+    //         blake2s_u32::spec_memzero_u32(
+    //             dst_ptr,
+    //             self.hasher
+    //                 .input_buffer
+    //                 .as_mut_ptr_range()
+    //                 .end
+    //                 .cast::<u32>(),
+    //         );
+    //         self.hasher
+    //             .run_round_function::<USE_REDUCED_BLAKE2_ROUNDS>(last_round_len, true);
+    //     }
+
+    //     // now hash output is in state, and we will use it to verify a path below by asking for witness elements
+    //     let mut index = leaf_index as usize;
+
+    //     if depth == 0 {
+    //         // quick path
+    //         let output_hash = self.hasher.read_state_for_output_ref();
+    //         let cap = merkle_cap
+    //             .get_unchecked(coset_index as usize)
+    //             .cap
+    //             .get_unchecked(index);
+    //         let mut equal = true;
+    //         for i in 0..8 {
+    //             // BLAKE2S_DIGEST_SIZE_U32_WORDS
+    //             equal &= output_hash[i] == cap[i];
+    //         }
+
+    //         return equal;
+    //     }
+
+    //     if blake2s_u32::Blake2sState::SUPPORT_SPEC_SINGLE_ROUND {
+    //         // special case for first round
+    //         {
+    //             let input_is_right = index & 1 == 1;
+    //             let previous_hash_dst_ptr = self
+    //                 .hasher
+    //                 .input_buffer
+    //                 .as_mut_ptr()
+    //                 .cast::<u32>()
+    //                 .add(BLAKE2S_DIGEST_SIZE_U32_WORDS * input_is_right as usize);
+    //             let mut witness_dst_ptr = self
+    //                 .hasher
+    //                 .input_buffer
+    //                 .as_mut_ptr()
+    //                 .cast::<u32>()
+    //                 .add(BLAKE2S_DIGEST_SIZE_U32_WORDS * (!input_is_right) as usize);
+    //             let current_state = self.hasher.read_state_for_output_ref();
+    //             blake2s_u32::spec_memcopy_u32_nonoverlapping(
+    //                 current_state.as_ptr().cast::<u32>(),
+    //                 previous_hash_dst_ptr,
+    //                 BLAKE2S_DIGEST_SIZE_U32_WORDS,
+    //             );
+    //             for _ in 0..8 {
+    //                 // BLAKE2S_DIGEST_SIZE_U32_WORDS
+    //                 // hashes are unstructured u32
+    //                 witness_dst_ptr.write(I::read_word());
+    //                 witness_dst_ptr = witness_dst_ptr.add(1);
+    //             }
+    //             index >>= 1;
+    //             let output_is_right = index & 1 == 1;
+    //             // we break aliasing, but fine, we know that we will delay writing there
+    //             let dst_ptr = self
+    //                 .hasher
+    //                 .input_buffer
+    //                 .as_mut_ptr()
+    //                 .cast::<[u32; BLAKE2S_DIGEST_SIZE_U32_WORDS]>()
+    //                 .add(output_is_right as usize);
+
+    //             self.hasher.reset();
+    //             self.hasher
+    //                 .spec_run_sinlge_round_into_destination::<USE_REDUCED_BLAKE2_ROUNDS>(
+    //                     BLAKE2S_BLOCK_SIZE_U32_WORDS,
+    //                     dst_ptr,
+    //                 );
+    //         }
+
+    //         // every step we:
+    //         // - place witness elements into the other part of input buffer
+    //         // - run round function
+    //         for _ in 1..depth {
+    //             let input_is_right = index & 1 == 1;
+    //             let mut witness_dst_ptr = self
+    //                 .hasher
+    //                 .input_buffer
+    //                 .as_mut_ptr()
+    //                 .add(BLAKE2S_DIGEST_SIZE_U32_WORDS * (!input_is_right) as usize);
+    //             for _ in 0..8 {
+    //                 // BLAKE2S_DIGEST_SIZE_U32_WORDS
+    //                 // hashes are unstructured u32
+    //                 witness_dst_ptr.write(I::read_word());
+    //                 witness_dst_ptr = witness_dst_ptr.add(1);
+    //             }
+    //             index >>= 1;
+    //             let output_is_right = index & 1 == 1;
+    //             // we break aliasing, but fine, we know that we will delay writing there
+    //             let dst_ptr = self
+    //                 .hasher
+    //                 .input_buffer
+    //                 .as_mut_ptr()
+    //                 .cast::<[u32; BLAKE2S_DIGEST_SIZE_U32_WORDS]>()
+    //                 .add(output_is_right as usize);
+
+    //             self.hasher.reset();
+    //             self.hasher
+    //                 .spec_run_sinlge_round_into_destination::<USE_REDUCED_BLAKE2_ROUNDS>(
+    //                     BLAKE2S_BLOCK_SIZE_U32_WORDS,
+    //                     dst_ptr,
+    //                 );
+    //         }
+
+    //         let output_is_right = index & 1 == 1;
+    //         let output_hash = self
+    //             .hasher
+    //             .input_buffer
+    //             .as_ptr()
+    //             .cast::<[u32; BLAKE2S_DIGEST_SIZE_U32_WORDS]>()
+    //             .add(output_is_right as usize)
+    //             .as_ref_unchecked();
+
+    //         // here we manually compare, otherwise it's compiled as memcmp that does by byte(!) comparison
+    //         // output_hash == &merkle_cap[coset_index as usize].cap[index]
+
+    //         let cap = merkle_cap
+    //             .get_unchecked(coset_index as usize)
+    //             .cap
+    //             .get_unchecked(index);
+    //         let mut equal = true;
+    //         for i in 0..8 {
+    //             // BLAKE2S_DIGEST_SIZE_U32_WORDS
+    //             equal &= output_hash[i] == cap[i];
+    //         }
+
+    //         equal
+    //     } else {
+    //         // every step we:
+    //         // - copy previous from the state into corresponding place of the input buffer
+    //         // - place witness elements into the other part of input buffer
+    //         // - run round function
+    //         for _ in 0..depth {
+    //             let input_is_right = index & 1 == 1;
+    //             let previous_hash_dst_ptr = self
+    //                 .hasher
+    //                 .input_buffer
+    //                 .as_mut_ptr()
+    //                 .cast::<u32>()
+    //                 .add(BLAKE2S_DIGEST_SIZE_U32_WORDS * input_is_right as usize);
+    //             let mut witness_dst_ptr = self
+    //                 .hasher
+    //                 .input_buffer
+    //                 .as_mut_ptr()
+    //                 .add(BLAKE2S_DIGEST_SIZE_U32_WORDS * (!input_is_right) as usize);
+    //             // copy element of the state - 8 of them
+    //             let current_state = self.hasher.read_state_for_output_ref();
+    //             blake2s_u32::spec_memcopy_u32_nonoverlapping(
+    //                 current_state.as_ptr().cast::<u32>(),
+    //                 previous_hash_dst_ptr,
+    //                 BLAKE2S_DIGEST_SIZE_U32_WORDS,
+    //             );
+    //             for _ in 0..8 {
+    //                 // BLAKE2S_DIGEST_SIZE_U32_WORDS
+    //                 // hashes are unstructured u32
+    //                 witness_dst_ptr.write(I::read_word());
+    //                 witness_dst_ptr = witness_dst_ptr.add(1);
+    //             }
+    //             index >>= 1;
+
+    //             self.hasher.reset();
+    //             self.hasher.run_round_function::<USE_REDUCED_BLAKE2_ROUNDS>(
+    //                 BLAKE2S_BLOCK_SIZE_U32_WORDS,
+    //                 true,
+    //             );
+    //         }
+
+    //         let output_hash = self.hasher.read_state_for_output_ref();
+
+    //         // here we manually compare, otherwise it's compiled as memcmp that does by byte(!) comparison
+    //         // output_hash == &merkle_cap[coset_index as usize].cap[index]
+
+    //         let cap = merkle_cap
+    //             .get_unchecked(coset_index as usize)
+    //             .cap
+    //             .get_unchecked(index);
+    //         let mut equal = true;
+    //         for i in 0..8 {
+    //             // BLAKE2S_DIGEST_SIZE_U32_WORDS
+    //             equal &= output_hash[i] == cap[i];
+    //         }
+
+    //         equal
+    //     }
+        todo!()
+    }
+}

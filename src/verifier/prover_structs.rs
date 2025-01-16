@@ -421,7 +421,7 @@ impl<
 }
 
 impl<F: SmallField> WrappedProofSkeletonInstance<F> {
-    pub(crate) fn from_non_determinism_source<CS: ConstraintSystem<F>, I: CircuitNonDeterminismSource<F>>(
+    pub(crate) fn from_non_determinism_source<CS: ConstraintSystem<F>, I: NonDeterminismSource>(
         cs: &mut CS,
         source: &mut I,
     ) -> Self {
@@ -629,10 +629,12 @@ impl<
 }
 
 impl<F: SmallField> WrappedQueryValuesInstance<F> {
-    fn from_non_determinism_source<CS: ConstraintSystem<F>, I: CircuitNonDeterminismSource<F>>(
+    fn from_non_determinism_source<CS: ConstraintSystem<F>, I: NonDeterminismSource, V: CircuitLeafInclusionVerifier<F>>(
         cs: &mut CS,
-        source: &mut I,
+        proof_skeleton: &WrappedProofSkeletonInstance<F>,
+        hasher: &mut V
     ) -> Self {
+        // QueryValuesInstance::fill
         todo!()
     }
 }

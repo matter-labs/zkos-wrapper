@@ -24,12 +24,13 @@ use zkos_verifier::verifier_common::{ProofPublicInputs, ProofOutput};
 use zkos_verifier::verifier_common::non_determinism_source::NonDeterminismSource;
 use zkos_verifier::blake2s_u32::*;
 
-mod prover_structs;
-mod verifier_traits;
+pub(crate) mod prover_structs;
+pub(crate) mod verifier_traits;
 pub mod transcript;
 mod transcript_opt;
 pub mod blake2s_reduced;
 
+mod risc_v_cycles_circuit_layout;
 
 use prover_structs::*;
 use verifier_traits::*;
@@ -37,11 +38,11 @@ pub use transcript::*;
 use transcript_opt::*;
 pub use blake2s_reduced::*;
 
-pub unsafe fn verify<
+pub fn verify<
     F: SmallField,
     CS: ConstraintSystem<F>,
     // I: CircuitNonDeterminismSource<F>,
-    V: CircuitLeafInclusionVerifier<F>
+    // V: CircuitLeafInclusionVerifier<F>
 >(
     cs: &mut CS,
     proof_state_dst: &mut WrappedProofOutput<
@@ -55,8 +56,6 @@ pub unsafe fn verify<
     skeleton: WrappedProofSkeletonInstance<F>,
     queries: [WrappedQueryValuesInstance<F>; NUM_QUERIES],
 ) {
-    let mut leaf_inclusion_verifier = V::new(cs);
-
     // now drive the transcript and continue
     let mut transcript_hasher = Blake2sStateGate::<F>::new(cs);
     let mut seed = Blake2sWrappedTranscript::commit_initial_using_hasher(
@@ -80,13 +79,13 @@ pub unsafe fn verify<
         = core::array::from_fn(|_| {
         MersenneQuartic::from_coeffs(
             it.next()
-                .unwrap_unchecked()
+                .unwrap()
                 .map(|el| MersenneField::from_uint32_with_reduction(cs, el)),
         )
     });
     let lookup_argument_gamma = MersenneQuartic::from_coeffs(
         it.next()
-            .unwrap_unchecked()
+            .unwrap()
             .map(|el| MersenneField::from_uint32_with_reduction(cs, el)),
     );
 
@@ -110,13 +109,13 @@ pub unsafe fn verify<
     let mut it = transcript_challenges.array_chunks::<4>();
     let quotient_alpha = MersenneQuartic::from_coeffs(
         it.next()
-            .unwrap_unchecked()
+            .unwrap()
             .map(|el| MersenneField::from_uint32_with_reduction(cs, el)),
     );
 
     let quotient_beta = MersenneQuartic::from_coeffs(
         it.next()
-            .unwrap_unchecked()
+            .unwrap()
             .map(|el| MersenneField::from_uint32_with_reduction(cs, el)),
     );
 
@@ -140,7 +139,7 @@ pub unsafe fn verify<
     let mut it = transcript_challenges.array_chunks::<4>();
     let z = MersenneQuartic::from_coeffs(
         it.next()
-            .unwrap_unchecked()
+            .unwrap()
             .map(|el| MersenneField::from_uint32_with_reduction(cs, el)),
     );
 
@@ -164,7 +163,7 @@ pub unsafe fn verify<
     let mut it = transcript_challenges.array_chunks::<4>();
     let deep_poly_alpha = MersenneQuartic::from_coeffs(
         it.next()
-            .unwrap_unchecked()
+            .unwrap()
             .map(|el| MersenneField::from_uint32_with_reduction(cs, el)),
     );
 
@@ -189,7 +188,7 @@ pub unsafe fn verify<
         let mut it = transcript_challenges.array_chunks::<4>();
         *challenge = MersenneQuartic::from_coeffs(
             it.next()
-                .unwrap_unchecked()
+                .unwrap()
                 .map(|el| MersenneField::from_uint32_with_reduction(cs, el)),
         );
     }
@@ -214,7 +213,7 @@ pub unsafe fn verify<
         let mut it = transcript_challenges.array_chunks::<4>();
         *dst = MersenneQuartic::from_coeffs(
             it.next()
-                .unwrap_unchecked()
+                .unwrap()
                 .map(|el| MersenneField::from_uint32_with_reduction(cs, el)),
         );
     }
@@ -368,7 +367,7 @@ pub unsafe fn verify<
 
         let delegation_argument_accumulator_sum =
             if skeleton.delegation_argument_accumulator.len() > 0 {
-                *skeleton.delegation_argument_accumulator.get_unchecked(0)
+                skeleton.delegation_argument_accumulator[0]
             } else {
                 // will be unused, but we do not want to deal with Option
                 MersenneQuartic::zero(cs)
@@ -381,7 +380,7 @@ pub unsafe fn verify<
 
         let delegation_argument_linearization_challenges =
             if skeleton.delegation_argument_challenges.len() > 0 {
-                *skeleton.delegation_argument_challenges.get_unchecked(0)
+                skeleton.delegation_argument_challenges[0]
             } else {
                 WrappedExternalDelegationArgumentChallenges {
                     delegation_argument_linearization_challenges:
@@ -391,7 +390,7 @@ pub unsafe fn verify<
             };
 
         let aux_boundary_values = if skeleton.aux_boundary_values.len() > 0 {
-            *skeleton.aux_boundary_values.get_unchecked(0)
+            skeleton.aux_boundary_values[0]
         } else {
             WrappedAuxArgumentsBoundaryValues {
                 lazy_init_first_row: [MersenneField::zero(cs); REGISTER_SIZE],
@@ -801,10 +800,12 @@ fn accumulate_over_row_for_consistency_check<F: SmallField, CS: ConstraintSystem
     tau_in_domain_by_half: MersenneComplex<F>,
     tau_in_domain_by_half_inversed: MersenneComplex<F>,
 ) -> MersenneQuartic<F> {
-    let VERIFIER_COMPILED_LAYOUT: VerifierCompiledCircuitArtifact<Mersenne31Field> = {
-        // IMPORT CONSTANT
-        todo!()
-    };
+    // let VERIFIER_COMPILED_LAYOUT: VerifierCompiledCircuitArtifact<Mersenne31Field> = {
+    //     // IMPORT CONSTANT
+    //     todo!()
+    // };
+
+    use risc_v_cycles_circuit_layout::VERIFIER_COMPILED_LAYOUT;
 
     // now we can do consistency check
     let mut accumulated_at_z = MersenneQuartic::zero(cs);
