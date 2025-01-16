@@ -15,6 +15,16 @@ use crate::verifier::Blake2sStateGate;
 use crate::verifier::blake2s_reduced_round_function;
 use zkos_verifier::{blake2s_u32::CONFIGURED_IV, prover::cs::cs::circuit};
 use std::mem::MaybeUninit;
+use boojum::cs::gates::FmaGateInBaseFieldWithoutConstant;
+use boojum::cs::gates::NopGate;
+use boojum::cs::gates::DotProductGate;
+use boojum::cs::gates::SelectionGate;
+use boojum::cs::LookupParameters;
+use boojum::cs::cs_builder_reference::CsReferenceImplementationBuilder;
+use boojum::gadgets::tables::RangeCheck15BitsTable;
+use boojum::gadgets::tables::create_range_check_15_bits_table;
+use boojum::gadgets::tables::RangeCheck16BitsTable;
+use boojum::gadgets::tables::create_range_check_16_bits_table;
 
 type F = boojum::field::goldilocks::GoldilocksField;
 
@@ -392,12 +402,121 @@ fn test_decompose() {
     let _owned_cs = owned_cs.into_assembly::<Global>();
 }
 
+use crate::verifier::prover_structs::*;
+use zkos_verifier::concrete::size_constants::*;
+use zkos_verifier::prover::definitions::LeafInclusionVerifier;
+use zkos_verifier::verifier_common::non_determinism_source::NonDeterminismSource;
+use zkos_verifier::verifier_common::{DefaultNonDeterminismSource, DefaultLeafInclusionVerifier, ProofPublicInputs, ProofOutput};
+use zkos_verifier::concrete::skeleton_instance::{ProofSkeletonInstance, QueryValuesInstance};
 
 #[test]
 fn allocate_verifier_structs() {
     // allocate CS
-    // get out of circuit structs
-    // allocate circuit structs
+    let geometry = CSGeometry {
+        num_columns_under_copy_permutation: 60,
+        num_witness_columns: 0,
+        num_constant_columns: 4,
+        max_allowed_constraint_degree: 4,
+    };
 
-    todo!()
+    use boojum::config::DevCSConfig;
+    type RCfg = <DevCSConfig as CSConfig>::ResolverConfig;
+    use boojum::cs::cs_builder_reference::*;
+    let builder_impl =
+        CsReferenceImplementationBuilder::<F, F, DevCSConfig>::new(geometry, 1 << 18);
+    use boojum::cs::cs_builder::new_builder;
+    let builder = new_builder::<_, F>(builder_impl);
+
+    let builder = builder.allow_lookup(
+        LookupParameters::UseSpecializedColumnsWithTableIdAsConstant {
+            width: 1,
+            num_repetitions: 10,
+            share_table_id: true,
+        },
+    );
+
+    let builder = ConstantsAllocatorGate::configure_builder(
+        builder,
+        GatePlacementStrategy::UseGeneralPurposeColumns,
+    );
+    let builder = FmaGateInBaseFieldWithoutConstant::configure_builder(
+        builder,
+        GatePlacementStrategy::UseGeneralPurposeColumns,
+    );
+    let builder = ReductionGate::<F, 4>::configure_builder(
+        builder,
+        GatePlacementStrategy::UseGeneralPurposeColumns,
+    );
+    let builder = DotProductGate::<4>::configure_builder(
+        builder,
+        GatePlacementStrategy::UseGeneralPurposeColumns,
+    );
+    let builder = UIntXAddGate::<16>::configure_builder(
+        builder,
+        GatePlacementStrategy::UseGeneralPurposeColumns,
+    );
+    let builder = SelectionGate::configure_builder(
+        builder,
+        GatePlacementStrategy::UseGeneralPurposeColumns,
+    );
+    let builder =
+        NopGate::configure_builder(builder, GatePlacementStrategy::UseGeneralPurposeColumns);
+
+    let builder = ReductionGate::<F, 2>::configure_builder(
+        builder,
+        GatePlacementStrategy::UseGeneralPurposeColumns,
+    );
+
+    let mut owned_cs = builder.build(CircuitResolverOpts::new(1 << 20));
+
+    // add tables
+    let table = create_range_check_16_bits_table();
+    owned_cs.add_lookup_table::<RangeCheck16BitsTable<1>, 1>(table);
+
+    let table = create_range_check_15_bits_table();
+    owned_cs.add_lookup_table::<RangeCheck15BitsTable<1>, 1>(table);
+
+    let cs = &mut owned_cs;
+
+    // prepare verifier structs
+    let (skeleton, queries) = unsafe {
+        get_prove_parts::<DefaultNonDeterminismSource, DefaultLeafInclusionVerifier>()
+    };
+
+    let skeleton = WrappedProofSkeleton::allocate(cs, skeleton);
+    let queries = queries.map(|query| WrappedQueryValues::allocate(cs, query));
+
+    // allocate empty
+    let proof_state_dst = unsafe {MaybeUninit::<ProofOutput<
+        TREE_CAP_SIZE,
+        NUM_COSETS,
+        NUM_DELEGATION_CHALLENGES,
+        NUM_AUX_BOUNDARY_VALUES,
+    >>::uninit().assume_init()};
+    let proof_input_dst = unsafe {MaybeUninit::<ProofPublicInputs<NUM_STATE_ELEMENTS>>::uninit().assume_init()};
+
+    let mut proof_state_dst = WrappedProofOutput::allocate(cs, proof_state_dst);
+    let mut proof_input_dst = WrappedProofPublicInputs::allocate(cs, proof_input_dst);
+
+    // verify function
+    crate::verifier::verify(cs, &mut proof_state_dst, &mut proof_input_dst, skeleton, queries);
+}
+
+unsafe fn get_prove_parts<I: NonDeterminismSource, V: LeafInclusionVerifier>() -> (ProofSkeletonInstance, [QueryValuesInstance; NUM_QUERIES]) {
+    // TODO: set non-determinism source iterator
+
+    let mut leaf_inclusion_verifier = V::new();
+
+    let mut skeleton = MaybeUninit::<ProofSkeletonInstance>::uninit().assume_init();
+    ProofSkeletonInstance::fill::<I>((&mut skeleton) as *mut _);
+    // let skeleton = skeleton.assume_init();
+
+    let mut queries = MaybeUninit::<[QueryValuesInstance; NUM_QUERIES]>::uninit().assume_init();
+    QueryValuesInstance::fill_array::<I, V, NUM_QUERIES>(
+        (&mut queries) as *mut _,
+        &skeleton,
+        &mut leaf_inclusion_verifier,
+    );
+
+    (skeleton, queries)
 }
