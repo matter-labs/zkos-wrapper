@@ -243,6 +243,10 @@ fn test_transcript_circuit(len: usize) {
         builder,
         GatePlacementStrategy::UseGeneralPurposeColumns,
     );
+    let builder = NopGate::configure_builder(
+        builder,
+        GatePlacementStrategy::UseGeneralPurposeColumns,
+    );
 
     let mut owned_cs = builder.build(CircuitResolverOpts::new(1 << 20));
 
@@ -315,7 +319,11 @@ fn test_transcript_circuit(len: usize) {
     assert_eq!(output, reference_output);
 
     drop(cs);
-    let _owned_cs = owned_cs.into_assembly::<Global>();
+    let worker = boojum::worker::Worker::new_with_num_threads(8);
+
+    owned_cs.pad_and_shrink();
+    let mut owned_cs = owned_cs.into_assembly::<Global>();
+    assert!(owned_cs.check_if_satisfied(&worker));
 }
 
 
@@ -399,7 +407,11 @@ fn test_decompose() {
     assert_eq!(output, reference_output);
 
     drop(cs);
-    let _owned_cs = owned_cs.into_assembly::<Global>();
+    let worker = boojum::worker::Worker::new_with_num_threads(8);
+
+    owned_cs.pad_and_shrink();
+    let mut owned_cs = owned_cs.into_assembly::<Global>();
+    assert!(owned_cs.check_if_satisfied(&worker));
 }
 
 use crate::verifier::prover_structs::*;

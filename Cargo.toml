@@ -6,10 +6,10 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-boojum = { git = "https://github.com/matter-labs/zksync-crypto.git", package="boojum", branch = "oh_mersenne_field"}
-# boojum = { path = "../zksync-crypto/crates/boojum"}
-zkos_verifier = {git="https://github.com/matter-labs/air_compiler.git", package="verifier", branch="oh_for_zkos_wrapper", features=["proof_utils"]}
-# zkos_verifier = {path="../air_compiler/verifier", package="verifier", features=["proof_utils"]}
+# boojum = { git = "https://github.com/matter-labs/zksync-crypto.git", package="boojum", branch = "oh_mersenne_field"}
+boojum = { path = "../zksync-crypto/crates/boojum"}
+# zkos_verifier = {git="https://github.com/matter-labs/air_compiler.git", package="verifier", branch="oh_for_zkos_wrapper", features=["proof_utils"]}
+zkos_verifier = {path="../air_compiler/verifier", package="verifier", features=["proof_utils"]}
 
 [dev-dependencies]
 rand = "0.8.4"
