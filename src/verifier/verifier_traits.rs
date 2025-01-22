@@ -38,7 +38,7 @@ pub trait CircuitLeafInclusionVerifier<F: SmallField> {
         depth: usize,
         leaf_encoding: &[MersenneField<F>],
         merkle_cap: &[WrappedMerkleTreeCap<F, CAP_SIZE>; NUM_COSETS],
-    ) -> Boolean<F>;
+    );
 }
 
 use zkos_verifier::blake2s_u32::{BLAKE2S_BLOCK_SIZE_U32_WORDS, BLAKE2S_DIGEST_SIZE_U32_WORDS};
@@ -68,7 +68,7 @@ impl<F: SmallField> CircuitLeafInclusionVerifier<F> for CircuitBlake2sForEveryth
         depth: usize,
         leaf_encoding: &[MersenneField<F>],
         merkle_cap: &[WrappedMerkleTreeCap<F, CAP_SIZE>; NUM_COSETS],
-    ) -> Boolean<F> {
+    ) {
         // our strategy is:
         // - since leaf is used for other purposes, we have to copy it into the buffer, no options here
         // - but when we output the leaf hash, we will put it into the input buffer of our first of `merkle_path_hashers`,
@@ -142,15 +142,12 @@ impl<F: SmallField> CircuitLeafInclusionVerifier<F> for CircuitBlake2sForEveryth
         if depth == 0 {
             let cap = binary_parallel_select(cs, merkle_cap_flattened, &absolute_tree_index_bits);
             let output_hash = self.hasher.read_state_for_output();
-            let equalities: [_; DIGEST_SIZE_U32_WORDS] = std::array::from_fn(|idx| 
-                {
-                    let a = cap[idx].into_num();
-                    let b = UInt32::from_le_bytes(cs, output_hash[idx].inner).into_num();
-                    Num::equals(cs, &a, &b)
-                }
-            );
-            let equal = Boolean::multi_and(cs, &equalities);
-            return equal;
+            for i in 0..DIGEST_SIZE_U32_WORDS {
+                let a = cap[i].into_num();
+                let b = UInt32::from_le_bytes(cs, output_hash[i].inner).into_num();
+                Num::enforce_equal(cs, &a, &b);
+            }
+            return;
         }
 
         // every step we:
@@ -191,20 +188,10 @@ impl<F: SmallField> CircuitLeafInclusionVerifier<F> for CircuitBlake2sForEveryth
         // here we manually compare, otherwise it's compiled as memcmp that does by byte(!) comparison
         let cap = binary_parallel_select(cs, merkle_cap_flattened, &absolute_tree_index_bits[depth..]);
         let output_hash = self.hasher.read_state_for_output();
-        let equalities: [_; DIGEST_SIZE_U32_WORDS] = std::array::from_fn(|idx| 
-            {
-                let a = cap[idx].into_num();
-                let b = UInt32::from_le_bytes(cs, output_hash[idx].inner).into_num();
-                Num::equals(cs, &a, &b)
-
-                // let ans = Num::equals(cs, &a, &b);
-                // let ans_val = ans.witness_hook(cs)().unwrap();
-                // println!("ans_val: {:?}", ans_val);
-                // ans
-            }
-        );
-        let equal = Boolean::multi_and(cs, &equalities);
-
-        equal
+        for i in 0..DIGEST_SIZE_U32_WORDS {
+            let a = cap[i].into_num();
+            let b = UInt32::from_le_bytes(cs, output_hash[i].inner).into_num();
+            Num::enforce_equal(cs, &a, &b);
+        }
     }
 }

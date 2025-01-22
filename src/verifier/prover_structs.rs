@@ -662,10 +662,8 @@ impl<F: SmallField> WrappedQueryValuesInstance<F> {
         let coset_index = coset_index.into_num().spread_into_bits::<CS, FRI_FACTOR_LOG2>(cs);
         let mut tree_index = tree_index.into_num().spread_into_bits::<CS, TRACE_LEN_LOG2>(cs);
 
-        let mut inclusions = vec![];
-
         // and now we should optimistically verify each leaf over the corresponding merkle cap
-        let setup_included = hasher.verify_leaf_inclusion::<CS, I, TREE_CAP_SIZE, NUM_COSETS>(
+        hasher.verify_leaf_inclusion::<CS, I, TREE_CAP_SIZE, NUM_COSETS>(
             cs,
             &coset_index,
             &tree_index,
@@ -673,12 +671,8 @@ impl<F: SmallField> WrappedQueryValuesInstance<F> {
                 &query.setup_leaf,
             &proof_skeleton.setup_caps,
         );
-        inclusions.push(setup_included);
-        // let setup_included = setup_included.witness_hook(cs)().unwrap();
-        // println!("setup_included: {:?}", setup_included);
-        // assert!(setup_included);
 
-        let witness_included = hasher.verify_leaf_inclusion::<CS, I, TREE_CAP_SIZE, NUM_COSETS>(
+        hasher.verify_leaf_inclusion::<CS, I, TREE_CAP_SIZE, NUM_COSETS>(
             cs,
             &coset_index,
             &tree_index,
@@ -686,12 +680,8 @@ impl<F: SmallField> WrappedQueryValuesInstance<F> {
             &query.witness_leaf,
             &proof_skeleton.witness_caps,
         );
-        inclusions.push(witness_included);
-        // let witness_included = witness_included.witness_hook(cs)().unwrap();
-        // println!("witness_included: {:?}", witness_included);
-        // assert!(witness_included);
-
-        let memory_included = hasher.verify_leaf_inclusion::<CS, I, TREE_CAP_SIZE, NUM_COSETS>(
+        
+        hasher.verify_leaf_inclusion::<CS, I, TREE_CAP_SIZE, NUM_COSETS>(
             cs,
             &coset_index,
             &tree_index,
@@ -699,12 +689,8 @@ impl<F: SmallField> WrappedQueryValuesInstance<F> {
             &query.memory_leaf,
             &proof_skeleton.memory_caps,
         );
-        inclusions.push(memory_included);
-        // let memory_included = memory_included.witness_hook(cs)().unwrap();
-        // println!("memory_included: {:?}", memory_included);
-        // assert!(memory_included);
-
-        let stage_2_included = hasher.verify_leaf_inclusion::<CS, I, TREE_CAP_SIZE, NUM_COSETS>(
+        
+        hasher.verify_leaf_inclusion::<CS, I, TREE_CAP_SIZE, NUM_COSETS>(
             cs,
             &coset_index,
             &tree_index,
@@ -712,12 +698,8 @@ impl<F: SmallField> WrappedQueryValuesInstance<F> {
             &query.stage_2_leaf,
             &proof_skeleton.stage_2_caps,
         );
-        inclusions.push(stage_2_included);
-        // let stage_2_included = stage_2_included.witness_hook(cs)().unwrap();
-        // println!("stage_2_included: {:?}", stage_2_included);
-        // assert!(stage_2_included);
-
-        let quotient_included = hasher.verify_leaf_inclusion::<CS, I, TREE_CAP_SIZE, NUM_COSETS>(
+        
+        hasher.verify_leaf_inclusion::<CS, I, TREE_CAP_SIZE, NUM_COSETS>(
             cs,
             &coset_index,
             &tree_index,
@@ -725,11 +707,7 @@ impl<F: SmallField> WrappedQueryValuesInstance<F> {
             &query.quotient_leaf,
             &proof_skeleton.quotient_caps,
         );
-        inclusions.push(quotient_included);
-        // let quotient_included = quotient_included.witness_hook(cs)().unwrap();
-        // println!("quotient_included: {:?}", quotient_included);
-        // assert!(quotient_included);
-
+        
         let mut fri_tree_index = &mut tree_index[..];
         let mut fri_path_length = DEFAULT_MERKLE_PATH_LENGTH;
         let mut fri_leaf_start = query.fri_oracles_leafs.as_ptr();
@@ -739,7 +717,7 @@ impl<F: SmallField> WrappedQueryValuesInstance<F> {
             fri_path_length -= FRI_FOLDING_SCHEDULE[fri_step];
             let leaf_size = 4 * (1 << FRI_FOLDING_SCHEDULE[fri_step]);
             let fri_leaf_slice = core::slice::from_raw_parts(fri_leaf_start, leaf_size);
-            let fri_oracle_included = hasher.verify_leaf_inclusion::<CS, I, TREE_CAP_SIZE, NUM_COSETS>(
+            hasher.verify_leaf_inclusion::<CS, I, TREE_CAP_SIZE, NUM_COSETS>(
                 cs,
                 &coset_index,
                 &fri_tree_index,
@@ -747,17 +725,9 @@ impl<F: SmallField> WrappedQueryValuesInstance<F> {
                 fri_leaf_slice,
                 caps,
             );
-            inclusions.push(fri_oracle_included);
-            // let fri_oracle_included = fri_oracle_included.witness_hook(cs)().unwrap();
-            // println!("fri_oracle_included: {:?}", fri_oracle_included);
-            // assert!(fri_oracle_included);
-
             fri_leaf_start = fri_leaf_start.add(leaf_size);
         }
-        let all_included = Boolean::multi_and(cs, &inclusions);
-        let allincluded = all_included.witness_hook(cs)().unwrap();
-        println!("all_included: {:?}", allincluded);
-
+        
         query
     }
 }

@@ -360,11 +360,11 @@ fn test_leaf_inclusion() {
         builder,
         GatePlacementStrategy::UseGeneralPurposeColumns,
     );
-    let builder = ZeroCheckGate::configure_builder(
-        builder,
-        GatePlacementStrategy::UseGeneralPurposeColumns,
-        false,
-    );
+    // let builder = ZeroCheckGate::configure_builder(
+    //     builder,
+    //     GatePlacementStrategy::UseGeneralPurposeColumns,
+    //     false,
+    // );
     let builder = FmaGateInBaseFieldWithoutConstant::configure_builder(
         builder,
         GatePlacementStrategy::UseGeneralPurposeColumns,
