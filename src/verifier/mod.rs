@@ -1,4 +1,5 @@
 use std::result;
+use std::mem::MaybeUninit;
 
 use boojum::field::SmallField;
 use boojum::gadgets::num::Num;
@@ -13,9 +14,13 @@ use boojum::gadgets::boolean::Boolean;
 use boojum::gadgets::u16::UInt16;
 use boojum::gadgets::traits::selectable::Selectable;
 use boojum::gadgets::traits::allocatable::CSAllocatable;
+use boojum::gadgets::recursion::recursive_verifier::binary_select;
 use boojum::cs::Place;
+use boojum::gadgets::traits::witnessable::WitnessHookable;
+use boojum::cs::gates::ConstantAllocatableCS;
 
 use zkos_verifier::concrete::size_constants::*;
+use zkos_verifier::concrete::skeleton_instance::*;
 use zkos_verifier::prover::definitions::*;
 use zkos_verifier::prover::cs::definitions::*;
 use zkos_verifier::skeleton::{ProofSkeleton, QueryValues};
@@ -23,12 +28,15 @@ use zkos_verifier::field::*;
 use zkos_verifier::verifier_common::{ProofPublicInputs, ProofOutput};
 use zkos_verifier::verifier_common::non_determinism_source::NonDeterminismSource;
 use zkos_verifier::blake2s_u32::*;
+use zkos_verifier::concrete::skeleton_instance::ProofSkeletonInstance;
+use zkos_verifier::concrete::skeleton_instance::QueryValuesInstance;
 
 pub(crate) mod prover_structs;
 pub(crate) mod verifier_traits;
 pub mod transcript;
 mod transcript_opt;
 pub mod blake2s_reduced;
+pub mod utils;
 
 mod risc_v_cycles_circuit_layout;
 
@@ -37,6 +45,7 @@ use verifier_traits::*;
 pub use transcript::*;
 use transcript_opt::*;
 pub use blake2s_reduced::*;
+pub use utils::*;
 
 pub fn verify<
     F: SmallField,

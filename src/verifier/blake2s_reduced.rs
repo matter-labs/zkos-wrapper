@@ -35,7 +35,7 @@ pub struct Blake2sStateGate<F: SmallField> {
 }
 
 impl<F: SmallField> Blake2sStateGate<F> {
-    pub const SUPPORT_SPEC_SINGLE_ROUND: bool = false;
+    // pub const SUPPORT_SPEC_SINGLE_ROUND: bool = false;
 
     pub fn new<CS: ConstraintSystem<F>>(cs: &mut CS) -> Self {
         let preconfigured_state: [UInt32<F>; BLAKE2S_STATE_WIDTH_IN_U32_WORDS] = std::array::from_fn(|idx| {
@@ -207,7 +207,7 @@ pub fn blake2s_reduced_round_function<F: SmallField, CS: ConstraintSystem<F>>(
     for round_idx in 0..BLAKE2S_REDUCED_ROUNDS {
         let sigma_word = &SIGMAS[round_idx];
 
-        dbg!(cs.next_available_row());
+        // dbg!(cs.next_available_row());
         // mix
         mixing_function_g(
             cs,
@@ -216,77 +216,77 @@ pub fn blake2s_reduced_round_function<F: SmallField, CS: ConstraintSystem<F>>(
             &message_block[sigma_word[0]],
             &message_block[sigma_word[1]],
         );
-        // mixing_function_g(
-        //     cs,
-        //     &mut local_work_vector,
-        //     [1, 5, 9, 13],
-        //     &message_block[sigma_word[2]],
-        //     &message_block[sigma_word[3]],
-        // );
-        // mixing_function_g(
-        //     cs,
-        //     &mut local_work_vector,
-        //     [2, 6, 10, 14],
-        //     &message_block[sigma_word[4]],
-        //     &message_block[sigma_word[5]],
-        // );
-        // mixing_function_g(
-        //     cs,
-        //     &mut local_work_vector,
-        //     [3, 7, 11, 15],
-        //     &message_block[sigma_word[6]],
-        //     &message_block[sigma_word[7]],
-        // );
+        mixing_function_g(
+            cs,
+            &mut local_work_vector,
+            [1, 5, 9, 13],
+            &message_block[sigma_word[2]],
+            &message_block[sigma_word[3]],
+        );
+        mixing_function_g(
+            cs,
+            &mut local_work_vector,
+            [2, 6, 10, 14],
+            &message_block[sigma_word[4]],
+            &message_block[sigma_word[5]],
+        );
+        mixing_function_g(
+            cs,
+            &mut local_work_vector,
+            [3, 7, 11, 15],
+            &message_block[sigma_word[6]],
+            &message_block[sigma_word[7]],
+        );
 
-        // mixing_function_g(
-        //     cs,
-        //     &mut local_work_vector,
-        //     [0, 5, 10, 15],
-        //     &message_block[sigma_word[8]],
-        //     &message_block[sigma_word[9]],
-        // );
-        // mixing_function_g(
-        //     cs,
-        //     &mut local_work_vector,
-        //     [1, 6, 11, 12],
-        //     &message_block[sigma_word[10]],
-        //     &message_block[sigma_word[11]],
-        // );
-        // mixing_function_g(
-        //     cs,
-        //     &mut local_work_vector,
-        //     [2, 7, 8, 13],
-        //     &message_block[sigma_word[12]],
-        //     &message_block[sigma_word[13]],
-        // );
-        // mixing_function_g(
-        //     cs,
-        //     &mut local_work_vector,
-        //     [3, 4, 9, 14],
-        //     &message_block[sigma_word[14]],
-        //     &message_block[sigma_word[15]],
-        // );
+        mixing_function_g(
+            cs,
+            &mut local_work_vector,
+            [0, 5, 10, 15],
+            &message_block[sigma_word[8]],
+            &message_block[sigma_word[9]],
+        );
+        mixing_function_g(
+            cs,
+            &mut local_work_vector,
+            [1, 6, 11, 12],
+            &message_block[sigma_word[10]],
+            &message_block[sigma_word[11]],
+        );
+        mixing_function_g(
+            cs,
+            &mut local_work_vector,
+            [2, 7, 8, 13],
+            &message_block[sigma_word[12]],
+            &message_block[sigma_word[13]],
+        );
+        mixing_function_g(
+            cs,
+            &mut local_work_vector,
+            [3, 4, 9, 14],
+            &message_block[sigma_word[14]],
+            &message_block[sigma_word[15]],
+        );
     }
 
-    // // XOR between halfes
-    // for ((src0, src1), dst) in local_work_vector[..8]
-    //     .iter()
-    //     .zip(local_work_vector[8..].iter())
-    //     .zip(state[..8].iter_mut())
-    // {
-    //     let tmp = xor_many(
-    //         cs,
-    //         &src0.inner.map(|el| el.get_variable()),
-    //         &src1.inner.map(|el| el.get_variable()),
-    //     );
+    // XOR between halfes
+    for ((src0, src1), dst) in local_work_vector[..8]
+        .iter()
+        .zip(local_work_vector[8..].iter())
+        .zip(state[..8].iter_mut())
+    {
+        let tmp = xor_many(
+            cs,
+            &src0.inner.map(|el| el.get_variable()),
+            &src1.inner.map(|el| el.get_variable()),
+        );
 
-    //     let result = xor_many(cs, &tmp, &dst.inner.map(|el| el.get_variable()));
+        let result = xor_many(cs, &tmp, &dst.inner.map(|el| el.get_variable()));
 
-    //     let result = unsafe {
-    //         Word {
-    //             inner: result.map(|el| UInt8::<F>::from_variable_unchecked(el)),
-    //         }
-    //     };
-    //     *dst = result;
-    // }
+        let result = unsafe {
+            Word {
+                inner: result.map(|el| UInt8::<F>::from_variable_unchecked(el)),
+            }
+        };
+        *dst = result;
+    }
 }

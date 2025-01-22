@@ -7,7 +7,7 @@ use zkos_verifier::blake2s_u32::{
     BLAKE2S_BLOCK_SIZE_U32_WORDS,
 };
 
-const USE_REDUCED_BLAKE2_ROUNDS: bool = true;
+pub const USE_REDUCED_BLAKE2_ROUNDS: bool = true;
 
 
 #[derive(Clone, Copy, Debug)]//, PartialEq, Eq)]
@@ -27,7 +27,7 @@ impl Blake2sWrappedTranscript {
         let mut offset = 0;
         hasher.reset();
         Self::commit_inner(cs, hasher, input, &mut offset);
-        // Self::flush(cs, hasher, offset);
+        Self::flush(cs, hasher, offset);
 
         SeedWrapped(hasher.read_state_for_output())
     }
@@ -165,25 +165,14 @@ impl Blake2sWrappedTranscript {
             }
         });
 
-        if Blake2sStateGate::<F>::SUPPORT_SPEC_SINGLE_ROUND {
-            unimplemented!()
-            // unsafe {
-            //     hasher.spec_run_sinlge_round_into_destination::<CS, USE_REDUCED_BLAKE2_ROUNDS>(
-            //         cs, 
-            //         BLAKE2S_DIGEST_SIZE_U32_WORDS,
-            //         &mut seed.0 as *mut _,
-            //     );
-            // }
-        } else {
-            // we take the seed + sequence id, and produce hash
-            hasher.run_round_function::<CS, USE_REDUCED_BLAKE2_ROUNDS>(
-                cs, 
-                BLAKE2S_DIGEST_SIZE_U32_WORDS,
-                true,
-            );
+        // we take the seed + sequence id, and produce hash
+        hasher.run_round_function::<CS, USE_REDUCED_BLAKE2_ROUNDS>(
+            cs, 
+            BLAKE2S_DIGEST_SIZE_U32_WORDS,
+            true,
+        );
 
-            seed.0 = hasher.read_state_for_output();
-        }
+        seed.0 = hasher.read_state_for_output();
     }
 
     pub fn verify_pow_using_hasher<F: SmallField, CS: ConstraintSystem<F>, const POW_BITS: usize>(

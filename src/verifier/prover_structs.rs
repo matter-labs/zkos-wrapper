@@ -421,11 +421,11 @@ impl<
 }
 
 impl<F: SmallField> WrappedProofSkeletonInstance<F> {
-    pub(crate) fn from_non_determinism_source<CS: ConstraintSystem<F>, I: NonDeterminismSource>(
+    pub(crate) fn from_non_determinism_source<CS: ConstraintSystem<F>>(
         cs: &mut CS,
-        source: &mut I,
+        source: <Self as CSAllocatable<F>>::Witness,
     ) -> Self {
-        todo!()
+        Self::allocate(cs, source)
     }
 
     pub(crate) fn transcript_elements_before_stage2(&self) -> Vec<UInt32<F>> {
@@ -629,13 +629,136 @@ impl<
 }
 
 impl<F: SmallField> WrappedQueryValuesInstance<F> {
-    fn from_non_determinism_source<CS: ConstraintSystem<F>, I: NonDeterminismSource, V: CircuitLeafInclusionVerifier<F>>(
+    pub unsafe fn from_non_determinism_source<CS: ConstraintSystem<F>, I: NonDeterminismSource, V: CircuitLeafInclusionVerifier<F>>(
         cs: &mut CS,
         proof_skeleton: &WrappedProofSkeletonInstance<F>,
-        hasher: &mut V
+        hasher: &mut V,
+        // source: &<Self as CSAllocatable<F>>::Witness,
     ) -> Self {
-        // QueryValuesInstance::fill
-        todo!()
+        let mut source = MaybeUninit::<QueryValuesInstance>::uninit().assume_init();
+        let dst = ((&mut source) as *mut <Self as CSAllocatable<F>>::Witness).cast::<u32>();
+        let modulus = Mersenne31Field::CHARACTERISTICS as u32;
+        // query index
+        let query_index = I::read_word();
+        assert!(
+            query_index < (1u32 << BITS_FOR_QUERY_INDEX),
+            "query index 0x{:08x} must be smaller than 0x{:08x}",
+            query_index,
+            1u32 << BITS_FOR_QUERY_INDEX
+        );
+        dst.write(query_index);
+        let mut i = 1;
+        // leaf values are field elements
+        while i < BASE_CIRCUIT_QUERY_VALUES_NO_PADDING_U32_WORDS {
+            // field elements mut be reduced in full
+            dst.add(i).write(I::read_reduced_field_element(modulus));
+            i += 1;
+        }
+        let query = Self::allocate(cs, source.clone());
+        
+        // for all except FRI the following is valid
+        let tree_index = UInt32::allocate_checked(cs, source.query_index & TREE_INDEX_MASK);
+        let coset_index = UInt32::allocate_checked(cs, source.query_index >> TRACE_LEN_LOG2);
+        let coset_index = coset_index.into_num().spread_into_bits::<CS, FRI_FACTOR_LOG2>(cs);
+        let mut tree_index = tree_index.into_num().spread_into_bits::<CS, TRACE_LEN_LOG2>(cs);
+
+        let mut inclusions = vec![];
+
+        // and now we should optimistically verify each leaf over the corresponding merkle cap
+        let setup_included = hasher.verify_leaf_inclusion::<CS, I, TREE_CAP_SIZE, NUM_COSETS>(
+            cs,
+            &coset_index,
+            &tree_index,
+            DEFAULT_MERKLE_PATH_LENGTH,
+                &query.setup_leaf,
+            &proof_skeleton.setup_caps,
+        );
+        inclusions.push(setup_included);
+        // let setup_included = setup_included.witness_hook(cs)().unwrap();
+        // println!("setup_included: {:?}", setup_included);
+        // assert!(setup_included);
+
+        let witness_included = hasher.verify_leaf_inclusion::<CS, I, TREE_CAP_SIZE, NUM_COSETS>(
+            cs,
+            &coset_index,
+            &tree_index,
+            DEFAULT_MERKLE_PATH_LENGTH,
+            &query.witness_leaf,
+            &proof_skeleton.witness_caps,
+        );
+        inclusions.push(witness_included);
+        // let witness_included = witness_included.witness_hook(cs)().unwrap();
+        // println!("witness_included: {:?}", witness_included);
+        // assert!(witness_included);
+
+        let memory_included = hasher.verify_leaf_inclusion::<CS, I, TREE_CAP_SIZE, NUM_COSETS>(
+            cs,
+            &coset_index,
+            &tree_index,
+            DEFAULT_MERKLE_PATH_LENGTH,
+            &query.memory_leaf,
+            &proof_skeleton.memory_caps,
+        );
+        inclusions.push(memory_included);
+        // let memory_included = memory_included.witness_hook(cs)().unwrap();
+        // println!("memory_included: {:?}", memory_included);
+        // assert!(memory_included);
+
+        let stage_2_included = hasher.verify_leaf_inclusion::<CS, I, TREE_CAP_SIZE, NUM_COSETS>(
+            cs,
+            &coset_index,
+            &tree_index,
+            DEFAULT_MERKLE_PATH_LENGTH,
+            &query.stage_2_leaf,
+            &proof_skeleton.stage_2_caps,
+        );
+        inclusions.push(stage_2_included);
+        // let stage_2_included = stage_2_included.witness_hook(cs)().unwrap();
+        // println!("stage_2_included: {:?}", stage_2_included);
+        // assert!(stage_2_included);
+
+        let quotient_included = hasher.verify_leaf_inclusion::<CS, I, TREE_CAP_SIZE, NUM_COSETS>(
+            cs,
+            &coset_index,
+            &tree_index,
+            DEFAULT_MERKLE_PATH_LENGTH,
+            &query.quotient_leaf,
+            &proof_skeleton.quotient_caps,
+        );
+        inclusions.push(quotient_included);
+        // let quotient_included = quotient_included.witness_hook(cs)().unwrap();
+        // println!("quotient_included: {:?}", quotient_included);
+        // assert!(quotient_included);
+
+        let mut fri_tree_index = &mut tree_index[..];
+        let mut fri_path_length = DEFAULT_MERKLE_PATH_LENGTH;
+        let mut fri_leaf_start = query.fri_oracles_leafs.as_ptr();
+        for fri_step in 0..NUM_FRI_STEPS_WITH_ORACLES {
+            let caps = &proof_skeleton.fri_intermediate_oracles[fri_step];
+            fri_tree_index = &mut fri_tree_index[FRI_FOLDING_SCHEDULE[fri_step]..];
+            fri_path_length -= FRI_FOLDING_SCHEDULE[fri_step];
+            let leaf_size = 4 * (1 << FRI_FOLDING_SCHEDULE[fri_step]);
+            let fri_leaf_slice = core::slice::from_raw_parts(fri_leaf_start, leaf_size);
+            let fri_oracle_included = hasher.verify_leaf_inclusion::<CS, I, TREE_CAP_SIZE, NUM_COSETS>(
+                cs,
+                &coset_index,
+                &fri_tree_index,
+                fri_path_length,
+                fri_leaf_slice,
+                caps,
+            );
+            inclusions.push(fri_oracle_included);
+            // let fri_oracle_included = fri_oracle_included.witness_hook(cs)().unwrap();
+            // println!("fri_oracle_included: {:?}", fri_oracle_included);
+            // assert!(fri_oracle_included);
+
+            fri_leaf_start = fri_leaf_start.add(leaf_size);
+        }
+        let all_included = Boolean::multi_and(cs, &inclusions);
+        let allincluded = all_included.witness_hook(cs)().unwrap();
+        println!("all_included: {:?}", allincluded);
+
+        query
     }
 }
 

@@ -1,5 +1,6 @@
 use super::*;
 
+use serde::de;
 use zkos_verifier::prover::nd_source_std::ThreadLocalBasedSource;
 
 // wrapping NonDeterminismSource functions:
@@ -32,12 +33,12 @@ pub trait CircuitLeafInclusionVerifier<F: SmallField> {
     >(
         &mut self,
         cs: &mut CS,
-        coset_index: UInt32<F>,
-        leaf_index: UInt32<F>,
+        coset_index: &[Boolean<F>],
+        leaf_index: &[Boolean<F>],
         depth: usize,
-        leaf_encoding: &[UInt32<F>],
+        leaf_encoding: &[MersenneField<F>],
         merkle_cap: &[WrappedMerkleTreeCap<F, CAP_SIZE>; NUM_COSETS],
-    );
+    ) -> Boolean<F>;
 }
 
 use zkos_verifier::blake2s_u32::{BLAKE2S_BLOCK_SIZE_U32_WORDS, BLAKE2S_DIGEST_SIZE_U32_WORDS};
@@ -62,243 +63,148 @@ impl<F: SmallField> CircuitLeafInclusionVerifier<F> for CircuitBlake2sForEveryth
     >(
         &mut self,
         cs: &mut CS,
-        coset_index: UInt32<F>,
-        leaf_index: UInt32<F>,
+        coset_index: &[Boolean<F>],
+        leaf_index: &[Boolean<F>],
         depth: usize,
-        leaf_encoding: &[UInt32<F>],
+        leaf_encoding: &[MersenneField<F>],
         merkle_cap: &[WrappedMerkleTreeCap<F, CAP_SIZE>; NUM_COSETS],
-    ) {
-    //     // our strategy is:
-    //     // - since leaf is used for other purposes, we have to copy it into the buffer, no options here
-    //     // - but when we output the leaf hash, we will put it into the input buffer of our first of `merkle_path_hashers`,
-    //     // and then alternate between them
-    //     self.hasher.reset();
+    ) -> Boolean<F> {
+        // our strategy is:
+        // - since leaf is used for other purposes, we have to copy it into the buffer, no options here
+        // - but when we output the leaf hash, we will put it into the input buffer of our first of `merkle_path_hashers`,
+        // and then alternate between them
+        self.hasher.reset();
 
-    //     let input_len_words = leaf_encoding.len();
-    //     let mut num_full_rounds = input_len_words / BLAKE2S_BLOCK_SIZE_U32_WORDS;
-    //     let mut last_round_len = input_len_words % BLAKE2S_BLOCK_SIZE_U32_WORDS;
-    //     if last_round_len == 0 {
-    //         if num_full_rounds > 1 {
-    //             num_full_rounds -= 1;
-    //         }
-    //         last_round_len = BLAKE2S_BLOCK_SIZE_U32_WORDS;
-    //     }
+        let input_len_words = leaf_encoding.len();
+        let mut num_full_rounds = input_len_words / BLAKE2S_BLOCK_SIZE_U32_WORDS;
+        let mut last_round_len = input_len_words % BLAKE2S_BLOCK_SIZE_U32_WORDS;
+        if last_round_len == 0 {
+            if num_full_rounds > 1 {
+                num_full_rounds -= 1;
+            }
+            last_round_len = BLAKE2S_BLOCK_SIZE_U32_WORDS;
+        }
 
-    //     // full rounds, unrolled
-    //     let mut src_ptr = leaf_encoding
-    //         .as_ptr()
-    //         .cast::<[u32; BLAKE2S_BLOCK_SIZE_U32_WORDS]>();
-    //     for _ in 0..num_full_rounds {
-    //         let dst = self.hasher.input_buffer.as_mut_ptr().cast::<u32>();
-    //         blake2s_u32::spec_memcopy_u32_nonoverlapping(
-    //             src_ptr.cast::<u32>(),
-    //             dst,
-    //             BLAKE2S_BLOCK_SIZE_U32_WORDS,
-    //         );
-    //         self.hasher.run_round_function::<USE_REDUCED_BLAKE2_ROUNDS>(
-    //             BLAKE2S_BLOCK_SIZE_U32_WORDS,
-    //             false,
-    //         );
-    //         src_ptr = src_ptr.add(1);
-    //     }
+        // full rounds, unrolled
+        unsafe {
+            let mut src_ptr = leaf_encoding.as_ptr();
+            for _ in 0..num_full_rounds {
+                let input_slice = core::slice::from_raw_parts(src_ptr, BLAKE2S_BLOCK_SIZE_U32_WORDS);
+                self.hasher.input_buffer
+                    .iter_mut()
+                    .zip(input_slice)
+                    .for_each(|(dst, src)| {
+                        *dst = Word { inner: src.into_uint32().to_le_bytes(cs) };
+                    });
 
-    //     // last round unrolled padding
-    //     {
-    //         let src_ptr = src_ptr.cast::<u32>();
-    //         let mut dst_ptr = self.hasher.input_buffer.as_mut_ptr().cast::<u32>();
-    //         blake2s_u32::spec_memcopy_u32_nonoverlapping(src_ptr, dst_ptr, last_round_len);
-    //         dst_ptr = dst_ptr.add(last_round_len);
-    //         blake2s_u32::spec_memzero_u32(
-    //             dst_ptr,
-    //             self.hasher
-    //                 .input_buffer
-    //                 .as_mut_ptr_range()
-    //                 .end
-    //                 .cast::<u32>(),
-    //         );
-    //         self.hasher
-    //             .run_round_function::<USE_REDUCED_BLAKE2_ROUNDS>(last_round_len, true);
-    //     }
+                self.hasher.run_round_function::<CS, USE_REDUCED_BLAKE2_ROUNDS>(
+                    cs,
+                    BLAKE2S_BLOCK_SIZE_U32_WORDS,
+                    false,
+                );
+                src_ptr = src_ptr.add(BLAKE2S_BLOCK_SIZE_U32_WORDS);
+            }
 
-    //     // now hash output is in state, and we will use it to verify a path below by asking for witness elements
-    //     let mut index = leaf_index as usize;
+            // last round unrolled padding
+            {
+                let input_slice = core::slice::from_raw_parts(src_ptr, last_round_len);
+                self.hasher.input_buffer[..last_round_len]
+                    .iter_mut()
+                    .zip(input_slice)
+                    .for_each(|(dst, src)| {
+                        *dst = Word { inner: src.into_uint32().to_le_bytes(cs) };
+                    });
+                self.hasher.input_buffer[last_round_len..].iter_mut().for_each(|el| {
+                    *el = Word {
+                        inner: [UInt8::zero(cs); 4],
+                    };
+                });
+                self.hasher.run_round_function::<CS, USE_REDUCED_BLAKE2_ROUNDS>(
+                    cs,
+                    last_round_len,
+                    true,
+                );
+            }
+        }
 
-    //     if depth == 0 {
-    //         // quick path
-    //         let output_hash = self.hasher.read_state_for_output_ref();
-    //         let cap = merkle_cap
-    //             .get_unchecked(coset_index as usize)
-    //             .cap
-    //             .get_unchecked(index);
-    //         let mut equal = true;
-    //         for i in 0..8 {
-    //             // BLAKE2S_DIGEST_SIZE_U32_WORDS
-    //             equal &= output_hash[i] == cap[i];
-    //         }
+        // now hash output is in state, and we will use it to verify a path below by asking for witness elements
+        let absolute_tree_index_bits = leaf_index
+            .iter()
+            .chain(coset_index.iter())
+            .cloned()
+            .collect::<Vec<_>>();
+        let (head, middle, tail) = unsafe {
+            merkle_cap.align_to::<[UInt32<F>; DIGEST_SIZE_U32_WORDS]>()
+        };
+        assert!(head.is_empty() && tail.is_empty());
+        let merkle_cap_flattened = middle;
 
-    //         return equal;
-    //     }
+        if depth == 0 {
+            let cap = binary_parallel_select(cs, merkle_cap_flattened, &absolute_tree_index_bits);
+            let output_hash = self.hasher.read_state_for_output();
+            let equalities: [_; DIGEST_SIZE_U32_WORDS] = std::array::from_fn(|idx| 
+                {
+                    let a = cap[idx].into_num();
+                    let b = UInt32::from_le_bytes(cs, output_hash[idx].inner).into_num();
+                    Num::equals(cs, &a, &b)
+                }
+            );
+            let equal = Boolean::multi_and(cs, &equalities);
+            return equal;
+        }
 
-    //     if blake2s_u32::Blake2sState::SUPPORT_SPEC_SINGLE_ROUND {
-    //         // special case for first round
-    //         {
-    //             let input_is_right = index & 1 == 1;
-    //             let previous_hash_dst_ptr = self
-    //                 .hasher
-    //                 .input_buffer
-    //                 .as_mut_ptr()
-    //                 .cast::<u32>()
-    //                 .add(BLAKE2S_DIGEST_SIZE_U32_WORDS * input_is_right as usize);
-    //             let mut witness_dst_ptr = self
-    //                 .hasher
-    //                 .input_buffer
-    //                 .as_mut_ptr()
-    //                 .cast::<u32>()
-    //                 .add(BLAKE2S_DIGEST_SIZE_U32_WORDS * (!input_is_right) as usize);
-    //             let current_state = self.hasher.read_state_for_output_ref();
-    //             blake2s_u32::spec_memcopy_u32_nonoverlapping(
-    //                 current_state.as_ptr().cast::<u32>(),
-    //                 previous_hash_dst_ptr,
-    //                 BLAKE2S_DIGEST_SIZE_U32_WORDS,
-    //             );
-    //             for _ in 0..8 {
-    //                 // BLAKE2S_DIGEST_SIZE_U32_WORDS
-    //                 // hashes are unstructured u32
-    //                 witness_dst_ptr.write(I::read_word());
-    //                 witness_dst_ptr = witness_dst_ptr.add(1);
-    //             }
-    //             index >>= 1;
-    //             let output_is_right = index & 1 == 1;
-    //             // we break aliasing, but fine, we know that we will delay writing there
-    //             let dst_ptr = self
-    //                 .hasher
-    //                 .input_buffer
-    //                 .as_mut_ptr()
-    //                 .cast::<[u32; BLAKE2S_DIGEST_SIZE_U32_WORDS]>()
-    //                 .add(output_is_right as usize);
+        // every step we:
+        // - copy previous from the state into corresponding place of the input buffer
+        // - place witness elements into the other part of input buffer
+        // - run round function
+        for i in 0..depth {
+            let current_state = self.hasher.read_state_for_output();
+            let witness_dst: [Word<F>; 8] = std::array::from_fn(|_idx| {
+                    let word = read_word::<F, CS, I>(cs);
+                    Word { inner: word.to_le_bytes(cs) }
+                }
+            );
+            let input_is_right = leaf_index[i];
+            self.hasher.input_buffer[..BLAKE2S_DIGEST_SIZE_U32_WORDS]
+                .iter_mut()
+                .zip(current_state.iter())
+                .zip(witness_dst.iter())
+                .for_each(|((dst, current), witness)| {
+                    (*dst).inner = UInt8::parallel_select(cs, input_is_right, &witness.inner, &current.inner);
+                });
+            self.hasher.input_buffer[BLAKE2S_DIGEST_SIZE_U32_WORDS..]
+                .iter_mut()
+                .zip(current_state.iter())
+                .zip(witness_dst.iter())
+                .for_each(|((dst, current), witness)| {
+                    (*dst).inner = UInt8::parallel_select(cs, input_is_right, &current.inner, &witness.inner);
+                });
 
-    //             self.hasher.reset();
-    //             self.hasher
-    //                 .spec_run_sinlge_round_into_destination::<USE_REDUCED_BLAKE2_ROUNDS>(
-    //                     BLAKE2S_BLOCK_SIZE_U32_WORDS,
-    //                     dst_ptr,
-    //                 );
-    //         }
+            self.hasher.reset();
+            self.hasher.run_round_function::<CS, USE_REDUCED_BLAKE2_ROUNDS>(
+                cs,
+                BLAKE2S_BLOCK_SIZE_U32_WORDS,
+                true,
+            );
+        }
 
-    //         // every step we:
-    //         // - place witness elements into the other part of input buffer
-    //         // - run round function
-    //         for _ in 1..depth {
-    //             let input_is_right = index & 1 == 1;
-    //             let mut witness_dst_ptr = self
-    //                 .hasher
-    //                 .input_buffer
-    //                 .as_mut_ptr()
-    //                 .add(BLAKE2S_DIGEST_SIZE_U32_WORDS * (!input_is_right) as usize);
-    //             for _ in 0..8 {
-    //                 // BLAKE2S_DIGEST_SIZE_U32_WORDS
-    //                 // hashes are unstructured u32
-    //                 witness_dst_ptr.write(I::read_word());
-    //                 witness_dst_ptr = witness_dst_ptr.add(1);
-    //             }
-    //             index >>= 1;
-    //             let output_is_right = index & 1 == 1;
-    //             // we break aliasing, but fine, we know that we will delay writing there
-    //             let dst_ptr = self
-    //                 .hasher
-    //                 .input_buffer
-    //                 .as_mut_ptr()
-    //                 .cast::<[u32; BLAKE2S_DIGEST_SIZE_U32_WORDS]>()
-    //                 .add(output_is_right as usize);
+        // here we manually compare, otherwise it's compiled as memcmp that does by byte(!) comparison
+        let cap = binary_parallel_select(cs, merkle_cap_flattened, &absolute_tree_index_bits[depth..]);
+        let output_hash = self.hasher.read_state_for_output();
+        let equalities: [_; DIGEST_SIZE_U32_WORDS] = std::array::from_fn(|idx| 
+            {
+                let a = cap[idx].into_num();
+                let b = UInt32::from_le_bytes(cs, output_hash[idx].inner).into_num();
+                Num::equals(cs, &a, &b)
 
-    //             self.hasher.reset();
-    //             self.hasher
-    //                 .spec_run_sinlge_round_into_destination::<USE_REDUCED_BLAKE2_ROUNDS>(
-    //                     BLAKE2S_BLOCK_SIZE_U32_WORDS,
-    //                     dst_ptr,
-    //                 );
-    //         }
+                // let ans = Num::equals(cs, &a, &b);
+                // let ans_val = ans.witness_hook(cs)().unwrap();
+                // println!("ans_val: {:?}", ans_val);
+                // ans
+            }
+        );
+        let equal = Boolean::multi_and(cs, &equalities);
 
-    //         let output_is_right = index & 1 == 1;
-    //         let output_hash = self
-    //             .hasher
-    //             .input_buffer
-    //             .as_ptr()
-    //             .cast::<[u32; BLAKE2S_DIGEST_SIZE_U32_WORDS]>()
-    //             .add(output_is_right as usize)
-    //             .as_ref_unchecked();
-
-    //         // here we manually compare, otherwise it's compiled as memcmp that does by byte(!) comparison
-    //         // output_hash == &merkle_cap[coset_index as usize].cap[index]
-
-    //         let cap = merkle_cap
-    //             .get_unchecked(coset_index as usize)
-    //             .cap
-    //             .get_unchecked(index);
-    //         let mut equal = true;
-    //         for i in 0..8 {
-    //             // BLAKE2S_DIGEST_SIZE_U32_WORDS
-    //             equal &= output_hash[i] == cap[i];
-    //         }
-
-    //         equal
-    //     } else {
-    //         // every step we:
-    //         // - copy previous from the state into corresponding place of the input buffer
-    //         // - place witness elements into the other part of input buffer
-    //         // - run round function
-    //         for _ in 0..depth {
-    //             let input_is_right = index & 1 == 1;
-    //             let previous_hash_dst_ptr = self
-    //                 .hasher
-    //                 .input_buffer
-    //                 .as_mut_ptr()
-    //                 .cast::<u32>()
-    //                 .add(BLAKE2S_DIGEST_SIZE_U32_WORDS * input_is_right as usize);
-    //             let mut witness_dst_ptr = self
-    //                 .hasher
-    //                 .input_buffer
-    //                 .as_mut_ptr()
-    //                 .add(BLAKE2S_DIGEST_SIZE_U32_WORDS * (!input_is_right) as usize);
-    //             // copy element of the state - 8 of them
-    //             let current_state = self.hasher.read_state_for_output_ref();
-    //             blake2s_u32::spec_memcopy_u32_nonoverlapping(
-    //                 current_state.as_ptr().cast::<u32>(),
-    //                 previous_hash_dst_ptr,
-    //                 BLAKE2S_DIGEST_SIZE_U32_WORDS,
-    //             );
-    //             for _ in 0..8 {
-    //                 // BLAKE2S_DIGEST_SIZE_U32_WORDS
-    //                 // hashes are unstructured u32
-    //                 witness_dst_ptr.write(I::read_word());
-    //                 witness_dst_ptr = witness_dst_ptr.add(1);
-    //             }
-    //             index >>= 1;
-
-    //             self.hasher.reset();
-    //             self.hasher.run_round_function::<USE_REDUCED_BLAKE2_ROUNDS>(
-    //                 BLAKE2S_BLOCK_SIZE_U32_WORDS,
-    //                 true,
-    //             );
-    //         }
-
-    //         let output_hash = self.hasher.read_state_for_output_ref();
-
-    //         // here we manually compare, otherwise it's compiled as memcmp that does by byte(!) comparison
-    //         // output_hash == &merkle_cap[coset_index as usize].cap[index]
-
-    //         let cap = merkle_cap
-    //             .get_unchecked(coset_index as usize)
-    //             .cap
-    //             .get_unchecked(index);
-    //         let mut equal = true;
-    //         for i in 0..8 {
-    //             // BLAKE2S_DIGEST_SIZE_U32_WORDS
-    //             equal &= output_hash[i] == cap[i];
-    //         }
-
-    //         equal
-    //     }
-        todo!()
+        equal
     }
 }
