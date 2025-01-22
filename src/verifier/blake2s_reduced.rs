@@ -1,29 +1,22 @@
 use super::*;
 
-use std::mem::MaybeUninit;
-use boojum::gadgets::blake2s::{
-    mixing_function::Word,
-    round_function::Blake2sControl,
-    IV,
-    SIGMAS,
-    mixing_function::mixing_function_g,
-};
-use boojum::gadgets::u8::UInt8;
-use boojum::cs::gates::ConstantAllocatableCS;
-use boojum::cs::Place;
 use boojum::config::CSConfig;
 use boojum::config::CSWitnessEvaluationConfig;
+use boojum::cs::gates::ConstantAllocatableCS;
+use boojum::cs::Place;
+use boojum::gadgets::blake2s::{
+    mixing_function::mixing_function_g, mixing_function::Word, round_function::Blake2sControl, IV,
+    SIGMAS,
+};
+use boojum::gadgets::u8::UInt8;
+use std::mem::MaybeUninit;
 
 use zkos_verifier::blake2s_u32::{
-    BLAKE2S_EXTENDED_STATE_WIDTH_IN_U32_WORDS,
-    BLAKE2S_BLOCK_SIZE_U32_WORDS,
-    BLAKE2S_DIGEST_SIZE_U32_WORDS,
-    CONFIGURED_IV,
-    BLAKE2S_STATE_WIDTH_IN_U32_WORDS,
+    BLAKE2S_BLOCK_SIZE_U32_WORDS, BLAKE2S_DIGEST_SIZE_U32_WORDS,
+    BLAKE2S_EXTENDED_STATE_WIDTH_IN_U32_WORDS, BLAKE2S_STATE_WIDTH_IN_U32_WORDS, CONFIGURED_IV,
 };
 
 const BLAKE2S_REDUCED_ROUNDS: usize = 7;
-
 
 #[derive(Clone, Copy, Debug)]
 #[repr(C)]
@@ -35,28 +28,30 @@ pub struct Blake2sStateGate<F: SmallField> {
 }
 
 impl<F: SmallField> Blake2sStateGate<F> {
-    pub const SUPPORT_SPEC_SINGLE_ROUND: bool = true;
+    // FIXME!!
+    pub const SUPPORT_SPEC_SINGLE_ROUND: bool = false;
 
     pub fn new<CS: ConstraintSystem<F>>(cs: &mut CS) -> Self {
-        let preconfigured_state: [UInt32<F>; BLAKE2S_STATE_WIDTH_IN_U32_WORDS] = std::array::from_fn(|idx| {
-            UInt32::allocate(cs, CONFIGURED_IV[idx])
+        let preconfigured_state: [UInt32<F>; BLAKE2S_STATE_WIDTH_IN_U32_WORDS] =
+            std::array::from_fn(|idx| UInt32::allocate(cs, CONFIGURED_IV[idx]));
+        let preconfigured_state = preconfigured_state.map(|el| Word {
+            inner: el.to_le_bytes(cs),
         });
-        let preconfigured_state = preconfigured_state.map(|el| Word { inner: el.to_le_bytes(cs) });
 
-        let extended_state: [Word<F>; BLAKE2S_EXTENDED_STATE_WIDTH_IN_U32_WORDS] = std::array::from_fn(|idx| {
-            if idx < BLAKE2S_STATE_WIDTH_IN_U32_WORDS {
-                preconfigured_state[idx]
-            } else {
-                Word {
-                    inner: [UInt8::zero(cs); 4],
+        let extended_state: [Word<F>; BLAKE2S_EXTENDED_STATE_WIDTH_IN_U32_WORDS] =
+            std::array::from_fn(|idx| {
+                if idx < BLAKE2S_STATE_WIDTH_IN_U32_WORDS {
+                    preconfigured_state[idx]
+                } else {
+                    Word {
+                        inner: [UInt8::zero(cs); 4],
+                    }
                 }
-            }
-        });
-        let input_buffer: [Word<F>; BLAKE2S_BLOCK_SIZE_U32_WORDS] = std::array::from_fn(|idx| {
-            Word {
+            });
+        let input_buffer: [Word<F>; BLAKE2S_BLOCK_SIZE_U32_WORDS] =
+            std::array::from_fn(|idx| Word {
                 inner: [UInt8::zero(cs); 4],
-            }
-        });
+            });
         let t = 0u32;
 
         Self {
@@ -73,7 +68,9 @@ impl<F: SmallField> Blake2sStateGate<F> {
         //     .map(|el| UInt32::from_le_bytes(cs,el.inner))
         //     .collect::<Vec<_>>()
         //     .try_into().unwrap()
-        self.extended_state[..BLAKE2S_DIGEST_SIZE_U32_WORDS].try_into().unwrap()
+        self.extended_state[..BLAKE2S_DIGEST_SIZE_U32_WORDS]
+            .try_into()
+            .unwrap()
     }
 
     pub fn reset(&mut self) {
@@ -83,7 +80,7 @@ impl<F: SmallField> Blake2sStateGate<F> {
             .zip(self.preconfigured_state.iter())
             .for_each(|(dst, src)| {
                 dst.inner = src.inner;
-        });
+            });
     }
 
     pub fn run_round_function<CS: ConstraintSystem<F>, const REDUCED_ROUNDS: bool>(
@@ -104,7 +101,10 @@ impl<F: SmallField> Blake2sStateGate<F> {
         );
     }
 
-    pub fn spec_run_sinlge_round_into_destination<CS: ConstraintSystem<F>, const REDUCED_ROUNDS: bool>(
+    pub fn spec_run_sinlge_round_into_destination<
+        CS: ConstraintSystem<F>,
+        const REDUCED_ROUNDS: bool,
+    >(
         &mut self,
         cs: &mut CS,
         block_len: usize,
@@ -112,9 +112,7 @@ impl<F: SmallField> Blake2sStateGate<F> {
     ) {
         todo!()
     }
-    
 }
-
 
 pub fn blake2s_reduced_round_function<F: SmallField, CS: ConstraintSystem<F>>(
     cs: &mut CS,

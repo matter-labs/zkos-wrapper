@@ -1,7 +1,7 @@
 #![feature(allocator_api)]
 #![feature(array_chunks)]
 
-mod verifier;
+pub mod verifier;
 
 #[cfg(test)]
 mod tests;
