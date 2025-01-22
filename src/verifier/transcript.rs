@@ -27,7 +27,7 @@ impl Blake2sWrappedTranscript {
         let mut offset = 0;
         hasher.reset();
         Self::commit_inner(cs, hasher, input, &mut offset);
-        // Self::flush(cs, hasher, offset);
+        Self::flush(cs, hasher, offset);
 
         SeedWrapped(hasher.read_state_for_output())
     }

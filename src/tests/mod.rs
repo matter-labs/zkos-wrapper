@@ -1,4 +1,5 @@
 use crate::verifier::transcript::*;
+
 use boojum::{
     blake2::*, config::CSConfig, cs::{gates::{
         ConstantsAllocatorGate, ReductionGate, U32TriAddCarryAsChunkGate, UIntXAddGate,
@@ -19,6 +20,7 @@ use boojum::cs::gates::FmaGateInBaseFieldWithoutConstant;
 use boojum::cs::gates::NopGate;
 use boojum::cs::gates::DotProductGate;
 use boojum::cs::gates::SelectionGate;
+use boojum::cs::gates::ZeroCheckGate;
 use boojum::cs::LookupParameters;
 use boojum::cs::cs_builder_reference::CsReferenceImplementationBuilder;
 use boojum::gadgets::tables::RangeCheck15BitsTable;
@@ -243,6 +245,10 @@ fn test_transcript_circuit(len: usize) {
         builder,
         GatePlacementStrategy::UseGeneralPurposeColumns,
     );
+    let builder = NopGate::configure_builder(
+        builder,
+        GatePlacementStrategy::UseGeneralPurposeColumns,
+    );
 
     let mut owned_cs = builder.build(CircuitResolverOpts::new(1 << 20));
 
@@ -312,7 +318,7 @@ fn test_transcript_circuit(len: usize) {
     
     let output = output.witness_hook(cs)().unwrap();
     let reference_output = reference_output.as_slice();
-    // assert_eq!(output, reference_output);
+    assert_eq!(output, reference_output);
 
     drop(cs);
     let worker = boojum::worker::Worker::new_with_num_threads(8);
@@ -412,6 +418,7 @@ use zkos_verifier::prover::definitions::LeafInclusionVerifier;
 use zkos_verifier::verifier_common::non_determinism_source::NonDeterminismSource;
 use zkos_verifier::verifier_common::{DefaultNonDeterminismSource, DefaultLeafInclusionVerifier, ProofPublicInputs, ProofOutput};
 use zkos_verifier::concrete::skeleton_instance::{ProofSkeletonInstance, QueryValuesInstance};
+use zkos_verifier::prover::definitions::Blake2sForEverythingVerifier;
 
 #[test]
 fn allocate_verifier_structs() {
@@ -474,8 +481,13 @@ fn allocate_verifier_structs() {
         builder,
         GatePlacementStrategy::UseGeneralPurposeColumns,
     );
+    let builder = ZeroCheckGate::configure_builder(
+        builder,
+        GatePlacementStrategy::UseGeneralPurposeColumns,
+        false
+    );
 
-    let mut owned_cs = builder.build(CircuitResolverOpts::new(1 << 20));
+    let mut owned_cs = builder.build(CircuitResolverOpts::new(1 << 25));
 
     // add tables
     let table = create_range_check_16_bits_table::<3, F>();
@@ -499,12 +511,11 @@ fn allocate_verifier_structs() {
     let cs = &mut owned_cs;
 
     // read proof and set iterator
-    // verify_proof(&String::from("proof_1"));
     crate::prepare_proof::verify_proof_and_set_iterator(&"/Users/superoles/Desktop/MatterLabs/RiskWrapper/air_compiler/prover/delegation_proof".to_string());
 
     // prepare verifier structs
     let (skeleton, queries) = unsafe {
-        get_prove_parts::<DefaultNonDeterminismSource, DefaultLeafInclusionVerifier>()
+        get_prove_parts::<DefaultNonDeterminismSource, Blake2sForEverythingVerifier>()
     };
 
     let skeleton = WrappedProofSkeleton::allocate(cs, skeleton);
