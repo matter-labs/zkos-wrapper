@@ -1,42 +1,40 @@
-use std::result;
-use boojum::gadgets::traits::witnessable::WitnessHookable;
-use boojum::field::SmallField;
-use boojum::gadgets::num::Num;
-use boojum::gadgets::u32::UInt32;
-use boojum::gadgets::blake2s::mixing_function::Word;
-use boojum::gadgets::u8::UInt8;
+use boojum::cs::Place;
 use boojum::cs::traits::cs::ConstraintSystem;
+use boojum::field::SmallField;
+use boojum::gadgets::blake2s::mixing_function::Word;
+use boojum::gadgets::boolean::Boolean;
+use boojum::gadgets::mersenne_field::MersenneField;
 use boojum::gadgets::mersenne_field::fourth_ext::MersenneQuartic;
 use boojum::gadgets::mersenne_field::second_ext::MersenneComplex;
-use boojum::gadgets::mersenne_field::MersenneField;
-use boojum::gadgets::boolean::Boolean;
-use boojum::gadgets::u16::UInt16;
-use boojum::gadgets::traits::selectable::Selectable;
+use boojum::gadgets::num::Num;
 use boojum::gadgets::traits::allocatable::CSAllocatable;
-use boojum::cs::Place;
+use boojum::gadgets::traits::selectable::Selectable;
+use boojum::gadgets::traits::witnessable::WitnessHookable;
+use boojum::gadgets::u8::UInt8;
+use boojum::gadgets::u16::UInt16;
+use boojum::gadgets::u32::UInt32;
+use std::result;
 
-use zkos_verifier::concrete::size_constants::*;
-use zkos_verifier::prover::definitions::*;
-use zkos_verifier::prover::cs::definitions::*;
-use zkos_verifier::skeleton::{ProofSkeleton, QueryValues};
-use zkos_verifier::field::*;
-use zkos_verifier::verifier_common::{ProofPublicInputs, ProofOutput};
-use zkos_verifier::verifier_common::non_determinism_source::NonDeterminismSource;
 use zkos_verifier::blake2s_u32::*;
+use zkos_verifier::concrete::size_constants::*;
+use zkos_verifier::field::*;
+use zkos_verifier::prover::cs::definitions::*;
+use zkos_verifier::prover::definitions::*;
+use zkos_verifier::skeleton::{ProofSkeleton, QueryValues};
+use zkos_verifier::verifier_common::non_determinism_source::NonDeterminismSource;
+use zkos_verifier::verifier_common::{ProofOutput, ProofPublicInputs};
 
+pub mod blake2s_reduced;
 pub(crate) mod prover_structs;
-pub(crate) mod verifier_traits;
 pub mod transcript;
 mod transcript_opt;
-pub mod blake2s_reduced;
+pub(crate) mod verifier_traits;
 
-mod risc_v_cycles_circuit_layout;
-
+pub use blake2s_reduced::*;
 use prover_structs::*;
-use verifier_traits::*;
 pub use transcript::*;
 use transcript_opt::*;
-pub use blake2s_reduced::*;
+use verifier_traits::*;
 
 pub fn verify<
     F: SmallField,
@@ -46,7 +44,7 @@ pub fn verify<
 >(
     cs: &mut CS,
     proof_state_dst: &mut WrappedProofOutput<
-        F, 
+        F,
         TREE_CAP_SIZE,
         NUM_COSETS,
         NUM_DELEGATION_CHALLENGES,
@@ -65,7 +63,8 @@ pub fn verify<
     );
 
     // draw local lookup argument challenges
-    const NUM_LOOKUP_CHALLENGES: usize = ((NUM_LOOKUP_ARGUMENT_LINEARIZATION_CHALLENGES + 1) * 4).next_multiple_of(BLAKE2S_DIGEST_SIZE_U32_WORDS);
+    const NUM_LOOKUP_CHALLENGES: usize = ((NUM_LOOKUP_ARGUMENT_LINEARIZATION_CHALLENGES + 1) * 4)
+        .next_multiple_of(BLAKE2S_DIGEST_SIZE_U32_WORDS);
     let mut transcript_challenges = [UInt32::zero(cs); NUM_LOOKUP_CHALLENGES];
     Blake2sWrappedTranscript::draw_randomness_using_hasher(
         cs,
@@ -75,8 +74,8 @@ pub fn verify<
     );
 
     let mut it = transcript_challenges.array_chunks::<4>();
-    let lookup_argument_linearization_challenges: [MersenneQuartic<F>; NUM_LOOKUP_ARGUMENT_LINEARIZATION_CHALLENGES] 
-        = core::array::from_fn(|_| {
+    let lookup_argument_linearization_challenges: [MersenneQuartic<F>;
+        NUM_LOOKUP_ARGUMENT_LINEARIZATION_CHALLENGES] = core::array::from_fn(|_| {
         MersenneQuartic::from_coeffs(
             it.next()
                 .unwrap()
@@ -98,7 +97,8 @@ pub fn verify<
     );
 
     // draw quotient linearization challenges
-    let mut transcript_challenges = [UInt32::zero(cs); (2usize * 4).next_multiple_of(BLAKE2S_DIGEST_SIZE_U32_WORDS)];
+    let mut transcript_challenges =
+        [UInt32::zero(cs); (2usize * 4).next_multiple_of(BLAKE2S_DIGEST_SIZE_U32_WORDS)];
     Blake2sWrappedTranscript::draw_randomness_using_hasher(
         cs,
         &mut transcript_hasher,
@@ -128,7 +128,8 @@ pub fn verify<
     );
 
     // draw DEEP poly linearization challenge
-    let mut transcript_challenges = [UInt32::zero(cs); (1usize * 4).next_multiple_of(BLAKE2S_DIGEST_SIZE_U32_WORDS)];
+    let mut transcript_challenges =
+        [UInt32::zero(cs); (1usize * 4).next_multiple_of(BLAKE2S_DIGEST_SIZE_U32_WORDS)];
     Blake2sWrappedTranscript::draw_randomness_using_hasher(
         cs,
         &mut transcript_hasher,
@@ -152,7 +153,8 @@ pub fn verify<
     );
 
     // draw initial challenge for DEEP-poly
-    let mut transcript_challenges = [UInt32::zero(cs); (1usize * 4).next_multiple_of(BLAKE2S_DIGEST_SIZE_U32_WORDS)];
+    let mut transcript_challenges =
+        [UInt32::zero(cs); (1usize * 4).next_multiple_of(BLAKE2S_DIGEST_SIZE_U32_WORDS)];
     Blake2sWrappedTranscript::draw_randomness_using_hasher(
         cs,
         &mut transcript_hasher,
@@ -175,9 +177,15 @@ pub fn verify<
         .into_iter()
         .zip(fri_folding_challenges.iter_mut())
     {
-        Blake2sWrappedTranscript::commit_with_seed_using_hasher(cs, &mut transcript_hasher, &mut seed, &caps);
+        Blake2sWrappedTranscript::commit_with_seed_using_hasher(
+            cs,
+            &mut transcript_hasher,
+            &mut seed,
+            &caps,
+        );
 
-        let mut transcript_challenges = [UInt32::zero(cs); (1usize * 4).next_multiple_of(BLAKE2S_DIGEST_SIZE_U32_WORDS)];
+        let mut transcript_challenges =
+            [UInt32::zero(cs); (1usize * 4).next_multiple_of(BLAKE2S_DIGEST_SIZE_U32_WORDS)];
         Blake2sWrappedTranscript::draw_randomness_using_hasher(
             cs,
             &mut transcript_hasher,
@@ -202,7 +210,8 @@ pub fn verify<
             &skeleton.transcript_elements_last_fri_step_leaf_values(),
         );
 
-        let mut transcript_challenges = [UInt32::zero(cs); (1usize * 4).next_multiple_of(BLAKE2S_DIGEST_SIZE_U32_WORDS)];
+        let mut transcript_challenges =
+            [UInt32::zero(cs); (1usize * 4).next_multiple_of(BLAKE2S_DIGEST_SIZE_U32_WORDS)];
         Blake2sWrappedTranscript::draw_randomness_using_hasher(
             cs,
             &mut transcript_hasher,
@@ -236,7 +245,12 @@ pub fn verify<
 
     // now we need to draw enough bits to form query indexes
     let mut indexes_bits = [UInt32::<F>::zero(cs); NUM_REQUIRED_WORDS_FOR_QUERY_INDEXES];
-    Blake2sWrappedTranscript::draw_randomness_using_hasher(cs, &mut transcript_hasher, &mut seed, &mut indexes_bits);
+    Blake2sWrappedTranscript::draw_randomness_using_hasher(
+        cs,
+        &mut transcript_hasher,
+        &mut seed,
+        &mut indexes_bits,
+    );
 
     // NOTE: when we will use queries below, we MUST check that query set's index is exactly the index we draw from transcript.
     // Indexes in `queries` are already checked to be included in merkle tree caps declared in `skeleton`
@@ -248,8 +262,14 @@ pub fn verify<
 
     // quotient evaluation at z
 
-    let omega = MersenneComplex::allocate_constant(cs, Mersenne31Complex::TWO_ADICITY_GENERATORS[TRACE_LEN_LOG2]);
-    let omega_inv = MersenneComplex::allocate_constant(cs, Mersenne31Complex::TWO_ADICITY_GENERATORS_INVERSED[TRACE_LEN_LOG2]);
+    let omega = MersenneComplex::allocate_constant(
+        cs,
+        Mersenne31Complex::TWO_ADICITY_GENERATORS[TRACE_LEN_LOG2],
+    );
+    let omega_inv = MersenneComplex::allocate_constant(
+        cs,
+        Mersenne31Complex::TWO_ADICITY_GENERATORS_INVERSED[TRACE_LEN_LOG2],
+    );
 
     let mut z_omega = z.mul_by_2nd_ext(cs, &omega);
 
@@ -306,7 +326,10 @@ pub fn verify<
         let mut vanishing = z.exp_power_of_2(cs, TRACE_LEN_LOG2);
         vanishing.x.x = vanishing.x.x.sub(cs, &one_base);
 
-        let omega_inv_squared = MersenneComplex::allocate_constant(cs, Mersenne31Complex::TWO_ADICITY_GENERATORS_INVERSED[TRACE_LEN_LOG2 - 1]);
+        let omega_inv_squared = MersenneComplex::allocate_constant(
+            cs,
+            Mersenne31Complex::TWO_ADICITY_GENERATORS_INVERSED[TRACE_LEN_LOG2 - 1],
+        );
 
         let mut z_minus_omega_inv = z;
         z_minus_omega_inv.x = z_minus_omega_inv.x.sub(cs, &omega_inv);
@@ -322,7 +345,8 @@ pub fn verify<
 
         // one before last row is 1/(x - omega^-2)
         let mut one_before_last_row_to_inverse = z;
-        one_before_last_row_to_inverse.x = one_before_last_row_to_inverse.x.sub(cs, &omega_inv_squared);
+        one_before_last_row_to_inverse.x =
+            one_before_last_row_to_inverse.x.sub(cs, &omega_inv_squared);
 
         // last row is 1/(x - omega^-1)
         let mut last_row_to_inverse = z;
@@ -346,13 +370,20 @@ pub fn verify<
             Boolean::enforce_equal(cs, &is_zero, &boolean_false);
         }
 
-        let [z_inv, vanishing_inv, first_row, one_before_last_row, last_row] = to_batch_inverse;
+        let [
+            z_inv,
+            vanishing_inv,
+            first_row,
+            one_before_last_row,
+            last_row,
+        ] = to_batch_inverse;
 
         // everywhere except last row (x - omega^-1) / (x^n - 1)
         let mut everywhere_except_last = z_minus_omega_inv.mul(cs, &vanishing_inv);
 
         // everywhere except last two rows
-        let mut everywhere_except_last_two_rows = everywhere_except_last.mul(cs, &z_minus_omega_inv_squared);
+        let mut everywhere_except_last_two_rows =
+            everywhere_except_last.mul(cs, &z_minus_omega_inv_squared);
 
         let mut last_row_and_zero = last_row.mul(cs, &z_inv);
 
@@ -383,8 +414,8 @@ pub fn verify<
                 skeleton.delegation_argument_challenges[0]
             } else {
                 WrappedExternalDelegationArgumentChallenges {
-                    delegation_argument_linearization_challenges:
-                        [MersenneQuartic::zero(cs); NUM_DELEGATION_ARGUMENT_LINEARIZATION_CHALLENGES],
+                    delegation_argument_linearization_challenges: [MersenneQuartic::zero(cs);
+                        NUM_DELEGATION_ARGUMENT_LINEARIZATION_CHALLENGES],
                     delegation_argument_gamma: MersenneQuartic::zero(cs),
                 }
             };
@@ -399,11 +430,19 @@ pub fn verify<
         };
 
         let shift = UInt32::allocate_constant(cs, 1 << CIRCUIT_SEQUENCE_BITS_SHIFT as u32);
-        let memory_timestamp_high_from_circuit_sequence = skeleton.circuit_sequence_idx.non_widening_mul(cs, &shift);
-        let memory_timestamp_high_from_circuit_sequence = MersenneField::from_uint32_with_reduction(cs, memory_timestamp_high_from_circuit_sequence);
+        let memory_timestamp_high_from_circuit_sequence =
+            skeleton.circuit_sequence_idx.non_widening_mul(cs, &shift);
+        let memory_timestamp_high_from_circuit_sequence = MersenneField::from_uint32_with_reduction(
+            cs,
+            memory_timestamp_high_from_circuit_sequence,
+        );
 
         // TODO: should we check if delegation type is valid or should we reduce?
-        let delegation_type = MersenneField::from_variable_checked(cs, skeleton.delegation_type.get_variable(), false);
+        let delegation_type = MersenneField::from_variable_checked(
+            cs,
+            skeleton.delegation_type.get_variable(),
+            false,
+        );
 
         // we need to show the sum of the values everywhere except the last row,
         // so we show that intermediate poly - interpolant((0, 0), (omega^-1, `value``)) is divisible
@@ -411,8 +450,10 @@ pub fn verify<
         // all the domain is 0
 
         // interpolant is literaly 1/omega^-1 * value * X (as one can see it's 0 at 0 and `value` at omega^-1)
-        let mut delegation_argument_interpolant_linear_coeff = delegation_argument_accumulator_sum.mul_by_2nd_ext(cs, &omega);
-        delegation_argument_interpolant_linear_coeff = delegation_argument_interpolant_linear_coeff.negated(cs);
+        let mut delegation_argument_interpolant_linear_coeff =
+            delegation_argument_accumulator_sum.mul_by_2nd_ext(cs, &omega);
+        delegation_argument_interpolant_linear_coeff =
+            delegation_argument_interpolant_linear_coeff.negated(cs);
 
         // use crate::concrete::evaluate_quotient;
         // let quotient_recomputed_value = evaluate_quotient(
@@ -451,7 +492,6 @@ pub fn verify<
         // );
     }
 
-
     {
         // For the purposes of FRI below we consider query index as indexing into coset (highest bits) and domain (lowest bits).
         // Both indexes are bitreversed. When we will perform FRI folding we will need to perform an operation like (a - b)/eval_point(a).
@@ -466,18 +506,26 @@ pub fn verify<
 
         let mut extra_factor_for_accumulation_at_z_omega = MersenneQuartic::zero(cs);
 
-        let (precompute_with_evals_at_z, precompute_with_evals_at_z_omega) = precompute_for_consistency_checks(
-            cs,
-            &skeleton,
-            &deep_poly_alpha,
-            &mut extra_factor_for_accumulation_at_z_omega,
-        );
+        let (precompute_with_evals_at_z, precompute_with_evals_at_z_omega) =
+            precompute_for_consistency_checks(
+                cs,
+                &skeleton,
+                &deep_poly_alpha,
+                &mut extra_factor_for_accumulation_at_z_omega,
+            );
 
-        let omega = MersenneComplex::allocate_constant(cs, Mersenne31Complex::TWO_ADICITY_GENERATORS[TRACE_LEN_LOG2]);
-        let tau = MersenneComplex::allocate_constant(cs, 
-            Mersenne31Complex::TWO_ADICITY_GENERATORS[TRACE_LEN_LOG2 + FRI_FACTOR_LOG2]);
-        let tau_inv = MersenneComplex::allocate_constant(cs,
-            Mersenne31Complex::TWO_ADICITY_GENERATORS_INVERSED[TRACE_LEN_LOG2 + FRI_FACTOR_LOG2]);
+        let omega = MersenneComplex::allocate_constant(
+            cs,
+            Mersenne31Complex::TWO_ADICITY_GENERATORS[TRACE_LEN_LOG2],
+        );
+        let tau = MersenneComplex::allocate_constant(
+            cs,
+            Mersenne31Complex::TWO_ADICITY_GENERATORS[TRACE_LEN_LOG2 + FRI_FACTOR_LOG2],
+        );
+        let tau_inv = MersenneComplex::allocate_constant(
+            cs,
+            Mersenne31Complex::TWO_ADICITY_GENERATORS_INVERSED[TRACE_LEN_LOG2 + FRI_FACTOR_LOG2],
+        );
 
         let mut taus = [MersenneComplex::zero(cs); 1 << FRI_FACTOR_LOG2];
         taus[0] = MersenneComplex::one(cs);
@@ -489,13 +537,19 @@ pub fn verify<
 
         let mut taus_in_domain_by_half = [MersenneComplex::zero(cs); 1 << FRI_FACTOR_LOG2];
         taus_in_domain_by_half[0] = MersenneComplex::one(cs);
-        taus_in_domain_by_half[1] = MersenneComplex::allocate_constant(cs,
-            Mersenne31Complex::TWO_ADICITY_GENERATORS[TRACE_LEN_LOG2 + FRI_FACTOR_LOG2 - (TRACE_LEN_LOG2 - 1)]);
+        taus_in_domain_by_half[1] = MersenneComplex::allocate_constant(
+            cs,
+            Mersenne31Complex::TWO_ADICITY_GENERATORS
+                [TRACE_LEN_LOG2 + FRI_FACTOR_LOG2 - (TRACE_LEN_LOG2 - 1)],
+        );
 
         let mut taus_in_domain_by_half_inversed = [MersenneComplex::zero(cs); 1 << FRI_FACTOR_LOG2];
         taus_in_domain_by_half_inversed[0] = MersenneComplex::one(cs);
-        taus_in_domain_by_half_inversed[1] = MersenneComplex::allocate_constant(cs,
-            Mersenne31Complex::TWO_ADICITY_GENERATORS_INVERSED[TRACE_LEN_LOG2 + FRI_FACTOR_LOG2 - (TRACE_LEN_LOG2 - 1)]);
+        taus_in_domain_by_half_inversed[1] = MersenneComplex::allocate_constant(
+            cs,
+            Mersenne31Complex::TWO_ADICITY_GENERATORS_INVERSED
+                [TRACE_LEN_LOG2 + FRI_FACTOR_LOG2 - (TRACE_LEN_LOG2 - 1)],
+        );
 
         // here we will precompute max powers even needed
         let fri_folding_challenges_powers = fri_folding_challenges.map(|el| {
@@ -519,7 +573,10 @@ pub fn verify<
             powers.copy_from_slice(&F::SHIFTS[..BITS_FOR_QUERY_INDEX]);
             boojum::gadgets::impls::lc::linear_combination_collapse(
                 cs,
-                &mut query_index_bits.iter().map(|bit| bit.get_variable()).zip(powers),
+                &mut query_index_bits
+                    .iter()
+                    .map(|bit| bit.get_variable())
+                    .zip(powers),
                 Some(query.query_index.get_variable()),
             );
 
@@ -531,12 +588,8 @@ pub fn verify<
             let mut evaluation_point = omega.pow(cs, &domain_index_bits);
 
             assert!(coset_index_bits.len() == 1);
-            let tau_power = MersenneComplex::conditionally_select(
-                cs,
-                coset_index_bits[0],
-                &taus[1],
-                &taus[0],
-            );
+            let tau_power =
+                MersenneComplex::conditionally_select(cs, coset_index_bits[0], &taus[1], &taus[0]);
 
             evaluation_point = evaluation_point.mul(cs, &tau_power);
 
@@ -603,7 +656,8 @@ pub fn verify<
                     let leaf_size_in_ext4_elements = leaf_size / 4;
                     let leaf_size_in_ext4_elements_log = leaf_size_log - 2;
                     // we should peek into the skeleton for all leaf values
-                    let all_leaf_values_in_coset = <[MersenneQuartic<F>; LAST_FRI_STEP_LEAFS_TOTAL_SIZE_PER_COSET]>::conditionally_select(
+                    let all_leaf_values_in_coset = <[MersenneQuartic<F>;
+                        LAST_FRI_STEP_LEAFS_TOTAL_SIZE_PER_COSET]>::conditionally_select(
                         cs,
                         coset_index_bits[0],
                         &skeleton.fri_final_step_leafs[1],
@@ -612,11 +666,13 @@ pub fn verify<
 
                     let leaf_index_bits = &tree_index_bits[leaf_size_in_ext4_elements_log..];
 
-                    let num_non_zero_bits = (all_leaf_values_in_coset.len() / leaf_size_in_ext4_elements).trailing_zeros() as usize;
+                    let num_non_zero_bits = (all_leaf_values_in_coset.len()
+                        / leaf_size_in_ext4_elements)
+                        .trailing_zeros() as usize;
                     let leaf_projection = get_chunk_with_index_bits(
                         cs,
                         &all_leaf_values_in_coset,
-                        &leaf_index_bits[..num_non_zero_bits]
+                        &leaf_index_bits[..num_non_zero_bits],
                     );
                     for bit in leaf_index_bits[num_non_zero_bits..].iter() {
                         let boolean_false = Boolean::allocated_constant(cs, false);
@@ -625,7 +681,10 @@ pub fn verify<
 
                     assert_eq!(leaf_projection.len(), leaf_size_in_ext4_elements);
 
-                    let leaf_projection: Vec<_> = leaf_projection.into_iter().flat_map(|el| el.into_coeffs()).collect();
+                    let leaf_projection: Vec<_> = leaf_projection
+                        .into_iter()
+                        .flat_map(|el| el.into_coeffs())
+                        .collect();
 
                     leaf_projection
                 } else {
@@ -755,10 +814,7 @@ pub fn verify<
     }
 }
 
-fn precompute_for_consistency_checks<
-    F: SmallField,
-    CS: ConstraintSystem<F>
->(
+fn precompute_for_consistency_checks<F: SmallField, CS: ConstraintSystem<F>>(
     cs: &mut CS,
     skeleton: &WrappedProofSkeletonInstance<F>,
     deep_poly_alpha: &MersenneQuartic<F>,
@@ -774,7 +830,7 @@ fn precompute_for_consistency_checks<
         precompute_with_evals_at_z = deep_poly_alpha.mul_and_add(
             cs,
             &precompute_with_evals_at_z,
-            &skeleton.openings_at_z[i]
+            &skeleton.openings_at_z[i],
         );
     }
 
@@ -785,13 +841,14 @@ fn precompute_for_consistency_checks<
         precompute_with_evals_at_z_omega = deep_poly_alpha.mul_and_add(
             cs,
             &precompute_with_evals_at_z_omega,
-            &skeleton.openings_at_z_omega[i]
+            &skeleton.openings_at_z_omega[i],
         );
     }
 
     // multiply by extra power
     *extra_factor_for_accumulation_at_z_omega = deep_poly_alpha.pow_const(cs, num_evals_at_z);
-    precompute_with_evals_at_z_omega = precompute_with_evals_at_z_omega.mul(cs, extra_factor_for_accumulation_at_z_omega);
+    precompute_with_evals_at_z_omega =
+        precompute_with_evals_at_z_omega.mul(cs, extra_factor_for_accumulation_at_z_omega);
 
     (precompute_with_evals_at_z, precompute_with_evals_at_z_omega)
 }
@@ -824,7 +881,8 @@ fn accumulate_over_row_for_consistency_check<F: SmallField, CS: ConstraintSystem
     }
 
     for leaf_el in query.stage_2_leaf[VERIFIER_COMPILED_LAYOUT.stage_2_layout.ext4_polys_offset..]
-        .array_chunks::<4>().rev()
+        .array_chunks::<4>()
+        .rev()
     {
         let leaf_el = MersenneQuartic::from_coeffs(*leaf_el);
         accumulated_at_z = accumulated_at_z.mul_and_add(cs, &deep_poly_alpha, &leaf_el);
@@ -833,7 +891,8 @@ fn accumulate_over_row_for_consistency_check<F: SmallField, CS: ConstraintSystem
     for leaf_el in query.stage_2_leaf[..VERIFIER_COMPILED_LAYOUT
         .stage_2_layout
         .num_base_field_polys()]
-        .iter().rev()
+        .iter()
+        .rev()
     {
         let leaf_el = MersenneQuartic::from_base(cs, *leaf_el);
         accumulated_at_z = accumulated_at_z.mul_and_add(cs, &deep_poly_alpha, &leaf_el);
@@ -888,18 +947,19 @@ fn accumulate_over_row_for_consistency_check<F: SmallField, CS: ConstraintSystem
         accumulated_at_z_omega = accumulated_at_z_omega.mul_and_add(cs, &deep_poly_alpha, &leaf_el);
     }
 
-    accumulated_at_z_omega = accumulated_at_z_omega.mul(cs, &extra_factor_for_accumulation_at_z_omega);
+    accumulated_at_z_omega =
+        accumulated_at_z_omega.mul(cs, &extra_factor_for_accumulation_at_z_omega);
 
     // all terms are linear over leaf values, so it's enough to scale once
     accumulated_at_z_omega.x = accumulated_at_z_omega.x.mul(cs, &tau_in_domain_by_half);
     accumulated_at_z_omega.y = accumulated_at_z_omega.y.mul(cs, &tau_in_domain_by_half);
 
-    let mut simulated_from_z_omega = precompute_with_evals_at_z_omega.sub(cs, &accumulated_at_z_omega);
+    let mut simulated_from_z_omega =
+        precompute_with_evals_at_z_omega.sub(cs, &accumulated_at_z_omega);
     simulated_from_z_omega = simulated_from_z_omega.mul(cs, &divisor_for_z_omega);
 
     simulated_from_z.add(cs, &simulated_from_z_omega)
 }
-
 
 fn evaluate_monomial_form<F: SmallField, CS: ConstraintSystem<F>>(
     cs: &mut CS,
@@ -915,7 +975,8 @@ fn evaluate_monomial_form<F: SmallField, CS: ConstraintSystem<F>>(
     let evaluation_point = MersenneQuartic::from_complex(cs, *evaluation_point);
     while i > 0 {
         i -= 1;
-        value_from_monomial_form = value_from_monomial_form.mul_and_add(cs, &evaluation_point, &monomial_coeffs[i]);
+        value_from_monomial_form =
+            value_from_monomial_form.mul_and_add(cs, &evaluation_point, &monomial_coeffs[i]);
     }
 
     value_from_monomial_form
@@ -926,7 +987,10 @@ fn get_chunk_with_index_bits<F: SmallField, CS: ConstraintSystem<F>, T: Selectab
     src: &[T],
     index_bits: &[Boolean<F>],
 ) -> Vec<T> {
-    assert!(src.len() % (1 << index_bits.len()) == 0, "src should contain 2^index_bits.len() equal chunks");
+    assert!(
+        src.len() % (1 << index_bits.len()) == 0,
+        "src should contain 2^index_bits.len() equal chunks"
+    );
 
     let mut result = src.to_vec();
 
@@ -935,14 +999,12 @@ fn get_chunk_with_index_bits<F: SmallField, CS: ConstraintSystem<F>, T: Selectab
         let mut current = Vec::with_capacity(current_length);
 
         for idx in 0..current_length {
-            current.push(
-                T::conditionally_select(
-                    cs,
-                    bit.clone(),
-                    &result[idx + current_length],
-                    &result[idx],
-                )
-            );
+            current.push(T::conditionally_select(
+                cs,
+                bit.clone(),
+                &result[idx + current_length],
+                &result[idx],
+            ));
         }
 
         result = current;
@@ -954,7 +1016,7 @@ fn get_chunk_with_index_bits<F: SmallField, CS: ConstraintSystem<F>, T: Selectab
 pub fn fri_fold_by_log_n<
     F: SmallField,
     CS: ConstraintSystem<F>,
-    const FOLDING_DEGREE_LOG2: usize
+    const FOLDING_DEGREE_LOG2: usize,
 >(
     cs: &mut CS,
     expected_value: &mut MersenneQuartic<F>,
@@ -975,8 +1037,10 @@ pub fn fri_fold_by_log_n<
     debug_assert_eq!(leaf.len(), (1 << FOLDING_DEGREE_LOG2) * 4);
 
     let eval_points_num_bits = *domain_size_log_2 - FOLDING_DEGREE_LOG2;
-    let generator_inv = MersenneComplex::allocate_constant(cs,
-        Mersenne31Complex::TWO_ADICITY_GENERATORS_INVERSED[*domain_size_log_2]);
+    let generator_inv = MersenneComplex::allocate_constant(
+        cs,
+        Mersenne31Complex::TWO_ADICITY_GENERATORS_INVERSED[*domain_size_log_2],
+    );
 
     *domain_size_log_2 -= FOLDING_DEGREE_LOG2;
 
@@ -989,14 +1053,12 @@ pub fn fri_fold_by_log_n<
     }
 
     let expected_index_in_rs_code_word_leaf_bits = tree_index_bits[..FOLDING_DEGREE_LOG2].to_vec();
-    let value_at_expected_index = get_chunk_with_index_bits(
-        cs,
-        &leaf,
-        &expected_index_in_rs_code_word_leaf_bits,
-    );
+    let value_at_expected_index =
+        get_chunk_with_index_bits(cs, &leaf, &expected_index_in_rs_code_word_leaf_bits);
     assert_eq!(value_at_expected_index.len(), 4);
 
-    let value_at_expected_index = MersenneQuartic::from_coeffs(value_at_expected_index.try_into().unwrap());
+    let value_at_expected_index =
+        MersenneQuartic::from_coeffs(value_at_expected_index.try_into().unwrap());
     // check that our simulated value is actually in the leaf
 
     expected_value.enforce_equal(cs, &value_at_expected_index);
@@ -1036,15 +1098,9 @@ pub fn fri_fold_by_log_n<
         for i in 0..1 << (FOLDING_DEGREE_LOG2 - round - 1) {
             let root = folding_evals_points_inversed[i * roots_stride];
             let (a, b) = if round == 0 {
-                (
-                    leaf_parsed[2 * i],
-                    leaf_parsed[2 * i + 1],
-                )
+                (leaf_parsed[2 * i], leaf_parsed[2 * i + 1])
             } else {
-                (
-                    input_buffer[2 * i],
-                    input_buffer[2 * i + 1],
-                )
+                (input_buffer[2 * i], input_buffer[2 * i + 1])
             };
 
             let mut t = a.sub(cs, &b);

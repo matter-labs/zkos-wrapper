@@ -1,35 +1,46 @@
 use crate::verifier::transcript::*;
 
-use boojum::{
-    blake2::*, config::CSConfig, cs::{gates::{
-        ConstantsAllocatorGate, ReductionGate, U32TriAddCarryAsChunkGate, UIntXAddGate,
-    }, traits::{cs::ConstraintSystem, gate::GatePlacementStrategy}, CSGeometry}, dag::CircuitResolverOpts, gadgets::{blake2s::blake2s, tables::{
-        byte_split::{create_byte_split_table, ByteSplitTable},
-        xor8::{create_xor8_table, Xor8Table},
-    }, traits::witnessable::WitnessHookable, u32::UInt32, u8::UInt8},
-    gadgets::blake2s::mixing_function::Word,
-    gadgets::traits::allocatable::CSAllocatable,
-    gadgets::blake2s::round_function::Blake2sControl,
-};
-use std::alloc::Global;
 use crate::verifier::Blake2sStateGate;
 use crate::verifier::blake2s_reduced_round_function;
-use zkos_verifier::{blake2s_u32::CONFIGURED_IV, prover::cs::cs::circuit};
-use std::mem::MaybeUninit;
-use boojum::cs::gates::FmaGateInBaseFieldWithoutConstant;
-use boojum::cs::gates::NopGate;
-use boojum::cs::gates::DotProductGate;
-use boojum::cs::gates::SelectionGate;
-use boojum::cs::gates::ZeroCheckGate;
 use boojum::cs::LookupParameters;
 use boojum::cs::cs_builder_reference::CsReferenceImplementationBuilder;
+use boojum::cs::gates::DotProductGate;
+use boojum::cs::gates::FmaGateInBaseFieldWithoutConstant;
+use boojum::cs::gates::NopGate;
+use boojum::cs::gates::SelectionGate;
+use boojum::cs::gates::ZeroCheckGate;
 use boojum::gadgets::tables::RangeCheck15BitsTable;
-use boojum::gadgets::tables::create_range_check_15_bits_table;
 use boojum::gadgets::tables::RangeCheck16BitsTable;
+use boojum::gadgets::tables::create_range_check_15_bits_table;
 use boojum::gadgets::tables::create_range_check_16_bits_table;
+use boojum::{
+    blake2::*,
+    config::CSConfig,
+    cs::{
+        CSGeometry,
+        gates::{ConstantsAllocatorGate, ReductionGate, U32TriAddCarryAsChunkGate, UIntXAddGate},
+        traits::{cs::ConstraintSystem, gate::GatePlacementStrategy},
+    },
+    dag::CircuitResolverOpts,
+    gadgets::blake2s::mixing_function::Word,
+    gadgets::blake2s::round_function::Blake2sControl,
+    gadgets::traits::allocatable::CSAllocatable,
+    gadgets::{
+        blake2s::blake2s,
+        tables::{
+            byte_split::{ByteSplitTable, create_byte_split_table},
+            xor8::{Xor8Table, create_xor8_table},
+        },
+        traits::witnessable::WitnessHookable,
+        u8::UInt8,
+        u32::UInt32,
+    },
+};
+use std::alloc::Global;
+use std::mem::MaybeUninit;
+use zkos_verifier::{blake2s_u32::CONFIGURED_IV, prover::cs::cs::circuit};
 
 type F = boojum::field::goldilocks::GoldilocksField;
-
 
 // #[test]
 // fn test_transcript_circuit() {
@@ -39,8 +50,6 @@ type F = boojum::field::goldilocks::GoldilocksField;
 //         input_u32.push(i as u32);
 //     }
 
-
-    
 // }
 
 // #[test]
@@ -61,10 +70,16 @@ fn test_blake2s_round_function() {
     }
 
     let mut hasher = zkos_verifier::blake2s_u32::Blake2sState::new();
-    hasher.input_buffer.iter_mut().enumerate().for_each(|(i, x)| {
-        *x = input[i];
-    });
-    unsafe { hasher.run_round_function::<true>(len, true); }
+    hasher
+        .input_buffer
+        .iter_mut()
+        .enumerate()
+        .for_each(|(i, x)| {
+            *x = input[i];
+        });
+    unsafe {
+        hasher.run_round_function::<true>(len, true);
+    }
     let reference_output = hasher.read_state_for_output();
 
     let geometry = CSGeometry {
@@ -133,10 +148,18 @@ fn test_blake2s_round_function() {
     }
 
     let mut hasher = Blake2sStateGate::new(cs);
-    hasher.input_buffer.iter_mut().enumerate().for_each(|(i, x)| {
-        *x = Word { inner: circuit_input[i].to_le_bytes(cs) };
-    });
-    unsafe { hasher.run_round_function::<_, true>(cs, len, true); }
+    hasher
+        .input_buffer
+        .iter_mut()
+        .enumerate()
+        .for_each(|(i, x)| {
+            *x = Word {
+                inner: circuit_input[i].to_le_bytes(cs),
+            };
+        });
+    unsafe {
+        hasher.run_round_function::<_, true>(cs, len, true);
+    }
     let output = hasher
         .read_state_for_output()
         .map(|el| UInt32::from_le_bytes(cs, el.inner));
@@ -149,7 +172,6 @@ fn test_blake2s_round_function() {
     let _owned_cs = owned_cs.into_assembly::<Global>();
 }
 
-
 #[test]
 fn test_transcript_circuit_initial() {
     test_transcript_circuit(200);
@@ -161,7 +183,7 @@ fn test_transcript_circuit(len: usize) {
 
     let mut input = vec![];
     for i in 0..len {
-        let byte: u32 = i as u32;// rng.r#gen();
+        let byte: u32 = i as u32; // rng.r#gen();
         input.push(byte);
     }
 
@@ -173,13 +195,14 @@ fn test_transcript_circuit(len: usize) {
         &input[..],
     );
     zkos_verifier::transcript::Blake2sTranscript::commit_with_seed_using_hasher(
-        &mut transcript_hasher, 
-        &mut seed, 
-        &input
+        &mut transcript_hasher,
+        &mut seed,
+        &input,
     );
     let mut transcript_challenges = unsafe {
         MaybeUninit::<
-            [u32; (1usize * 4).next_multiple_of(zkos_verifier::blake2s_u32::BLAKE2S_DIGEST_SIZE_U32_WORDS)],
+            [u32; (1usize * 4)
+                .next_multiple_of(zkos_verifier::blake2s_u32::BLAKE2S_DIGEST_SIZE_U32_WORDS)],
         >::uninit()
         .assume_init()
     };
@@ -200,8 +223,8 @@ fn test_transcript_circuit(len: usize) {
         pow_nonce as u64,
         POW_BITS as u32,
     );
-    
-    let reference_output = transcript_challenges;// seed.0;
+
+    let reference_output = transcript_challenges; // seed.0;
 
     let geometry = CSGeometry {
         num_columns_under_copy_permutation: 20,
@@ -245,10 +268,8 @@ fn test_transcript_circuit(len: usize) {
         builder,
         GatePlacementStrategy::UseGeneralPurposeColumns,
     );
-    let builder = NopGate::configure_builder(
-        builder,
-        GatePlacementStrategy::UseGeneralPurposeColumns,
-    );
+    let builder =
+        NopGate::configure_builder(builder, GatePlacementStrategy::UseGeneralPurposeColumns);
 
     let mut owned_cs = builder.build(CircuitResolverOpts::new(1 << 20));
 
@@ -283,7 +304,7 @@ fn test_transcript_circuit(len: usize) {
     let pow_nonce = [
         UInt32::allocate_checked(cs, pow_nonce as u32),
         UInt32::allocate_checked(cs, (pow_nonce >> 32) as u32),
-        ];
+    ];
 
     // let output = blake2s(cs, &circuit_input);
     let mut transcript_hasher = Blake2sStateGate::new(cs);
@@ -298,8 +319,8 @@ fn test_transcript_circuit(len: usize) {
         &mut seed,
         &circuit_input,
     );
-    let mut transcript_challenges = 
-        [UInt32::zero(cs); (1usize * 4).next_multiple_of(zkos_verifier::blake2s_u32::BLAKE2S_DIGEST_SIZE_U32_WORDS)];
+    let mut transcript_challenges = [UInt32::zero(cs);
+        (1usize * 4).next_multiple_of(zkos_verifier::blake2s_u32::BLAKE2S_DIGEST_SIZE_U32_WORDS)];
     Blake2sWrappedTranscript::draw_randomness_using_hasher(
         cs,
         &mut transcript_hasher,
@@ -314,8 +335,8 @@ fn test_transcript_circuit(len: usize) {
         pow_nonce,
         // POW_BITS as u32,
     );
-    let output = transcript_challenges;// seed.0.map(|el| UInt32::from_le_bytes(cs, el.inner));
-    
+    let output = transcript_challenges; // seed.0.map(|el| UInt32::from_le_bytes(cs, el.inner));
+
     let output = output.witness_hook(cs)().unwrap();
     let reference_output = reference_output.as_slice();
     assert_eq!(output, reference_output);
@@ -328,7 +349,6 @@ fn test_transcript_circuit(len: usize) {
     assert!(owned_cs.check_if_satisfied(&worker));
 }
 
-
 #[test]
 fn test_decompose() {
     use rand::{Rng, SeedableRng};
@@ -336,9 +356,7 @@ fn test_decompose() {
 
     let input: u32 = rng.r#gen();
 
-    let reference_output: [u8; 4] = std::array::from_fn(|idx| {
-        (input >> (idx * 8)) as u8
-    });
+    let reference_output: [u8; 4] = std::array::from_fn(|idx| (input >> (idx * 8)) as u8);
     let reference_output = input;
 
     let geometry = CSGeometry {
@@ -403,9 +421,9 @@ fn test_decompose() {
 
     let output = circuit_input.to_le_bytes(cs);
     let output = UInt32::from_le_bytes(cs, output);
-    
+
     let output = output.witness_hook(cs)().unwrap();
-    let reference_output = reference_output;//.as_slice();
+    let reference_output = reference_output; //.as_slice();
     assert_eq!(output, reference_output);
 
     drop(cs);
@@ -414,11 +432,13 @@ fn test_decompose() {
 
 use crate::verifier::prover_structs::*;
 use zkos_verifier::concrete::size_constants::*;
-use zkos_verifier::prover::definitions::LeafInclusionVerifier;
-use zkos_verifier::verifier_common::non_determinism_source::NonDeterminismSource;
-use zkos_verifier::verifier_common::{DefaultNonDeterminismSource, DefaultLeafInclusionVerifier, ProofPublicInputs, ProofOutput};
 use zkos_verifier::concrete::skeleton_instance::{ProofSkeletonInstance, QueryValuesInstance};
 use zkos_verifier::prover::definitions::Blake2sForEverythingVerifier;
+use zkos_verifier::prover::definitions::LeafInclusionVerifier;
+use zkos_verifier::verifier_common::non_determinism_source::NonDeterminismSource;
+use zkos_verifier::verifier_common::{
+    DefaultLeafInclusionVerifier, DefaultNonDeterminismSource, ProofOutput, ProofPublicInputs,
+};
 
 #[test]
 fn test_verifier_inner_function() {
@@ -470,10 +490,8 @@ fn test_verifier_inner_function() {
         builder,
         GatePlacementStrategy::UseGeneralPurposeColumns,
     );
-    let builder = SelectionGate::configure_builder(
-        builder,
-        GatePlacementStrategy::UseGeneralPurposeColumns,
-    );
+    let builder =
+        SelectionGate::configure_builder(builder, GatePlacementStrategy::UseGeneralPurposeColumns);
     let builder = U32TriAddCarryAsChunkGate::configure_builder(
         builder,
         GatePlacementStrategy::UseGeneralPurposeColumns,
@@ -488,7 +506,7 @@ fn test_verifier_inner_function() {
     let builder = ZeroCheckGate::configure_builder(
         builder,
         GatePlacementStrategy::UseGeneralPurposeColumns,
-        false
+        false,
     );
 
     let mut owned_cs = builder.build(CircuitResolverOpts::new(1 << 25));
@@ -518,28 +536,39 @@ fn test_verifier_inner_function() {
     crate::prepare_proof::verify_proof_and_set_iterator(&"delegation_proof".to_string());
 
     // prepare verifier structs
-    let (skeleton, queries) = unsafe {
-        get_prove_parts::<DefaultNonDeterminismSource, Blake2sForEverythingVerifier>()
-    };
+    let (skeleton, queries) =
+        unsafe { get_prove_parts::<DefaultNonDeterminismSource, Blake2sForEverythingVerifier>() };
 
     let skeleton = WrappedProofSkeleton::allocate(cs, skeleton);
     let queries = queries.map(|query| WrappedQueryValues::allocate(cs, query));
 
     // allocate empty
-    let proof_state_dst = unsafe {MaybeUninit::<ProofOutput<
-        TREE_CAP_SIZE,
-        NUM_COSETS,
-        NUM_DELEGATION_CHALLENGES,
-        NUM_AUX_BOUNDARY_VALUES,
-    >>::uninit().assume_init()};
-    let proof_input_dst = unsafe {MaybeUninit::<ProofPublicInputs<NUM_STATE_ELEMENTS>>::uninit().assume_init()};
+    let proof_state_dst = unsafe {
+        MaybeUninit::<
+            ProofOutput<
+                TREE_CAP_SIZE,
+                NUM_COSETS,
+                NUM_DELEGATION_CHALLENGES,
+                NUM_AUX_BOUNDARY_VALUES,
+            >,
+        >::uninit()
+        .assume_init()
+    };
+    let proof_input_dst =
+        unsafe { MaybeUninit::<ProofPublicInputs<NUM_STATE_ELEMENTS>>::uninit().assume_init() };
 
     let mut proof_state_dst = WrappedProofOutput::allocate(cs, proof_state_dst);
     let mut proof_input_dst = WrappedProofPublicInputs::allocate(cs, proof_input_dst);
 
     // verify function
     println!("Start verification");
-    crate::verifier::verify(cs, &mut proof_state_dst, &mut proof_input_dst, skeleton, queries);
+    crate::verifier::verify(
+        cs,
+        &mut proof_state_dst,
+        &mut proof_input_dst,
+        skeleton,
+        queries,
+    );
 
     let worker = boojum::worker::Worker::new_with_num_threads(8);
 
@@ -551,7 +580,8 @@ fn test_verifier_inner_function() {
     assert!(owned_cs.check_if_satisfied(&worker));
 }
 
-unsafe fn get_prove_parts<I: NonDeterminismSource, V: LeafInclusionVerifier>() -> (ProofSkeletonInstance, [QueryValuesInstance; NUM_QUERIES]) {
+unsafe fn get_prove_parts<I: NonDeterminismSource, V: LeafInclusionVerifier>()
+-> (ProofSkeletonInstance, [QueryValuesInstance; NUM_QUERIES]) {
     let mut leaf_inclusion_verifier = V::new();
 
     let mut skeleton = MaybeUninit::<ProofSkeletonInstance>::uninit().assume_init();

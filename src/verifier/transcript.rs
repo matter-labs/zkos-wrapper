@@ -2,23 +2,17 @@
 
 use super::*;
 use boojum::cs::implementations::pow;
-use zkos_verifier::blake2s_u32::{
-    BLAKE2S_DIGEST_SIZE_U32_WORDS,
-    BLAKE2S_BLOCK_SIZE_U32_WORDS,
-};
+use zkos_verifier::blake2s_u32::{BLAKE2S_BLOCK_SIZE_U32_WORDS, BLAKE2S_DIGEST_SIZE_U32_WORDS};
 
 const USE_REDUCED_BLAKE2_ROUNDS: bool = true;
 
-
-#[derive(Clone, Copy, Debug)]//, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug)] //, PartialEq, Eq)]
 pub struct SeedWrapped<F: SmallField>(pub [Word<F>; BLAKE2S_DIGEST_SIZE_U32_WORDS]);
-
 
 #[derive(Clone, Copy, Debug, Default)]
 pub struct Blake2sWrappedTranscript;
 
 impl Blake2sWrappedTranscript {
-
     pub fn commit_initial_using_hasher<F: SmallField, CS: ConstraintSystem<F>>(
         cs: &mut CS,
         hasher: &mut Blake2sStateGate<F>,
@@ -84,18 +78,22 @@ impl Blake2sWrappedTranscript {
                     .iter_mut()
                     .zip(input_slice)
                     .for_each(|(dst, src)| {
-                        *dst = Word { inner: src.to_le_bytes(cs) };
+                        *dst = Word {
+                            inner: src.to_le_bytes(cs),
+                        };
                     });
 
                 remaining -= words_to_use;
                 buffer_offset += words_to_use;
                 input_ptr = input_ptr.add(words_to_use);
                 // zero out the rest
-                hasher.input_buffer[buffer_offset..].iter_mut().for_each(|el| {
-                    *el = Word {
-                        inner: [UInt8::zero(cs); 4],
-                    };
-                });
+                hasher.input_buffer[buffer_offset..]
+                    .iter_mut()
+                    .for_each(|el| {
+                        *el = Word {
+                            inner: [UInt8::zero(cs); 4],
+                        };
+                    });
                 if remaining > 0 {
                     debug_assert_eq!(buffer_offset, BLAKE2S_BLOCK_SIZE_U32_WORDS);
                     hasher.run_round_function::<CS, USE_REDUCED_BLAKE2_ROUNDS>(
@@ -112,8 +110,8 @@ impl Blake2sWrappedTranscript {
 
     fn flush<F: SmallField, CS: ConstraintSystem<F>>(
         cs: &mut CS,
-        hasher: &mut Blake2sStateGate<F>, 
-        offset: usize
+        hasher: &mut Blake2sStateGate<F>,
+        offset: usize,
     ) {
         hasher.run_round_function::<CS, USE_REDUCED_BLAKE2_ROUNDS>(cs, offset, true);
     }
@@ -135,18 +133,25 @@ impl Blake2sWrappedTranscript {
             let mut dst_ptr: *mut UInt32<F> = dst.as_mut_ptr();
             // first we can just take values from the seed
             let dst_slice = core::slice::from_raw_parts_mut(dst_ptr, BLAKE2S_DIGEST_SIZE_U32_WORDS);
-            dst_slice.iter_mut().zip(seed.0.iter()).for_each(|(dst, src)| {
-                *dst = UInt32::from_le_bytes(cs, src.inner);
-            });
+            dst_slice
+                .iter_mut()
+                .zip(seed.0.iter())
+                .for_each(|(dst, src)| {
+                    *dst = UInt32::from_le_bytes(cs, src.inner);
+                });
 
             dst_ptr = dst_ptr.add(BLAKE2S_DIGEST_SIZE_U32_WORDS);
             // and if we need more - we will hash it with the increasing sequence counter
             for _ in 1..(num_rounds as u32) {
                 Self::draw_randomness_inner(cs, hasher, seed);
-                let dst_slice = core::slice::from_raw_parts_mut(dst_ptr, BLAKE2S_DIGEST_SIZE_U32_WORDS);
-                dst_slice.iter_mut().zip(seed.0.iter()).for_each(|(dst, src)| {
-                    *dst = UInt32::from_le_bytes(cs, src.inner);
-                });
+                let dst_slice =
+                    core::slice::from_raw_parts_mut(dst_ptr, BLAKE2S_DIGEST_SIZE_U32_WORDS);
+                dst_slice
+                    .iter_mut()
+                    .zip(seed.0.iter())
+                    .for_each(|(dst, src)| {
+                        *dst = UInt32::from_le_bytes(cs, src.inner);
+                    });
                 dst_ptr = dst_ptr.add(BLAKE2S_DIGEST_SIZE_U32_WORDS);
             }
         }
@@ -154,22 +159,24 @@ impl Blake2sWrappedTranscript {
 
     fn draw_randomness_inner<F: SmallField, CS: ConstraintSystem<F>>(
         cs: &mut CS,
-        hasher: &mut Blake2sStateGate<F>, 
-        seed: &mut SeedWrapped<F>
+        hasher: &mut Blake2sStateGate<F>,
+        seed: &mut SeedWrapped<F>,
     ) {
         hasher.reset();
         hasher.input_buffer[..BLAKE2S_DIGEST_SIZE_U32_WORDS].copy_from_slice(&seed.0);
-        hasher.input_buffer[BLAKE2S_DIGEST_SIZE_U32_WORDS..].iter_mut().for_each(|el| {
-            *el = Word {
-                inner: [UInt8::zero(cs); 4],
-            }
-        });
+        hasher.input_buffer[BLAKE2S_DIGEST_SIZE_U32_WORDS..]
+            .iter_mut()
+            .for_each(|el| {
+                *el = Word {
+                    inner: [UInt8::zero(cs); 4],
+                }
+            });
 
         if Blake2sStateGate::<F>::SUPPORT_SPEC_SINGLE_ROUND {
             unimplemented!()
             // unsafe {
             //     hasher.spec_run_sinlge_round_into_destination::<CS, USE_REDUCED_BLAKE2_ROUNDS>(
-            //         cs, 
+            //         cs,
             //         BLAKE2S_DIGEST_SIZE_U32_WORDS,
             //         &mut seed.0 as *mut _,
             //     );
@@ -177,7 +184,7 @@ impl Blake2sWrappedTranscript {
         } else {
             // we take the seed + sequence id, and produce hash
             hasher.run_round_function::<CS, USE_REDUCED_BLAKE2_ROUNDS>(
-                cs, 
+                cs,
                 BLAKE2S_DIGEST_SIZE_U32_WORDS,
                 true,
             );
@@ -186,7 +193,11 @@ impl Blake2sWrappedTranscript {
         }
     }
 
-    pub fn verify_pow_using_hasher<F: SmallField, CS: ConstraintSystem<F>, const POW_BITS: usize>(
+    pub fn verify_pow_using_hasher<
+        F: SmallField,
+        CS: ConstraintSystem<F>,
+        const POW_BITS: usize,
+    >(
         cs: &mut CS,
         hasher: &mut Blake2sStateGate<F>,
         seed: &mut SeedWrapped<F>,
@@ -197,13 +208,19 @@ impl Blake2sWrappedTranscript {
         // first we can just take values from the seed
         hasher.input_buffer[..BLAKE2S_DIGEST_SIZE_U32_WORDS].copy_from_slice(&seed.0);
         // LE words of nonce
-        hasher.input_buffer[8] = Word { inner: nonce[0].to_le_bytes(cs) };
-        hasher.input_buffer[9] = Word { inner: nonce[1].to_le_bytes(cs) };
-        hasher.input_buffer[BLAKE2S_DIGEST_SIZE_U32_WORDS + 2..].iter_mut().for_each(|el| {
-            *el = Word {
-                inner: [UInt8::zero(cs); 4],
-            }
-        });
+        hasher.input_buffer[8] = Word {
+            inner: nonce[0].to_le_bytes(cs),
+        };
+        hasher.input_buffer[9] = Word {
+            inner: nonce[1].to_le_bytes(cs),
+        };
+        hasher.input_buffer[BLAKE2S_DIGEST_SIZE_U32_WORDS + 2..]
+            .iter_mut()
+            .for_each(|el| {
+                *el = Word {
+                    inner: [UInt8::zero(cs); 4],
+                }
+            });
 
         hasher.run_round_function::<CS, USE_REDUCED_BLAKE2_ROUNDS>(
             cs,
@@ -218,7 +235,8 @@ impl Blake2sWrappedTranscript {
         let first_el_high_1 = hasher.extended_state[0].inner[3];
         let _ = zero.sub_no_overflow(cs, first_el_high_0);
         let _ = zero.sub_no_overflow(cs, first_el_high_1);
-        let first_el_low = UInt16::from_le_bytes(cs, hasher.extended_state[0].inner[..2].try_into().unwrap());
+        let first_el_low =
+            UInt16::from_le_bytes(cs, hasher.extended_state[0].inner[..2].try_into().unwrap());
         let pow_bits_mask = (0xffffffff as u32 >> POW_BITS) as u16;
         let pow_bits_mask = UInt16::allocated_constant(cs, pow_bits_mask);
         let _ = pow_bits_mask.sub_no_overflow(cs, first_el_low);
@@ -226,5 +244,4 @@ impl Blake2sWrappedTranscript {
         // copy it out
         *seed = SeedWrapped(hasher.read_state_for_output());
     }
-
 }
