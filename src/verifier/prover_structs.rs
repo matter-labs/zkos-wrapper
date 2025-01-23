@@ -415,7 +415,7 @@ impl<
             fri_intermediate_oracles: witness.fri_intermediate_oracles.map(|x| x.map(|y| WrappedMerkleTreeCap::allocate(cs, y))),
             fri_final_step_leafs: witness.fri_final_step_leafs.map(|x| x.map(|y| MersenneQuartic::allocate(cs, y))),
             monomial_coeffs: witness.monomial_coeffs.map(|x| MersenneQuartic::allocate(cs, x)),
-            pow_nonce: [UInt32::allocate(cs, (witness.pow_nonce & 0xffff) as u32), UInt32::allocate(cs, (witness.pow_nonce >> 16) as u32)],
+            pow_nonce: [UInt32::allocate(cs, (witness.pow_nonce & 0xffffffff) as u32), UInt32::allocate(cs, (witness.pow_nonce >> 32) as u32)],
         }
     }
 }

@@ -421,7 +421,7 @@ use zkos_verifier::concrete::skeleton_instance::{ProofSkeletonInstance, QueryVal
 use zkos_verifier::prover::definitions::Blake2sForEverythingVerifier;
 
 #[test]
-fn allocate_verifier_structs() {
+fn test_verifier_inner_function() {
     // allocate CS
     let geometry = CSGeometry {
         num_columns_under_copy_permutation: 100,
@@ -463,6 +463,10 @@ fn allocate_verifier_structs() {
         GatePlacementStrategy::UseGeneralPurposeColumns,
     );
     let builder = UIntXAddGate::<16>::configure_builder(
+        builder,
+        GatePlacementStrategy::UseGeneralPurposeColumns,
+    );
+    let builder = UIntXAddGate::<8>::configure_builder(
         builder,
         GatePlacementStrategy::UseGeneralPurposeColumns,
     );
@@ -511,7 +515,7 @@ fn allocate_verifier_structs() {
     let cs = &mut owned_cs;
 
     // read proof and set iterator
-    crate::prepare_proof::verify_proof_and_set_iterator(&"/Users/superoles/Desktop/MatterLabs/RiskWrapper/air_compiler/prover/delegation_proof".to_string());
+    crate::prepare_proof::verify_proof_and_set_iterator(&"delegation_proof".to_string());
 
     // prepare verifier structs
     let (skeleton, queries) = unsafe {
@@ -563,85 +567,3 @@ unsafe fn get_prove_parts<I: NonDeterminismSource, V: LeafInclusionVerifier>() -
 
     (skeleton, queries)
 }
-
-// use std::path::Path;
-// fn verify_proof(proof_path: &String) {
-//     println!("Verifying proof from {}", proof_path);
-//     let proof: Proof = deserialize_from_file(proof_path);
-
-//     let end_params_output = get_end_params_output_suffix_from_proof(&proof);
-//     println!("Final params hash: {:?}", end_params_output);
-
-//     let verification_key = merkle_caps_to_hash(&proof.setup_tree_caps);
-//     println!("Proof verification key is {}", verification_key);
-
-//     let circuit_type =
-//         proof_name_to_circuit_type(Path::new(proof_path).file_name().unwrap().to_str().unwrap());
-
-//     println!("Circuit type deteced as {:?}", circuit_type);
-
-//     let shuffle_ram_inits_and_teardowns: bool = true;
-
-//     let mut oracle_data = vec![];
-
-//     oracle_data.extend(
-//         verifier_common::proof_flattener::flatten_proof_for_skeleton(
-//             &proof,
-//             shuffle_ram_inits_and_teardowns,
-//         ),
-//     );
-//     for query in proof.queries.iter() {
-//         oracle_data.extend(verifier_common::proof_flattener::flatten_query(query));
-//     }
-
-//     let it = oracle_data.into_iter();
-
-//     verifier_common::prover::nd_source_std::set_iterator(it);
-
-//     // match circuit_type {
-//     //     CircuitType::RiscV => unsafe {
-//     //         risc_v_cycles_verifier::verify(
-//     //             std::mem::MaybeUninit::uninit().assume_init_mut(),
-//     //             &mut verifier_common::ProofPublicInputs::uninit(),
-//     //         )
-//     //     },
-//     //     CircuitType::RiscVReduced => unsafe {
-//     //         reduced_risc_v_machine_verifier::verify(
-//     //             std::mem::MaybeUninit::uninit().assume_init_mut(),
-//     //             &mut verifier_common::ProofPublicInputs::uninit(),
-//     //         )
-//     //     },
-//     //     CircuitType::DelegatedBlake => {
-//     //         unsafe {
-//     //             blake2_single_round_verifier::verify(
-//     //                 std::mem::MaybeUninit::uninit().assume_init_mut(),
-//     //                 &mut verifier_common::ProofPublicInputs::uninit(),
-//     //             )
-//     //         };
-//     //     }
-//     // }
-//     // println!("PROOF IS VALID");
-// }
-
-// /// Computes a single hash for multiple tree caps.
-// pub fn merkle_caps_to_hash(caps: &Vec<MerkleTreeCapVarLength>) -> String {
-//     let mut all_leaves = vec![];
-//     for cap in caps {
-//         all_leaves.append(&mut cap.cap.clone());
-//     }
-//     let mut hasher = Blake2sState::new();
-//     for entry in all_leaves {
-//         let mut result = [0u32; 16];
-//         // yes, this is very lazy - as we just copy 8 uint32, and the remaining 8 are zero.
-//         result[..8].copy_from_slice(&entry);
-//         hasher.absorb::<true>(&result);
-//     }
-//     let empty = [0u32; 16];
-//     let mut dst = [0u32; 8];
-//     hasher.absorb_final_block::<true>(&empty, 0, &mut dst);
-
-//     dst.iter()
-//         .map(|value| format!("{:08x}", value))
-//         .collect::<Vec<_>>()
-//         .join("")
-// }
