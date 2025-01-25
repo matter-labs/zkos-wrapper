@@ -28,7 +28,7 @@ pub struct Blake2sStateGate<F: SmallField> {
 }
 
 impl<F: SmallField> Blake2sStateGate<F> {
-    pub const SUPPORT_SPEC_SINGLE_ROUND: bool = false;
+    // pub const SUPPORT_SPEC_SINGLE_ROUND: bool = false;
 
     pub fn new<CS: ConstraintSystem<F>>(cs: &mut CS) -> Self {
         let preconfigured_state: [UInt32<F>; BLAKE2S_STATE_WIDTH_IN_U32_WORDS] =

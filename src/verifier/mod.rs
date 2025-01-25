@@ -1,3 +1,5 @@
+use std::mem::MaybeUninit;
+
 use boojum::cs::Place;
 use boojum::cs::traits::cs::ConstraintSystem;
 use boojum::field::SmallField;
@@ -23,18 +25,22 @@ use zkos_verifier::prover::definitions::*;
 use zkos_verifier::skeleton::{ProofSkeleton, QueryValues};
 use zkos_verifier::verifier_common::non_determinism_source::NonDeterminismSource;
 use zkos_verifier::verifier_common::{ProofOutput, ProofPublicInputs};
+use zkos_verifier::concrete::skeleton_instance::QueryValuesInstance;
+use zkos_verifier::concrete::skeleton_instance::BASE_CIRCUIT_QUERY_VALUES_NO_PADDING_U32_WORDS;
 
 pub mod blake2s_reduced;
 pub(crate) mod prover_structs;
 pub mod transcript;
+pub mod verifier_traits;
 mod transcript_opt;
-pub(crate) mod verifier_traits;
+pub mod utils;
 
 pub use blake2s_reduced::*;
 use prover_structs::*;
 pub use transcript::*;
-use transcript_opt::*;
 use verifier_traits::*;
+use transcript_opt::*;
+pub use utils::*;
 
 pub fn verify<
     F: SmallField,

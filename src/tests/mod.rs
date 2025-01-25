@@ -1,7 +1,20 @@
 use crate::verifier::transcript::*;
-
+// use boojum::{
+//     blake2::*, config::CSConfig, cs::{gates::{
+//         ConstantsAllocatorGate, ReductionGate, U32TriAddCarryAsChunkGate, UIntXAddGate, ZeroCheckGate,
+//     }, traits::{cs::ConstraintSystem, gate::GatePlacementStrategy}, CSGeometry}, dag::CircuitResolverOpts, gadgets::{blake2s::{blake2s, mixing_function::Word, round_function::Blake2sControl}, tables::{
+//         byte_split::{create_byte_split_table, ByteSplitTable},
+//         xor8::{create_xor8_table, Xor8Table},
+//     }, traits::{allocatable::CSAllocatable, witnessable::WitnessHookable}, u32::UInt32, u8::UInt8},
+// };
+use std::alloc::Global;
 use crate::verifier::Blake2sStateGate;
 use crate::verifier::blake2s_reduced_round_function;
+use zkos_verifier::{blake2s_u32::CONFIGURED_IV, prover::cs::cs::circuit, skeleton};
+use crate::verifier::verifier_traits::CircuitBlake2sForEverythingVerifier;
+use crate::verifier::verifier_traits::CircuitLeafInclusionVerifier;
+use std::mem::MaybeUninit;
+use boojum::cs::traits::evaluator::GateConstraintEvaluator;
 use boojum::cs::LookupParameters;
 use boojum::cs::cs_builder_reference::CsReferenceImplementationBuilder;
 use boojum::cs::gates::DotProductGate;
@@ -36,9 +49,6 @@ use boojum::{
         u32::UInt32,
     },
 };
-use std::alloc::Global;
-use std::mem::MaybeUninit;
-use zkos_verifier::{blake2s_u32::CONFIGURED_IV, prover::cs::cs::circuit};
 
 type F = boojum::field::goldilocks::GoldilocksField;
 
@@ -268,8 +278,10 @@ fn test_transcript_circuit(len: usize) {
         builder,
         GatePlacementStrategy::UseGeneralPurposeColumns,
     );
-    let builder =
-        NopGate::configure_builder(builder, GatePlacementStrategy::UseGeneralPurposeColumns);
+    let builder = NopGate::configure_builder(
+        builder,
+        GatePlacementStrategy::UseGeneralPurposeColumns,
+    );
 
     let mut owned_cs = builder.build(CircuitResolverOpts::new(1 << 20));
 
@@ -350,6 +362,133 @@ fn test_transcript_circuit(len: usize) {
 }
 
 #[test]
+fn test_leaf_inclusion() {
+    crate::prepare_proof::verify_proof_and_set_iterator(&"delegation_proof".to_string());
+
+    // prepare verifier structs
+    let (skeleton, queries) = unsafe {
+        get_prove_parts::<DefaultNonDeterminismSource, DefaultLeafInclusionVerifier>()
+    };
+
+    let geometry = CSGeometry {
+        num_columns_under_copy_permutation: 80,
+        num_witness_columns: 0,
+        num_constant_columns: 4,
+        max_allowed_constraint_degree: 4,
+    };
+
+    use boojum::config::DevCSConfig;
+    type RCfg = <DevCSConfig as CSConfig>::ResolverConfig;
+    use boojum::cs::cs_builder_reference::*;
+    let builder_impl =
+        CsReferenceImplementationBuilder::<F, F, DevCSConfig>::new(geometry, 1 << 20);
+    use boojum::cs::cs_builder::new_builder;
+    let builder = new_builder::<_, F>(builder_impl);
+
+    let builder = builder.allow_lookup(
+        boojum::cs::LookupParameters::UseSpecializedColumnsWithTableIdAsConstant {
+            width: 3,
+            num_repetitions: 20,
+            share_table_id: true,
+        },
+    );
+    let builder = ConstantsAllocatorGate::configure_builder(
+        builder,
+        GatePlacementStrategy::UseGeneralPurposeColumns,
+    );
+    // let builder = ZeroCheckGate::configure_builder(
+    //     builder,
+    //     GatePlacementStrategy::UseGeneralPurposeColumns,
+    //     false,
+    // );
+    let builder = FmaGateInBaseFieldWithoutConstant::configure_builder(
+        builder,
+        GatePlacementStrategy::UseGeneralPurposeColumns,
+    );
+    let builder = U32TriAddCarryAsChunkGate::configure_builder(
+        builder,
+        GatePlacementStrategy::UseGeneralPurposeColumns,
+    );
+    let builder = ReductionGate::<F, 4>::configure_builder(
+        builder,
+        GatePlacementStrategy::UseGeneralPurposeColumns,
+    );
+    let builder = ReductionGate::<F, 2>::configure_builder(
+        builder,
+        GatePlacementStrategy::UseGeneralPurposeColumns,
+    );
+    let builder = SelectionGate::configure_builder(
+        builder,
+        GatePlacementStrategy::UseGeneralPurposeColumns,
+    );
+    let builder = UIntXAddGate::<16>::configure_builder(
+        builder,
+        GatePlacementStrategy::UseGeneralPurposeColumns,
+    );
+    let builder = UIntXAddGate::<8>::configure_builder(
+        builder,
+        GatePlacementStrategy::UseGeneralPurposeColumns,
+    );
+    let builder = NopGate::configure_builder(
+        builder,
+        GatePlacementStrategy::UseGeneralPurposeColumns,
+    );
+
+    let mut owned_cs = builder.build(CircuitResolverOpts::new(1 << 25));
+
+    // add tables
+    let table = create_range_check_16_bits_table::<3, F>();
+    owned_cs.add_lookup_table::<RangeCheck16BitsTable<3>, 3>(table);
+
+    let table = create_range_check_15_bits_table::<3, F>();
+    owned_cs.add_lookup_table::<RangeCheck15BitsTable<3>, 3>(table);
+
+    let table = create_xor8_table();
+    owned_cs.add_lookup_table::<Xor8Table, 3>(table);
+
+    let table = create_byte_split_table::<F, 4>();
+    owned_cs.add_lookup_table::<ByteSplitTable<4>, 3>(table);
+
+    let table = create_byte_split_table::<F, 7>();
+    owned_cs.add_lookup_table::<ByteSplitTable<7>, 3>(table);
+
+    let table = create_byte_split_table::<F, 1>();
+    owned_cs.add_lookup_table::<ByteSplitTable<1>, 3>(table);
+
+    let cs = &mut owned_cs;
+
+    // read proof and set iterator
+    crate::prepare_proof::verify_proof_and_set_iterator(&"delegation_proof".to_string());
+   
+    let ooc_skeleton = unsafe {
+        let mut skeleton = MaybeUninit::<ProofSkeletonInstance>::uninit().assume_init();
+        ProofSkeletonInstance::fill::<DefaultNonDeterminismSource>((&mut skeleton) as *mut _);
+        skeleton
+    };
+
+    let mut leaf_inclusion_verifier = CircuitBlake2sForEverythingVerifier::new(cs);
+    let skeleton = unsafe { WrappedProofSkeletonInstance::from_non_determinism_source(cs, ooc_skeleton.clone()) }; 
+    
+    let queries: [_; NUM_QUERIES] = std::array::from_fn(|_idx| { 
+        unsafe { 
+            WrappedQueryValuesInstance::from_non_determinism_source::<_,DefaultNonDeterminismSource,_>(
+                cs, 
+                &skeleton, 
+                &mut leaf_inclusion_verifier,
+            ) 
+        }
+    });
+    
+    drop(cs);
+    let worker = boojum::worker::Worker::new_with_num_threads(8);
+
+    owned_cs.pad_and_shrink();
+    let mut owned_cs = owned_cs.into_assembly::<Global>();
+    assert!(owned_cs.check_if_satisfied(&worker));
+}
+
+
+#[test]
 fn test_decompose() {
     use rand::{Rng, SeedableRng};
     let mut rng = rand::rngs::StdRng::seed_from_u64(42);
@@ -427,7 +566,11 @@ fn test_decompose() {
     assert_eq!(output, reference_output);
 
     drop(cs);
-    let _owned_cs = owned_cs.into_assembly::<Global>();
+    let worker = boojum::worker::Worker::new_with_num_threads(8);
+
+    owned_cs.pad_and_shrink();
+    let mut owned_cs = owned_cs.into_assembly::<Global>();
+    assert!(owned_cs.check_if_satisfied(&worker));
 }
 
 use crate::verifier::prover_structs::*;
@@ -536,11 +679,24 @@ fn test_verifier_inner_function() {
     crate::prepare_proof::verify_proof_and_set_iterator(&"delegation_proof".to_string());
 
     // prepare verifier structs
-    let (skeleton, queries) =
-        unsafe { get_prove_parts::<DefaultNonDeterminismSource, Blake2sForEverythingVerifier>() };
+    let ooc_skeleton = unsafe {
+        let mut skeleton = MaybeUninit::<ProofSkeletonInstance>::uninit().assume_init();
+        ProofSkeletonInstance::fill::<DefaultNonDeterminismSource>((&mut skeleton) as *mut _);
+        skeleton
+    };
 
-    let skeleton = WrappedProofSkeleton::allocate(cs, skeleton);
-    let queries = queries.map(|query| WrappedQueryValues::allocate(cs, query));
+    let mut leaf_inclusion_verifier = CircuitBlake2sForEverythingVerifier::new(cs);
+    let skeleton = unsafe { WrappedProofSkeletonInstance::from_non_determinism_source(cs, ooc_skeleton.clone()) }; 
+    
+    let queries: [_; NUM_QUERIES] = std::array::from_fn(|_idx| { 
+        unsafe { 
+            WrappedQueryValuesInstance::from_non_determinism_source::<_,DefaultNonDeterminismSource,_>(
+                cs, 
+                &skeleton, 
+                &mut leaf_inclusion_verifier,
+            ) 
+        }
+    });
 
     // allocate empty
     let proof_state_dst = unsafe {
