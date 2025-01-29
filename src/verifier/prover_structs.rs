@@ -436,7 +436,37 @@ impl<
     >;
 
     fn placeholder_witness() -> Self::Witness {
-        unimplemented!()
+        ProofSkeleton {
+            _padding: [0; SKELETON_PADDING],
+            circuit_sequence_idx: UInt32::<F>::placeholder_witness(),
+            delegation_type: UInt32::<F>::placeholder_witness(),
+            public_inputs: [MersenneField::<F>::placeholder_witness();
+                NUM_PUBLIC_INPUTS_FROM_STATE_ELEMENTS],
+            setup_caps: [WrappedMerkleTreeCap::<F, CAP_SIZE>::placeholder_witness(); NUM_COSETS],
+            memory_argument_challenges:
+                WrappedExternalMemoryArgumentChallenges::<F>::placeholder_witness(),
+            delegation_argument_challenges:
+                [WrappedExternalDelegationArgumentChallenges::<F>::placeholder_witness();
+                    NUM_DELEGATION_CHALLENGES],
+            aux_boundary_values: [WrappedAuxArgumentsBoundaryValues::<F>::placeholder_witness();
+                NUM_AUX_BOUNDARY_VALUES],
+            witness_caps: [WrappedMerkleTreeCap::<F, CAP_SIZE>::placeholder_witness(); NUM_COSETS],
+            memory_caps: [WrappedMerkleTreeCap::<F, CAP_SIZE>::placeholder_witness(); NUM_COSETS],
+            stage_2_caps: [WrappedMerkleTreeCap::<F, CAP_SIZE>::placeholder_witness(); NUM_COSETS],
+            memory_grand_product_accumulator: MersenneQuartic::<F>::placeholder_witness(),
+            delegation_argument_accumulator: [MersenneQuartic::<F>::placeholder_witness();
+                NUM_DELEGATION_CHALLENGES],
+            quotient_caps: [WrappedMerkleTreeCap::<F, CAP_SIZE>::placeholder_witness(); NUM_COSETS],
+            openings_at_z: [MersenneQuartic::<F>::placeholder_witness(); NUM_OPENINGS_AT_Z],
+            openings_at_z_omega: [MersenneQuartic::<F>::placeholder_witness();
+                NUM_OPENINGS_AT_Z_OMEGA],
+            fri_intermediate_oracles: [[WrappedMerkleTreeCap::<F, CAP_SIZE>::placeholder_witness();
+                NUM_COSETS]; NUM_FRI_STEPS_WITH_ORACLES],
+            fri_final_step_leafs: [[MersenneQuartic::<F>::placeholder_witness();
+                FINAL_FRI_STEP_LEAF_SIZE_PER_COSET]; NUM_COSETS],
+            monomial_coeffs: [MersenneQuartic::<F>::placeholder_witness(); FRI_FINAL_DEGREE],
+            pow_nonce: 0u64,
+        }
     }
     fn allocate_without_value<CS: ConstraintSystem<F>>(cs: &mut CS) -> Self {
         Self {
@@ -540,11 +570,16 @@ impl<
 }
 
 impl<F: SmallField> WrappedProofSkeletonInstance<F> {
-    pub(crate) fn from_non_determinism_source<CS: ConstraintSystem<F>>(
+    pub(crate) fn from_non_determinism_source<CS: ConstraintSystem<F>, I: NonDeterminismSource>(
         cs: &mut CS,
-        source: <Self as CSAllocatable<F>>::Witness,
     ) -> Self {
-        Self::allocate(cs, source)
+        let witness = unsafe {
+            let mut skeleton = MaybeUninit::<ProofSkeletonInstance>::uninit().assume_init();
+            ProofSkeletonInstance::fill::<I>((&mut skeleton) as *mut _);
+            skeleton
+        };
+
+        Self::allocate(cs, witness)
     }
 
     pub(crate) fn transcript_elements_before_stage2(&self) -> Vec<UInt32<F>> {
@@ -723,7 +758,15 @@ impl<
     >;
 
     fn placeholder_witness() -> Self::Witness {
-        unimplemented!()
+        QueryValues {
+            query_index: UInt32::<F>::placeholder_witness(),
+            setup_leaf: [MersenneField::<F>::placeholder_witness(); LEAF_SIZE_SETUP],
+            witness_leaf: [MersenneField::<F>::placeholder_witness(); LEAF_SIZE_WITNESS_TREE],
+            memory_leaf: [MersenneField::<F>::placeholder_witness(); LEAF_SIZE_MEMORY_TREE],
+            stage_2_leaf: [MersenneField::<F>::placeholder_witness(); LEAF_SIZE_STAGE_2],
+            quotient_leaf: [MersenneField::<F>::placeholder_witness(); LEAF_SIZE_QUOTIENT],
+            fri_oracles_leafs: [MersenneField::<F>::placeholder_witness(); TOTAL_FRI_LEAFS_SIZES],
+        }
     }
     fn allocate_without_value<CS: ConstraintSystem<F>>(cs: &mut CS) -> Self {
         Self {
@@ -759,11 +802,14 @@ impl<
 }
 
 impl<F: SmallField> WrappedQueryValuesInstance<F> {
-    pub unsafe fn from_non_determinism_source<CS: ConstraintSystem<F>, I: NonDeterminismSource, V: CircuitLeafInclusionVerifier<F>>(
+    pub unsafe fn from_non_determinism_source<
+        CS: ConstraintSystem<F>,
+        I: NonDeterminismSource,
+        V: CircuitLeafInclusionVerifier<F>,
+    >(
         cs: &mut CS,
         proof_skeleton: &WrappedProofSkeletonInstance<F>,
         hasher: &mut V,
-        // source: &<Self as CSAllocatable<F>>::Witness,
     ) -> Self {
         let mut source = MaybeUninit::<QueryValuesInstance>::uninit().assume_init();
         let dst = ((&mut source) as *mut <Self as CSAllocatable<F>>::Witness).cast::<u32>();
@@ -785,12 +831,16 @@ impl<F: SmallField> WrappedQueryValuesInstance<F> {
             i += 1;
         }
         let query = Self::allocate(cs, source.clone());
-        
+
         // for all except FRI the following is valid
         let tree_index = UInt32::allocate_checked(cs, source.query_index & TREE_INDEX_MASK);
         let coset_index = UInt32::allocate_checked(cs, source.query_index >> TRACE_LEN_LOG2);
-        let coset_index = coset_index.into_num().spread_into_bits::<CS, FRI_FACTOR_LOG2>(cs);
-        let mut tree_index = tree_index.into_num().spread_into_bits::<CS, TRACE_LEN_LOG2>(cs);
+        let coset_index = coset_index
+            .into_num()
+            .spread_into_bits::<CS, FRI_FACTOR_LOG2>(cs);
+        let mut tree_index = tree_index
+            .into_num()
+            .spread_into_bits::<CS, TRACE_LEN_LOG2>(cs);
 
         // and now we should optimistically verify each leaf over the corresponding merkle cap
         hasher.verify_leaf_inclusion::<CS, I, TREE_CAP_SIZE, NUM_COSETS>(
@@ -798,7 +848,7 @@ impl<F: SmallField> WrappedQueryValuesInstance<F> {
             &coset_index,
             &tree_index,
             DEFAULT_MERKLE_PATH_LENGTH,
-                &query.setup_leaf,
+            &query.setup_leaf,
             &proof_skeleton.setup_caps,
         );
 
@@ -810,7 +860,7 @@ impl<F: SmallField> WrappedQueryValuesInstance<F> {
             &query.witness_leaf,
             &proof_skeleton.witness_caps,
         );
-        
+
         hasher.verify_leaf_inclusion::<CS, I, TREE_CAP_SIZE, NUM_COSETS>(
             cs,
             &coset_index,
@@ -819,7 +869,7 @@ impl<F: SmallField> WrappedQueryValuesInstance<F> {
             &query.memory_leaf,
             &proof_skeleton.memory_caps,
         );
-        
+
         hasher.verify_leaf_inclusion::<CS, I, TREE_CAP_SIZE, NUM_COSETS>(
             cs,
             &coset_index,
@@ -828,7 +878,7 @@ impl<F: SmallField> WrappedQueryValuesInstance<F> {
             &query.stage_2_leaf,
             &proof_skeleton.stage_2_caps,
         );
-        
+
         hasher.verify_leaf_inclusion::<CS, I, TREE_CAP_SIZE, NUM_COSETS>(
             cs,
             &coset_index,
@@ -837,7 +887,7 @@ impl<F: SmallField> WrappedQueryValuesInstance<F> {
             &query.quotient_leaf,
             &proof_skeleton.quotient_caps,
         );
-        
+
         let mut fri_tree_index = &mut tree_index[..];
         let mut fri_path_length = DEFAULT_MERKLE_PATH_LENGTH;
         let mut fri_leaf_start = query.fri_oracles_leafs.as_ptr();
@@ -857,7 +907,7 @@ impl<F: SmallField> WrappedQueryValuesInstance<F> {
             );
             fri_leaf_start = fri_leaf_start.add(leaf_size);
         }
-        
+
         query
     }
 }

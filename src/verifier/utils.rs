@@ -1,6 +1,11 @@
 use super::*;
 
-pub fn binary_parallel_select<F: SmallField, T: Selectable<F>, CS: ConstraintSystem<F>, const N: usize>(
+pub fn binary_parallel_select<
+    F: SmallField,
+    T: Selectable<F>,
+    CS: ConstraintSystem<F>,
+    const N: usize,
+>(
     cs: &mut CS,
     elements: &[[T; N]],
     bits: &[Boolean<F>],

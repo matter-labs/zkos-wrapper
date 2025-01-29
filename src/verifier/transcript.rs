@@ -174,7 +174,7 @@ impl Blake2sWrappedTranscript {
 
         // we take the seed + sequence id, and produce hash
         hasher.run_round_function::<CS, USE_REDUCED_BLAKE2_ROUNDS>(
-            cs, 
+            cs,
             BLAKE2S_DIGEST_SIZE_U32_WORDS,
             true,
         );

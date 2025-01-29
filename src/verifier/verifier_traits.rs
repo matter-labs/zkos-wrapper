@@ -3,6 +3,20 @@ use super::*;
 use serde::de;
 use zkos_verifier::prover::nd_source_std::ThreadLocalBasedSource;
 
+#[derive(Clone, Copy)]
+pub(crate) struct PlaceholderSource;
+
+impl NonDeterminismSource for PlaceholderSource {
+    #[inline(always)]
+    fn read_word() -> u32 {
+        0u32
+    }
+    #[inline(always)]
+    fn read_reduced_field_element(_modulus: u32) -> u32 {
+        0u32
+    }
+}
+
 // wrapping NonDeterminismSource functions:
 pub(crate) fn read_word<F: SmallField, CS: ConstraintSystem<F>, I: NonDeterminismSource>(
     cs: &mut CS,
@@ -23,6 +37,8 @@ pub(crate) fn read_mersenne_element<
 }
 
 pub trait CircuitLeafInclusionVerifier<F: SmallField> {
+    type OutOfCircuitImpl: LeafInclusionVerifier;
+
     fn new<CS: ConstraintSystem<F>>(cs: &mut CS) -> Self;
 
     fn verify_leaf_inclusion<
@@ -49,6 +65,8 @@ pub struct CircuitBlake2sForEverythingVerifier<F: SmallField> {
 }
 
 impl<F: SmallField> CircuitLeafInclusionVerifier<F> for CircuitBlake2sForEverythingVerifier<F> {
+    type OutOfCircuitImpl = Blake2sForEverythingVerifier;
+
     fn new<CS: ConstraintSystem<F>>(cs: &mut CS) -> Self {
         Self {
             hasher: Blake2sStateGate::new(cs),
@@ -89,19 +107,24 @@ impl<F: SmallField> CircuitLeafInclusionVerifier<F> for CircuitBlake2sForEveryth
         unsafe {
             let mut src_ptr = leaf_encoding.as_ptr();
             for _ in 0..num_full_rounds {
-                let input_slice = core::slice::from_raw_parts(src_ptr, BLAKE2S_BLOCK_SIZE_U32_WORDS);
-                self.hasher.input_buffer
+                let input_slice =
+                    core::slice::from_raw_parts(src_ptr, BLAKE2S_BLOCK_SIZE_U32_WORDS);
+                self.hasher
+                    .input_buffer
                     .iter_mut()
                     .zip(input_slice)
                     .for_each(|(dst, src)| {
-                        *dst = Word { inner: src.into_uint32().to_le_bytes(cs) };
+                        *dst = Word {
+                            inner: src.into_uint32().to_le_bytes(cs),
+                        };
                     });
 
-                self.hasher.run_round_function::<CS, USE_REDUCED_BLAKE2_ROUNDS>(
-                    cs,
-                    BLAKE2S_BLOCK_SIZE_U32_WORDS,
-                    false,
-                );
+                self.hasher
+                    .run_round_function::<CS, USE_REDUCED_BLAKE2_ROUNDS>(
+                        cs,
+                        BLAKE2S_BLOCK_SIZE_U32_WORDS,
+                        false,
+                    );
                 src_ptr = src_ptr.add(BLAKE2S_BLOCK_SIZE_U32_WORDS);
             }
 
@@ -112,18 +135,19 @@ impl<F: SmallField> CircuitLeafInclusionVerifier<F> for CircuitBlake2sForEveryth
                     .iter_mut()
                     .zip(input_slice)
                     .for_each(|(dst, src)| {
-                        *dst = Word { inner: src.into_uint32().to_le_bytes(cs) };
+                        *dst = Word {
+                            inner: src.into_uint32().to_le_bytes(cs),
+                        };
                     });
-                self.hasher.input_buffer[last_round_len..].iter_mut().for_each(|el| {
-                    *el = Word {
-                        inner: [UInt8::zero(cs); 4],
-                    };
-                });
-                self.hasher.run_round_function::<CS, USE_REDUCED_BLAKE2_ROUNDS>(
-                    cs,
-                    last_round_len,
-                    true,
-                );
+                self.hasher.input_buffer[last_round_len..]
+                    .iter_mut()
+                    .for_each(|el| {
+                        *el = Word {
+                            inner: [UInt8::zero(cs); 4],
+                        };
+                    });
+                self.hasher
+                    .run_round_function::<CS, USE_REDUCED_BLAKE2_ROUNDS>(cs, last_round_len, true);
             }
         }
 
@@ -133,9 +157,8 @@ impl<F: SmallField> CircuitLeafInclusionVerifier<F> for CircuitBlake2sForEveryth
             .chain(coset_index.iter())
             .cloned()
             .collect::<Vec<_>>();
-        let (head, middle, tail) = unsafe {
-            merkle_cap.align_to::<[UInt32<F>; DIGEST_SIZE_U32_WORDS]>()
-        };
+        let (head, middle, tail) =
+            unsafe { merkle_cap.align_to::<[UInt32<F>; DIGEST_SIZE_U32_WORDS]>() };
         assert!(head.is_empty() && tail.is_empty());
         let merkle_cap_flattened = middle;
 
@@ -157,36 +180,41 @@ impl<F: SmallField> CircuitLeafInclusionVerifier<F> for CircuitBlake2sForEveryth
         for i in 0..depth {
             let current_state = self.hasher.read_state_for_output();
             let witness_dst: [Word<F>; 8] = std::array::from_fn(|_idx| {
-                    let word = read_word::<F, CS, I>(cs);
-                    Word { inner: word.to_le_bytes(cs) }
+                let word = read_word::<F, CS, I>(cs);
+                Word {
+                    inner: word.to_le_bytes(cs),
                 }
-            );
+            });
             let input_is_right = leaf_index[i];
             self.hasher.input_buffer[..BLAKE2S_DIGEST_SIZE_U32_WORDS]
                 .iter_mut()
                 .zip(current_state.iter())
                 .zip(witness_dst.iter())
                 .for_each(|((dst, current), witness)| {
-                    (*dst).inner = UInt8::parallel_select(cs, input_is_right, &witness.inner, &current.inner);
+                    (*dst).inner =
+                        UInt8::parallel_select(cs, input_is_right, &witness.inner, &current.inner);
                 });
             self.hasher.input_buffer[BLAKE2S_DIGEST_SIZE_U32_WORDS..]
                 .iter_mut()
                 .zip(current_state.iter())
                 .zip(witness_dst.iter())
                 .for_each(|((dst, current), witness)| {
-                    (*dst).inner = UInt8::parallel_select(cs, input_is_right, &current.inner, &witness.inner);
+                    (*dst).inner =
+                        UInt8::parallel_select(cs, input_is_right, &current.inner, &witness.inner);
                 });
 
             self.hasher.reset();
-            self.hasher.run_round_function::<CS, USE_REDUCED_BLAKE2_ROUNDS>(
-                cs,
-                BLAKE2S_BLOCK_SIZE_U32_WORDS,
-                true,
-            );
+            self.hasher
+                .run_round_function::<CS, USE_REDUCED_BLAKE2_ROUNDS>(
+                    cs,
+                    BLAKE2S_BLOCK_SIZE_U32_WORDS,
+                    true,
+                );
         }
 
         // here we manually compare, otherwise it's compiled as memcmp that does by byte(!) comparison
-        let cap = binary_parallel_select(cs, merkle_cap_flattened, &absolute_tree_index_bits[depth..]);
+        let cap =
+            binary_parallel_select(cs, merkle_cap_flattened, &absolute_tree_index_bits[depth..]);
         let output_hash = self.hasher.read_state_for_output();
         for i in 0..DIGEST_SIZE_U32_WORDS {
             let a = cap[i].into_num();

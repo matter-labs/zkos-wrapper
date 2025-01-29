@@ -19,46 +19,43 @@ use std::result;
 
 use zkos_verifier::blake2s_u32::*;
 use zkos_verifier::concrete::size_constants::*;
+use zkos_verifier::concrete::skeleton_instance::BASE_CIRCUIT_QUERY_VALUES_NO_PADDING_U32_WORDS;
+use zkos_verifier::concrete::skeleton_instance::ProofSkeletonInstance;
+use zkos_verifier::concrete::skeleton_instance::QueryValuesInstance;
 use zkos_verifier::field::*;
 use zkos_verifier::prover::cs::definitions::*;
 use zkos_verifier::prover::definitions::*;
 use zkos_verifier::skeleton::{ProofSkeleton, QueryValues};
 use zkos_verifier::verifier_common::non_determinism_source::NonDeterminismSource;
 use zkos_verifier::verifier_common::{ProofOutput, ProofPublicInputs};
-use zkos_verifier::concrete::skeleton_instance::QueryValuesInstance;
-use zkos_verifier::concrete::skeleton_instance::BASE_CIRCUIT_QUERY_VALUES_NO_PADDING_U32_WORDS;
 
 pub mod blake2s_reduced;
 pub(crate) mod prover_structs;
 pub mod transcript;
-pub mod verifier_traits;
 mod transcript_opt;
 pub mod utils;
+pub mod verifier_traits;
 
 pub use blake2s_reduced::*;
 use prover_structs::*;
 pub use transcript::*;
-use verifier_traits::*;
 use transcript_opt::*;
 pub use utils::*;
+use verifier_traits::*;
 
-pub fn verify<
-    F: SmallField,
-    CS: ConstraintSystem<F>,
-    // I: CircuitNonDeterminismSource<F>,
-    // V: CircuitLeafInclusionVerifier<F>
->(
+pub fn verify<F: SmallField, CS: ConstraintSystem<F>>(
     cs: &mut CS,
-    proof_state_dst: &mut WrappedProofOutput<
+    skeleton: WrappedProofSkeletonInstance<F>,
+    queries: [WrappedQueryValuesInstance<F>; NUM_QUERIES],
+) -> (
+    WrappedProofOutput<
         F,
         TREE_CAP_SIZE,
         NUM_COSETS,
         NUM_DELEGATION_CHALLENGES,
         NUM_AUX_BOUNDARY_VALUES,
     >,
-    proof_input_dst: &mut WrappedProofPublicInputs<F, NUM_STATE_ELEMENTS>,
-    skeleton: WrappedProofSkeletonInstance<F>,
-    queries: [WrappedQueryValuesInstance<F>; NUM_QUERIES],
+    WrappedProofPublicInputs<F, NUM_STATE_ELEMENTS>,
 ) {
     // now drive the transcript and continue
     let mut transcript_hasher = Blake2sStateGate::<F>::new(cs);
@@ -790,34 +787,56 @@ pub fn verify<
 
     // NOTE: we will NOT perform any logic about comparison here, and instead we will just write the result back to callee
 
-    // setup caps
-    proof_state_dst.setup_caps = skeleton.setup_caps;
-    // memory caps
-    proof_state_dst.memory_caps = skeleton.memory_caps;
-    // - memory challenges
-    proof_state_dst.memory_challenges = skeleton.memory_argument_challenges;
-    // - delegation challenges
-    if NUM_DELEGATION_CHALLENGES > 0 {
-        proof_state_dst.delegation_challenges = skeleton.delegation_argument_challenges;
-    }
-    // - shuffle RAM lazy init first and last values
-    if NUM_AUX_BOUNDARY_VALUES > 0 {
-        proof_state_dst.lazy_init_boundary_values = skeleton.aux_boundary_values;
-    }
-    // - memory grand product and delegation accumulators
-    proof_state_dst.memory_grand_product_accumulator = skeleton.memory_grand_product_accumulator;
-    if NUM_DELEGATION_CHALLENGES > 0 {
-        proof_state_dst.delegation_argument_accumulator = skeleton.delegation_argument_accumulator;
-    }
-    // sequence and delegation types
-    proof_state_dst.circuit_sequence = skeleton.circuit_sequence_idx;
-    proof_state_dst.delegation_type = skeleton.delegation_type;
-    // - input and output state variables
-    if NUM_STATE_ELEMENTS > 0 {
-        let mut it = skeleton.public_inputs.array_chunks::<NUM_STATE_ELEMENTS>();
-        proof_input_dst.input_state_variables = *it.next().unwrap();
-        proof_input_dst.output_state_variables = *it.next().unwrap();
-    }
+    let proof_state_dst = WrappedProofOutput {
+        setup_caps: skeleton.setup_caps,
+        memory_caps: skeleton.memory_caps,
+        memory_challenges: skeleton.memory_argument_challenges,
+        delegation_challenges: skeleton.delegation_argument_challenges,
+        lazy_init_boundary_values: skeleton.aux_boundary_values,
+        memory_grand_product_accumulator: skeleton.memory_grand_product_accumulator,
+        delegation_argument_accumulator: skeleton.delegation_argument_accumulator,
+        circuit_sequence: skeleton.circuit_sequence_idx,
+        delegation_type: skeleton.delegation_type,
+    };
+
+    // // setup caps
+    // proof_state_dst.setup_caps = skeleton.setup_caps;
+    // // memory caps
+    // proof_state_dst.memory_caps = skeleton.memory_caps;
+    // // - memory challenges
+    // proof_state_dst.memory_challenges = skeleton.memory_argument_challenges;
+    // // - delegation challenges
+    // if NUM_DELEGATION_CHALLENGES > 0 {
+    //     proof_state_dst.delegation_challenges = skeleton.delegation_argument_challenges;
+    // }
+    // // - shuffle RAM lazy init first and last values
+    // if NUM_AUX_BOUNDARY_VALUES > 0 {
+    //     proof_state_dst.lazy_init_boundary_values = skeleton.aux_boundary_values;
+    // }
+    // // - memory grand product and delegation accumulators
+    // proof_state_dst.memory_grand_product_accumulator = skeleton.memory_grand_product_accumulator;
+    // if NUM_DELEGATION_CHALLENGES > 0 {
+    //     proof_state_dst.delegation_argument_accumulator = skeleton.delegation_argument_accumulator;
+    // }
+    // // sequence and delegation types
+    // proof_state_dst.circuit_sequence = skeleton.circuit_sequence_idx;
+    // proof_state_dst.delegation_type = skeleton.delegation_type;
+    // // - input and output state variables
+    // if NUM_STATE_ELEMENTS > 0 {
+    //     let mut it = skeleton.public_inputs.array_chunks::<NUM_STATE_ELEMENTS>();
+    //     proof_input_dst.input_state_variables = *it.next().unwrap();
+    //     proof_input_dst.output_state_variables = *it.next().unwrap();
+    // }
+
+    let mut it = skeleton.public_inputs.array_chunks::<NUM_STATE_ELEMENTS>();
+    let input_state_variables = *it.next().unwrap();
+    let output_state_variables = *it.next().unwrap();
+    let proof_input_dst = WrappedProofPublicInputs {
+        input_state_variables,
+        output_state_variables,
+    };
+
+    (proof_state_dst, proof_input_dst)
 }
 
 fn precompute_for_consistency_checks<F: SmallField, CS: ConstraintSystem<F>>(
