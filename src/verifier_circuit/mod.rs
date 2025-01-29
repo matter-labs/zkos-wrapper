@@ -61,7 +61,7 @@ impl<F: SmallField, V: CircuitLeafInclusionVerifier<F>> CircuitBuilder<F>
 {
     fn geometry() -> CSGeometry {
         CSGeometry {
-            num_columns_under_copy_permutation: 100,
+            num_columns_under_copy_permutation: 51,
             num_witness_columns: 0,
             num_constant_columns: 4,
             max_allowed_constraint_degree: 4,
@@ -71,7 +71,7 @@ impl<F: SmallField, V: CircuitLeafInclusionVerifier<F>> CircuitBuilder<F>
     fn lookup_parameters() -> LookupParameters {
         LookupParameters::UseSpecializedColumnsWithTableIdAsConstant {
             width: 3,
-            num_repetitions: 20,
+            num_repetitions: 17,
             share_table_id: true,
         }
     }
@@ -203,22 +203,15 @@ impl<F: SmallField, V: CircuitLeafInclusionVerifier<F>> ZKOSWrapperCircuit<F, V>
             let skeleton_witness = WrappedProofSkeletonInstance::<F>::placeholder_witness();
             let skeleton = WrappedProofSkeletonInstance::allocate(cs, skeleton_witness);
 
-            let query_witness = WrappedQueryValuesInstance::<F>::placeholder_witness();
-            let queries = std::array::from_fn(|_idx| {
-                WrappedQueryValuesInstance::allocate(cs, query_witness.clone())
+            let mut leaf_inclusion_verifier = V::new(cs);
+
+            let queries: [_; NUM_QUERIES] = std::array::from_fn(|_idx| unsafe {
+                WrappedQueryValuesInstance::from_non_determinism_source::<_, PlaceholderSource, _>(
+                    cs,
+                    &skeleton,
+                    &mut leaf_inclusion_verifier,
+                )
             });
-
-            // let mut leaf_inclusion_verifier = V::new(cs);
-
-            // let queries: [_; NUM_QUERIES] = std::array::from_fn(|_idx| {
-            //     unsafe {
-            //         WrappedQueryValuesInstance::from_non_determinism_source::<_,PlaceholderSource,_>(
-            //             cs,
-            //             &skeleton,
-            //             &mut leaf_inclusion_verifier,
-            //         )
-            //     }
-            // });
 
             (skeleton, queries)
         };
@@ -269,47 +262,21 @@ pub(crate) fn prepare_proof_for_wrapper<
 ) {
     set_iterator_from_proof(proof);
 
-    // let skeleton = unsafe {
-    //     WrappedProofSkeletonInstance::from_non_determinism_source::<_,DefaultNonDeterminismSource>(cs)
-    // };
-
-    // let mut leaf_inclusion_verifier = V::new(cs);
-
-    // let queries: [_; NUM_QUERIES] = std::array::from_fn(|_idx| {
-    //     unsafe {
-    //         WrappedQueryValuesInstance::from_non_determinism_source::<_,DefaultNonDeterminismSource,_>(
-    //             cs,
-    //             &skeleton,
-    //             &mut leaf_inclusion_verifier,
-    //         )
-    //     }
-    // });
-
-    use zkos_verifier::concrete::skeleton_instance::QueryValuesInstance;
-
-    let mut skeleton = unsafe { MaybeUninit::<ProofSkeletonInstance>::uninit().assume_init() };
-    unsafe {
-        ProofSkeletonInstance::fill::<DefaultNonDeterminismSource>((&mut skeleton) as *mut _)
-    };
-
-    let mut leaf_inclusion_verifier = V::OutOfCircuitImpl::new();
-
-    let mut queries =
-        unsafe { MaybeUninit::<[QueryValuesInstance; NUM_QUERIES]>::uninit().assume_init() };
-    unsafe {
-        QueryValuesInstance::fill_array::<
-            DefaultNonDeterminismSource,
-            V::OutOfCircuitImpl,
-            NUM_QUERIES,
-        >(
-            (&mut queries) as *mut _,
-            &skeleton,
-            &mut leaf_inclusion_verifier,
+    let skeleton = unsafe {
+        WrappedProofSkeletonInstance::from_non_determinism_source::<_, DefaultNonDeterminismSource>(
+            cs,
         )
     };
 
-    let skeleton = WrappedProofSkeletonInstance::allocate(cs, skeleton);
-    let queries = queries.map(|el| WrappedQueryValuesInstance::allocate(cs, el));
+    let mut leaf_inclusion_verifier = V::new(cs);
+
+    let queries: [_; NUM_QUERIES] = std::array::from_fn(|_idx| unsafe {
+        WrappedQueryValuesInstance::from_non_determinism_source::<_, DefaultNonDeterminismSource, _>(
+            cs,
+            &skeleton,
+            &mut leaf_inclusion_verifier,
+        )
+    });
 
     (skeleton, queries)
 }

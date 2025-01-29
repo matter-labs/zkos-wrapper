@@ -569,7 +569,7 @@ use zkos_verifier::verifier_common::{
 fn test_verifier_inner_function() {
     // allocate CS
     let geometry = CSGeometry {
-        num_columns_under_copy_permutation: 100,
+        num_columns_under_copy_permutation: 51,
         num_witness_columns: 0,
         num_constant_columns: 4,
         max_allowed_constraint_degree: 4,
@@ -585,7 +585,7 @@ fn test_verifier_inner_function() {
     let builder = builder.allow_lookup(
         LookupParameters::UseSpecializedColumnsWithTableIdAsConstant {
             width: 3,
-            num_repetitions: 20,
+            num_repetitions: 17,
             share_table_id: true,
         },
     );
@@ -796,7 +796,7 @@ fn deserialize_from_file<T: serde::de::DeserializeOwned>(filename: &str) -> T {
 
 #[test]
 fn test_wrapper_circuit() {
-    let worker = boojum::worker::Worker::new_with_num_threads(1);
+    let worker = boojum::worker::Worker::new_with_num_threads(4);
     let (proof, _, _) = read_and_verify_proof(&"delegation_proof".to_string());
 
     let (finalization_hint, setup_base, setup, vk, setup_tree, vars_hint, witness_hints) =
