@@ -99,7 +99,7 @@ pub fn get_zkos_wrapper_proof(
     witness_hints: &DenseWitnessCopyHint,
     worker: &Worker,
 ) -> Proof<F, H, EXT> {
-    let verify_inner_proof = false;
+    let verify_inner_proof = true;
     let circuit = C::new(Some(zkos_proof), verify_inner_proof);
 
     let geometry = C::geometry();

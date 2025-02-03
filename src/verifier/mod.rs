@@ -6,6 +6,7 @@ use boojum::field::SmallField;
 use boojum::gadgets::blake2s::mixing_function::Word;
 use boojum::gadgets::boolean::Boolean;
 use boojum::gadgets::mersenne_field::MersenneField;
+use boojum::gadgets::mersenne_field::extension_trait::CircuitFieldExpression;
 use boojum::gadgets::mersenne_field::fourth_ext::MersenneQuartic;
 use boojum::gadgets::mersenne_field::second_ext::MersenneComplex;
 use boojum::gadgets::num::Num;
@@ -30,7 +31,9 @@ use zkos_verifier::verifier_common::non_determinism_source::NonDeterminismSource
 use zkos_verifier::verifier_common::{ProofOutput, ProofPublicInputs};
 
 pub mod blake2s_reduced;
+mod layout_import;
 pub(crate) mod prover_structs;
+mod quotient_import;
 pub mod transcript;
 mod transcript_opt;
 pub mod utils;
@@ -274,7 +277,7 @@ pub fn verify<F: SmallField, CS: ConstraintSystem<F>>(
         Mersenne31Complex::TWO_ADICITY_GENERATORS_INVERSED[TRACE_LEN_LOG2],
     );
 
-    let mut z_omega = z.mul_by_2nd_ext(cs, &omega);
+    let mut z_omega = z.mul_by_base(cs, &omega);
 
     {
         // setup, then witness, then memory, then stage 2 base, then stage 2 ext, then quotient
@@ -327,7 +330,7 @@ pub fn verify<F: SmallField, CS: ConstraintSystem<F>>(
         let one_base = MersenneField::one(cs);
 
         let mut vanishing = z.exp_power_of_2(cs, TRACE_LEN_LOG2);
-        vanishing.x.x = vanishing.x.x.sub(cs, &one_base);
+        vanishing = vanishing.sub_base(cs, &one_base);
 
         let omega_inv_squared = MersenneComplex::allocate_constant(
             cs,
@@ -335,25 +338,25 @@ pub fn verify<F: SmallField, CS: ConstraintSystem<F>>(
         );
 
         let mut z_minus_omega_inv = z;
-        z_minus_omega_inv.x = z_minus_omega_inv.x.sub(cs, &omega_inv);
+        z_minus_omega_inv = z_minus_omega_inv.sub_base(cs, &omega_inv);
 
         let mut z_minus_omega_inv_squared = z;
-        z_minus_omega_inv_squared.x = z_minus_omega_inv_squared.x.sub(cs, &omega_inv_squared);
+        z_minus_omega_inv_squared = z_minus_omega_inv_squared.sub_base(cs, &omega_inv_squared);
 
         // now we should assemble candidates for batch inversion
 
         // first row is 1 / (x - omega^0)
         let mut first_row_to_inverse = z;
-        first_row_to_inverse.x.x = first_row_to_inverse.x.x.sub(cs, &one_base);
+        first_row_to_inverse = first_row_to_inverse.sub_base(cs, &one_base);
 
         // one before last row is 1/(x - omega^-2)
         let mut one_before_last_row_to_inverse = z;
-        one_before_last_row_to_inverse.x =
-            one_before_last_row_to_inverse.x.sub(cs, &omega_inv_squared);
+        one_before_last_row_to_inverse =
+            one_before_last_row_to_inverse.sub_base(cs, &omega_inv_squared);
 
         // last row is 1/(x - omega^-1)
         let mut last_row_to_inverse = z;
-        last_row_to_inverse.x = last_row_to_inverse.x.sub(cs, &omega_inv);
+        last_row_to_inverse = last_row_to_inverse.sub_base(cs, &omega_inv);
 
         let mut to_batch_inverse = [
             z,
@@ -454,45 +457,45 @@ pub fn verify<F: SmallField, CS: ConstraintSystem<F>>(
 
         // interpolant is literaly 1/omega^-1 * value * X (as one can see it's 0 at 0 and `value` at omega^-1)
         let mut delegation_argument_interpolant_linear_coeff =
-            delegation_argument_accumulator_sum.mul_by_2nd_ext(cs, &omega);
+            delegation_argument_accumulator_sum.mul_by_base(cs, &omega);
         delegation_argument_interpolant_linear_coeff =
             delegation_argument_interpolant_linear_coeff.negated(cs);
 
-        // use crate::concrete::evaluate_quotient;
-        // let quotient_recomputed_value = evaluate_quotient(
-        //     z,
-        //     witness,
-        //     memory,
-        //     setup,
-        //     stage_2,
-        //     &witness_next_row,
-        //     &memory_next_row,
-        //     &stage_2_next_row,
-        //     quotient_alpha,
-        //     quotient_beta,
-        //     &divisors,
-        //     lookup_argument_linearization_challenges,
-        //     lookup_argument_gamma,
-        //     lookup_argument_two_gamma,
-        //     skeleton
-        //         .memory_argument_challenges
-        //         .memory_argument_linearization_challenges,
-        //     skeleton.memory_argument_challenges.memory_argument_gamma,
-        //     delegation_argument_linearization_challenges
-        //         .delegation_argument_linearization_challenges,
-        //     delegation_argument_linearization_challenges.delegation_argument_gamma,
-        //     &skeleton.public_inputs,
-        //     &aux_proof_values,
-        //     aux_boundary_values,
-        //     memory_timestamp_high_from_circuit_sequence,
-        //     delegation_type,
-        //     delegation_argument_interpolant_linear_coeff,
-        // );
+        use quotient_import::evaluate_quotient;
+        let quotient_recomputed_value = unsafe {
+            evaluate_quotient(
+                cs,
+                z,
+                witness,
+                memory,
+                setup,
+                stage_2,
+                &witness_next_row,
+                &memory_next_row,
+                &stage_2_next_row,
+                quotient_alpha,
+                quotient_beta,
+                &divisors,
+                lookup_argument_linearization_challenges,
+                lookup_argument_gamma,
+                lookup_argument_two_gamma,
+                skeleton
+                    .memory_argument_challenges
+                    .memory_argument_linearization_challenges,
+                skeleton.memory_argument_challenges.memory_argument_gamma,
+                delegation_argument_linearization_challenges
+                    .delegation_argument_linearization_challenges,
+                delegation_argument_linearization_challenges.delegation_argument_gamma,
+                &skeleton.public_inputs,
+                &aux_proof_values,
+                aux_boundary_values,
+                memory_timestamp_high_from_circuit_sequence,
+                delegation_type,
+                delegation_argument_interpolant_linear_coeff,
+            )
+        };
 
-        // assert_eq!(
-        //     quotient_recomputed_value, quotient_opening,
-        //     "quotient evaluation diverged"
-        // );
+        quotient_recomputed_value.enforce_equal(cs, &quotient_opening);
     }
 
     {
@@ -599,7 +602,7 @@ pub fn verify<F: SmallField, CS: ConstraintSystem<F>>(
             let mut to_inverse = [z, z_omega];
 
             for el in to_inverse.iter_mut() {
-                el.x = el.x.sub(cs, &evaluation_point);
+                *el = el.sub_base(cs, &evaluation_point);
 
                 // TODO: can be optimized
                 *el = el.inverse_or_zero(cs);
@@ -890,8 +893,7 @@ fn accumulate_over_row_for_consistency_check<F: SmallField, CS: ConstraintSystem
     tau_in_domain_by_half: MersenneComplex<F>,
     tau_in_domain_by_half_inversed: MersenneComplex<F>,
 ) -> MersenneQuartic<F> {
-    // TODO: import generated
-    use zkos_verifier::concrete::layout_import::VERIFIER_COMPILED_LAYOUT;
+    use layout_import::VERIFIER_COMPILED_LAYOUT;
 
     // now we can do consistency check
     let mut accumulated_at_z = MersenneQuartic::zero(cs);
@@ -901,8 +903,7 @@ fn accumulate_over_row_for_consistency_check<F: SmallField, CS: ConstraintSystem
         let leaf_el = MersenneQuartic::from_coeffs(query.quotient_leaf);
         // NOTE: we compute quotient at non-main domain first, and then LDE, so we do NOT have adjustment
         // there, and we should cancel one below
-        accumulated_at_z.x = leaf_el.x.mul(cs, &tau_in_domain_by_half_inversed);
-        accumulated_at_z.y = leaf_el.y.mul(cs, &tau_in_domain_by_half_inversed);
+        accumulated_at_z = leaf_el.mul_by_base(cs, &tau_in_domain_by_half_inversed);
     }
 
     for leaf_el in query.stage_2_leaf[VERIFIER_COMPILED_LAYOUT.stage_2_layout.ext4_polys_offset..]
@@ -940,8 +941,7 @@ fn accumulate_over_row_for_consistency_check<F: SmallField, CS: ConstraintSystem
     }
 
     // all terms are linear over leaf values, so it's enough to scale once
-    accumulated_at_z.x = accumulated_at_z.x.mul(cs, &tau_in_domain_by_half);
-    accumulated_at_z.y = accumulated_at_z.y.mul(cs, &tau_in_domain_by_half);
+    accumulated_at_z = accumulated_at_z.mul_by_base(cs, &tau_in_domain_by_half);
 
     let mut simulated_from_z = precompute_with_evals_at_z.sub(cs, &accumulated_at_z);
     simulated_from_z = simulated_from_z.mul(cs, &divisor_for_z);
@@ -976,8 +976,7 @@ fn accumulate_over_row_for_consistency_check<F: SmallField, CS: ConstraintSystem
         accumulated_at_z_omega.mul(cs, &extra_factor_for_accumulation_at_z_omega);
 
     // all terms are linear over leaf values, so it's enough to scale once
-    accumulated_at_z_omega.x = accumulated_at_z_omega.x.mul(cs, &tau_in_domain_by_half);
-    accumulated_at_z_omega.y = accumulated_at_z_omega.y.mul(cs, &tau_in_domain_by_half);
+    accumulated_at_z_omega = accumulated_at_z_omega.mul_by_base(cs, &tau_in_domain_by_half);
 
     let mut simulated_from_z_omega =
         precompute_with_evals_at_z_omega.sub(cs, &accumulated_at_z_omega);
@@ -1129,8 +1128,7 @@ pub fn fri_fold_by_log_n<
             };
 
             let mut t = a.sub(cs, &b);
-            t.x = t.x.mul(cs, &root);
-            t.y = t.y.mul(cs, &root);
+            t = t.mul_by_base(cs, &root);
             let folder = t.mul_and_add(cs, &challenge, &a);
 
             output_buffer[i] = folder.add(cs, &b);
