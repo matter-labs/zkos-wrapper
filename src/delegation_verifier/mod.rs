@@ -1,8 +1,8 @@
 use std::mem::MaybeUninit;
 
-use boojum::cs::Place;
 use boojum::cs::traits::cs::ConstraintSystem;
 use boojum::field::SmallField;
+use boojum::gadgets::blake2s;
 use boojum::gadgets::blake2s::mixing_function::Word;
 use boojum::gadgets::boolean::Boolean;
 use boojum::gadgets::mersenne_field::MersenneField;
@@ -12,11 +12,9 @@ use boojum::gadgets::mersenne_field::second_ext::MersenneComplex;
 use boojum::gadgets::num::Num;
 use boojum::gadgets::traits::allocatable::CSAllocatable;
 use boojum::gadgets::traits::selectable::Selectable;
-use boojum::gadgets::traits::witnessable::WitnessHookable;
 use boojum::gadgets::u8::UInt8;
 use boojum::gadgets::u16::UInt16;
 use boojum::gadgets::u32::UInt32;
-use std::result;
 
 use zkos_verifier::blake2s_u32::*;
 use zkos_verifier::concrete::size_constants::*;
@@ -25,26 +23,18 @@ use zkos_verifier::concrete::skeleton_instance::ProofSkeletonInstance;
 use zkos_verifier::concrete::skeleton_instance::QueryValuesInstance;
 use zkos_verifier::field::*;
 use zkos_verifier::prover::cs::definitions::*;
-use zkos_verifier::prover::definitions::*;
 use zkos_verifier::skeleton::{ProofSkeleton, QueryValues};
 use zkos_verifier::verifier_common::non_determinism_source::NonDeterminismSource;
 use zkos_verifier::verifier_common::{ProofOutput, ProofPublicInputs};
 
-pub mod blake2s_reduced;
-mod layout_import;
-pub(crate) mod prover_structs;
-mod quotient_import;
-pub mod transcript;
-mod transcript_opt;
-pub mod utils;
-pub mod verifier_traits;
+use crate::wrapper_utils::prover_structs::*;
 
-pub use blake2s_reduced::*;
-use prover_structs::*;
-pub use transcript::*;
-use transcript_opt::*;
-pub use utils::*;
-use verifier_traits::*;
+mod imports;
+pub mod skeleton;
+
+pub use crate::transcript::*;
+use crate::wrapper_utils::verifier_traits::*;
+use skeleton::*;
 
 pub fn verify<F: SmallField, CS: ConstraintSystem<F>>(
     cs: &mut CS,
@@ -277,7 +267,7 @@ pub fn verify<F: SmallField, CS: ConstraintSystem<F>>(
         Mersenne31Complex::TWO_ADICITY_GENERATORS_INVERSED[TRACE_LEN_LOG2],
     );
 
-    let mut z_omega = z.mul_by_base(cs, &omega);
+    let z_omega = z.mul_by_base(cs, &omega);
 
     {
         // setup, then witness, then memory, then stage 2 base, then stage 2 ext, then quotient
@@ -294,7 +284,7 @@ pub fn verify<F: SmallField, CS: ConstraintSystem<F>>(
 
         // we only need to update very few places here, so we will overwrite them below
 
-        let mut lookup_argument_two_gamma = lookup_argument_gamma.double(cs);
+        let lookup_argument_two_gamma = lookup_argument_gamma.double(cs);
 
         let (witness_next_row_set, rest) = skeleton
             .openings_at_z_omega
@@ -385,13 +375,13 @@ pub fn verify<F: SmallField, CS: ConstraintSystem<F>>(
         ] = to_batch_inverse;
 
         // everywhere except last row (x - omega^-1) / (x^n - 1)
-        let mut everywhere_except_last = z_minus_omega_inv.mul(cs, &vanishing_inv);
+        let everywhere_except_last = z_minus_omega_inv.mul(cs, &vanishing_inv);
 
         // everywhere except last two rows
-        let mut everywhere_except_last_two_rows =
+        let everywhere_except_last_two_rows =
             everywhere_except_last.mul(cs, &z_minus_omega_inv_squared);
 
-        let mut last_row_and_zero = last_row.mul(cs, &z_inv);
+        let last_row_and_zero = last_row.mul(cs, &z_inv);
 
         let divisors = [
             everywhere_except_last,
@@ -461,7 +451,7 @@ pub fn verify<F: SmallField, CS: ConstraintSystem<F>>(
         delegation_argument_interpolant_linear_coeff =
             delegation_argument_interpolant_linear_coeff.negated(cs);
 
-        use quotient_import::evaluate_quotient;
+        use imports::evaluate_quotient;
         let quotient_recomputed_value = unsafe {
             evaluate_quotient(
                 cs,
@@ -569,7 +559,6 @@ pub fn verify<F: SmallField, CS: ConstraintSystem<F>>(
 
         // NOTE: here we skip 1 word because PoW is checked over it
         let mut bit_iterator = WrappedBitSource::new(cs, &indexes_bits[1..]);
-        let mut inversion_buffer = [MersenneQuartic::zero(cs); 2];
         for query_round in 0..NUM_QUERIES {
             let query = &queries[query_round];
             let query_index_bits = bit_iterator.get_next_bits(cs, BITS_FOR_QUERY_INDEX);
@@ -893,7 +882,7 @@ fn accumulate_over_row_for_consistency_check<F: SmallField, CS: ConstraintSystem
     tau_in_domain_by_half: MersenneComplex<F>,
     tau_in_domain_by_half_inversed: MersenneComplex<F>,
 ) -> MersenneQuartic<F> {
-    use layout_import::VERIFIER_COMPILED_LAYOUT;
+    use imports::VERIFIER_COMPILED_LAYOUT;
 
     // now we can do consistency check
     let mut accumulated_at_z = MersenneQuartic::zero(cs);

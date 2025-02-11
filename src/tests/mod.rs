@@ -1,20 +1,11 @@
-use crate::verifier::transcript::*;
-// use boojum::{
-//     blake2::*, config::CSConfig, cs::{gates::{
-//         ConstantsAllocatorGate, ReductionGate, U32TriAddCarryAsChunkGate, UIntXAddGate, ZeroCheckGate,
-//     }, traits::{cs::ConstraintSystem, gate::GatePlacementStrategy}, CSGeometry}, dag::CircuitResolverOpts, gadgets::{blake2s::{blake2s, mixing_function::Word, round_function::Blake2sControl}, tables::{
-//         byte_split::{create_byte_split_table, ByteSplitTable},
-//         xor8::{create_xor8_table, Xor8Table},
-//     }, traits::{allocatable::CSAllocatable, witnessable::WitnessHookable}, u32::UInt32, u8::UInt8},
-// };
-use crate::verifier::Blake2sStateGate;
-use crate::verifier::blake2s_reduced_round_function;
-use crate::verifier::verifier_traits::CircuitBlake2sForEverythingVerifier;
-use crate::verifier::verifier_traits::CircuitLeafInclusionVerifier;
+use crate::delegation_verifier::skeleton::*;
+use crate::transcript::blake2s_reduced_round_function;
+use crate::transcript::*;
 use crate::verifier_circuit::*;
+use crate::wrapper_utils::verifier_traits::CircuitBlake2sForEverythingVerifier;
+use crate::wrapper_utils::verifier_traits::CircuitLeafInclusionVerifier;
 use boojum::cs::LookupParameters;
 use boojum::cs::cs_builder_reference::CsReferenceImplementationBuilder;
-use boojum::cs::gates::DotProductGate;
 use boojum::cs::gates::FmaGateInBaseFieldWithoutConstant;
 use boojum::cs::gates::NopGate;
 use boojum::cs::gates::SelectionGate;
@@ -24,34 +15,31 @@ use boojum::gadgets::tables::RangeCheck15BitsTable;
 use boojum::gadgets::tables::RangeCheck16BitsTable;
 use boojum::gadgets::tables::create_range_check_15_bits_table;
 use boojum::gadgets::tables::create_range_check_16_bits_table;
-use boojum::worker;
 use boojum::{
     blake2::*,
-    config::CSConfig,
     cs::{
         CSGeometry,
-        gates::{ConstantsAllocatorGate, ReductionGate, U32TriAddCarryAsChunkGate, UIntXAddGate},
+        gates::{
+            ConstantsAllocatorGate, ReductionGate, U32AddCarryAsChunkGate,
+            U32TriAddCarryAsChunkGate, UIntXAddGate,
+        },
         traits::{cs::ConstraintSystem, gate::GatePlacementStrategy},
     },
     dag::CircuitResolverOpts,
     gadgets::blake2s::mixing_function::Word,
-    gadgets::blake2s::round_function::Blake2sControl,
-    gadgets::traits::allocatable::CSAllocatable,
     gadgets::{
-        blake2s::blake2s,
         tables::{
             byte_split::{ByteSplitTable, create_byte_split_table},
             xor8::{Xor8Table, create_xor8_table},
         },
         traits::witnessable::WitnessHookable,
-        u8::UInt8,
         u32::UInt32,
     },
 };
 use std::alloc::Global;
 use std::mem::MaybeUninit;
 use zkos_verifier::prover::prover_stages::Proof;
-use zkos_verifier::{blake2s_u32::CONFIGURED_IV, prover::cs::cs::circuit, skeleton};
+// use zkos_verifier::{blake2s_u32::CONFIGURED_IV, prover::cs::cs::circuit, skeleton};
 
 type F = boojum::field::goldilocks::GoldilocksField;
 
@@ -169,9 +157,8 @@ fn test_blake2s_round_function() {
                 inner: circuit_input[i].to_le_bytes(cs),
             };
         });
-    unsafe {
-        hasher.run_round_function::<_, true>(cs, len, true);
-    }
+    hasher.run_round_function::<_, true>(cs, len, true);
+
     let output = hasher
         .read_state_for_output()
         .map(|el| UInt32::from_le_bytes(cs, el.inner));
@@ -190,8 +177,8 @@ fn test_transcript_circuit_initial() {
 }
 
 fn test_transcript_circuit(len: usize) {
-    use rand::{Rng, SeedableRng};
-    let mut rng = rand::rngs::StdRng::seed_from_u64(42);
+    // use rand::{Rng, SeedableRng};
+    // let mut rng = rand::rngs::StdRng::seed_from_u64(42);
 
     let mut input = vec![];
     for i in 0..len {
@@ -478,7 +465,6 @@ fn test_decompose() {
 
     let input: u32 = rng.r#gen();
 
-    let reference_output: [u8; 4] = std::array::from_fn(|idx| (input >> (idx * 8)) as u8);
     let reference_output = input;
 
     let geometry = CSGeometry {
@@ -555,21 +541,16 @@ fn test_decompose() {
     assert!(owned_cs.check_if_satisfied(&worker));
 }
 
-use crate::verifier::prover_structs::*;
+use crate::wrapper_utils::prover_structs::*;
 use zkos_verifier::concrete::size_constants::*;
-use zkos_verifier::concrete::skeleton_instance::{ProofSkeletonInstance, QueryValuesInstance};
 use zkos_verifier::prover::definitions::Blake2sForEverythingVerifier;
-use zkos_verifier::prover::definitions::LeafInclusionVerifier;
-use zkos_verifier::verifier_common::non_determinism_source::NonDeterminismSource;
-use zkos_verifier::verifier_common::{
-    DefaultLeafInclusionVerifier, DefaultNonDeterminismSource, ProofOutput, ProofPublicInputs,
-};
+use zkos_verifier::verifier_common::{DefaultNonDeterminismSource, ProofOutput, ProofPublicInputs};
 
 #[test]
 fn test_verifier_inner_function() {
     // allocate CS
     let geometry = CSGeometry {
-        num_columns_under_copy_permutation: 51,
+        num_columns_under_copy_permutation: 8,
         num_witness_columns: 0,
         num_constant_columns: 4,
         max_allowed_constraint_degree: 4,
@@ -611,10 +592,23 @@ fn test_verifier_inner_function() {
         GatePlacementStrategy::UseGeneralPurposeColumns,
     );
     let builder =
-        SelectionGate::configure_builder(builder, GatePlacementStrategy::UseGeneralPurposeColumns);
+        SelectionGate::configure_builder(builder, GatePlacementStrategy::UseSpecializedColumns {
+            num_repetitions: 1,
+            share_constants: true,
+        });
     let builder = U32TriAddCarryAsChunkGate::configure_builder(
         builder,
-        GatePlacementStrategy::UseGeneralPurposeColumns,
+        GatePlacementStrategy::UseSpecializedColumns {
+            num_repetitions: 1,
+            share_constants: true,
+        },
+    );
+    let builder = U32AddCarryAsChunkGate::configure_builder(
+        builder,
+        GatePlacementStrategy::UseSpecializedColumns {
+            num_repetitions: 1,
+            share_constants: true,
+        },
     );
     let builder =
         NopGate::configure_builder(builder, GatePlacementStrategy::UseGeneralPurposeColumns);
@@ -662,7 +656,14 @@ fn test_verifier_inner_function() {
 
     // verify function
     println!("Start verification");
-    let (proof_state_dst, proof_input_dst) = crate::verifier::verify(cs, skeleton, queries);
+    let (proof_state_dst, proof_input_dst) =
+        crate::delegation_verifier::verify(cs, skeleton, queries);
+
+    // let proof: Proof = deserialize_from_file(&"blake2s_delegator_proof");
+
+    // // allocate prove parts
+    // let (skeleton, queries) =
+    //     prepare_proof_for_wrapper::<F, _, CircuitBlake2sForEverythingVerifier<F>>(cs, &proof);
 
     // verify outputs
     for (a, b) in proof_state_dst
@@ -768,6 +769,7 @@ fn test_verifier_inner_function() {
     let _ = cs;
     owned_cs.pad_and_shrink();
     let mut owned_cs = owned_cs.into_assembly::<Global>();
+    owned_cs.print_gate_stats();
     assert!(owned_cs.check_if_satisfied(&worker));
 }
 

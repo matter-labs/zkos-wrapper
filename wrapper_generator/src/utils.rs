@@ -19,7 +19,7 @@ pub(crate) fn read_value_expr(
             };
 
             quote! {
-                *(#ident.get_unchecked(#offset))
+                unsafe { *(#ident.get_unchecked(#offset)) }
             }
         }
         ColumnAddress::MemorySubtree(offset) => {
@@ -30,7 +30,7 @@ pub(crate) fn read_value_expr(
             };
 
             quote! {
-                *(#ident.get_unchecked(#offset))
+                unsafe { *(#ident.get_unchecked(#offset)) }
             }
         }
         ColumnAddress::SetupSubtree(offset) => {
@@ -38,7 +38,7 @@ pub(crate) fn read_value_expr(
             let ident = &idents.setup_values_ident;
 
             quote! {
-                *(#ident.get_unchecked(#offset))
+                unsafe { *(#ident.get_unchecked(#offset)) }
             }
         }
         ColumnAddress::OptimizedOut(..) => {
@@ -59,7 +59,7 @@ pub(crate) fn read_stage_2_value_expr(
     };
 
     quote! {
-        *(#ident.get_unchecked(#offset))
+        unsafe { *(#ident.get_unchecked(#offset)) }
     }
 }
 

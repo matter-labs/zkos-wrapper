@@ -1,8 +1,32 @@
-// use std::cell::Ref;
+use boojum::cs::traits::cs::ConstraintSystem;
+use boojum::field::SmallField;
+use boojum::gadgets::blake2s;
+use boojum::gadgets::blake2s::mixing_function::Word;
+use boojum::gadgets::boolean::Boolean;
+use boojum::gadgets::mersenne_field::MersenneField;
+use boojum::gadgets::mersenne_field::extension_trait::CircuitFieldExpression;
+use boojum::gadgets::mersenne_field::fourth_ext::MersenneQuartic;
+use boojum::gadgets::mersenne_field::second_ext::MersenneComplex;
+use boojum::gadgets::num::Num;
+use boojum::gadgets::traits::allocatable::CSAllocatable;
+use boojum::gadgets::traits::selectable::Selectable;
+use boojum::gadgets::u8::UInt8;
+use boojum::gadgets::u16::UInt16;
+use boojum::gadgets::u32::UInt32;
 
-use super::*;
-use boojum::cs::implementations::pow;
-use zkos_verifier::blake2s_u32::{BLAKE2S_BLOCK_SIZE_U32_WORDS, BLAKE2S_DIGEST_SIZE_U32_WORDS};
+use zkos_verifier::blake2s_u32::*;
+use zkos_verifier::concrete::skeleton_instance::BASE_CIRCUIT_QUERY_VALUES_NO_PADDING_U32_WORDS;
+use zkos_verifier::concrete::skeleton_instance::ProofSkeletonInstance;
+use zkos_verifier::concrete::skeleton_instance::QueryValuesInstance;
+use zkos_verifier::prover::cs::definitions::*;
+use zkos_verifier::prover::definitions::*;
+use zkos_verifier::skeleton::{ProofSkeleton, QueryValues};
+use zkos_verifier::verifier_common::non_determinism_source::NonDeterminismSource;
+use zkos_verifier::verifier_common::{ProofOutput, ProofPublicInputs};
+
+mod blake2s_reduced;
+
+pub use blake2s_reduced::*;
 
 pub const USE_REDUCED_BLAKE2_ROUNDS: bool = true;
 

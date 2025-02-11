@@ -1,14 +1,12 @@
 use boojum::{
-    blake2::*,
-    config::CSConfig,
     cs::{
         CSGeometry, GateConfigurationHolder, LookupParameters, StaticToolboxHolder,
         cs_builder::{CsBuilder, CsBuilderImpl},
         cs_builder_reference::CsReferenceImplementationBuilder,
         gates::{
             ConstantsAllocatorGate, DotProductGate, FmaGateInBaseFieldWithoutConstant, NopGate,
-            PublicInputGate, ReductionGate, SelectionGate, U32TriAddCarryAsChunkGate, UIntXAddGate,
-            ZeroCheckGate,
+            PublicInputGate, ReductionGate, SelectionGate, U32AddCarryAsChunkGate,
+            U32TriAddCarryAsChunkGate, UIntXAddGate, ZeroCheckGate,
         },
         implementations::prover::ProofConfig,
         traits::{circuit::CircuitBuilder, cs::ConstraintSystem, gate::GatePlacementStrategy},
@@ -30,11 +28,10 @@ use boojum::{
 };
 use std::mem::MaybeUninit;
 
-use crate::verifier::prover_structs::WrappedQueryValuesInstance;
-use crate::verifier::{
-    prover_structs::WrappedProofSkeletonInstance,
-    verifier_traits::{CircuitLeafInclusionVerifier, PlaceholderSource},
+use crate::delegation_verifier::skeleton::{
+    WrappedProofSkeletonInstance, WrappedQueryValuesInstance,
 };
+use crate::wrapper_utils::verifier_traits::{CircuitLeafInclusionVerifier, PlaceholderSource};
 use zkos_verifier::concrete::size_constants::*;
 use zkos_verifier::prover::definitions::LeafInclusionVerifier;
 use zkos_verifier::{concrete::skeleton_instance::ProofSkeletonInstance, skeleton};
@@ -61,7 +58,7 @@ impl<F: SmallField, V: CircuitLeafInclusionVerifier<F>> CircuitBuilder<F>
 {
     fn geometry() -> CSGeometry {
         CSGeometry {
-            num_columns_under_copy_permutation: 51,
+            num_columns_under_copy_permutation: 8,
             num_witness_columns: 0,
             num_constant_columns: 4,
             max_allowed_constraint_degree: 4,
@@ -105,14 +102,6 @@ impl<F: SmallField, V: CircuitLeafInclusionVerifier<F>> CircuitBuilder<F>
             builder,
             GatePlacementStrategy::UseGeneralPurposeColumns,
         );
-        let builder = SelectionGate::configure_builder(
-            builder,
-            GatePlacementStrategy::UseGeneralPurposeColumns,
-        );
-        let builder = U32TriAddCarryAsChunkGate::configure_builder(
-            builder,
-            GatePlacementStrategy::UseGeneralPurposeColumns,
-        );
         let builder =
             NopGate::configure_builder(builder, GatePlacementStrategy::UseGeneralPurposeColumns);
 
@@ -128,6 +117,27 @@ impl<F: SmallField, V: CircuitLeafInclusionVerifier<F>> CircuitBuilder<F>
         let builder = PublicInputGate::configure_builder(
             builder,
             GatePlacementStrategy::UseGeneralPurposeColumns,
+        );
+        let builder = SelectionGate::configure_builder(
+            builder,
+            GatePlacementStrategy::UseSpecializedColumns {
+                num_repetitions: 1,
+                share_constants: true,
+            },
+        );
+        let builder = U32TriAddCarryAsChunkGate::configure_builder(
+            builder,
+            GatePlacementStrategy::UseSpecializedColumns {
+                num_repetitions: 1,
+                share_constants: true,
+            },
+        );
+        let builder = U32AddCarryAsChunkGate::configure_builder(
+            builder,
+            GatePlacementStrategy::UseSpecializedColumns {
+                num_repetitions: 1,
+                share_constants: true,
+            },
         );
 
         builder
@@ -216,7 +226,8 @@ impl<F: SmallField, V: CircuitLeafInclusionVerifier<F>> ZKOSWrapperCircuit<F, V>
             (skeleton, queries)
         };
 
-        let (proof_state_dst, proof_input_dst) = crate::verifier::verify(cs, skeleton, queries);
+        let (proof_state_dst, proof_input_dst) =
+            crate::delegation_verifier::verify(cs, skeleton, queries);
 
         // TODO: check proof_state_dest
 
@@ -229,7 +240,6 @@ impl<F: SmallField, V: CircuitLeafInclusionVerifier<F>> ZKOSWrapperCircuit<F, V>
         }
 
         let input_keccak_hash = boojum::gadgets::keccak256::keccak256(cs, &flattened_public_input);
-        let input_keccak_hash = [UInt8::zero(cs); 32];
         let take_by = F::CAPACITY_BITS / 8;
 
         for chunk in input_keccak_hash

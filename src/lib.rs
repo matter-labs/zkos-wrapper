@@ -1,8 +1,10 @@
 #![feature(allocator_api)]
 #![feature(array_chunks)]
 
-mod verifier;
+mod delegation_verifier;
+mod transcript;
 mod verifier_circuit;
+mod wrapper_utils;
 
 #[cfg(test)]
 mod tests;
@@ -25,8 +27,8 @@ use boojum::cs::oracle::merkle_tree::MerkleTreeWithCap;
 use boojum::cs::traits::circuit::CircuitBuilder;
 use boojum::cs::traits::circuit::CircuitBuilderProxy;
 use boojum::worker::*;
-use verifier::verifier_traits::CircuitBlake2sForEverythingVerifier;
 use verifier_circuit::*;
+use wrapper_utils::verifier_traits::CircuitBlake2sForEverythingVerifier;
 use zkos_verifier::prover::prover_stages::Proof as ZkosProof;
 
 type F = boojum::field::goldilocks::GoldilocksField;

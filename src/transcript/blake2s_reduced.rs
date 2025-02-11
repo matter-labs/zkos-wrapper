@@ -1,8 +1,5 @@
 use super::*;
 
-use boojum::config::CSConfig;
-use boojum::config::CSWitnessEvaluationConfig;
-use boojum::cs::Place;
 use boojum::cs::gates::ConstantAllocatableCS;
 use boojum::gadgets::blake2s::{
     IV, SIGMAS, mixing_function::Word, mixing_function::mixing_function_g,
@@ -32,7 +29,7 @@ impl<F: SmallField> Blake2sStateGate<F> {
 
     pub fn new<CS: ConstraintSystem<F>>(cs: &mut CS) -> Self {
         let preconfigured_state: [UInt32<F>; BLAKE2S_STATE_WIDTH_IN_U32_WORDS] =
-            std::array::from_fn(|idx| UInt32::allocate(cs, CONFIGURED_IV[idx]));
+            std::array::from_fn(|idx| UInt32::allocate_constant(cs, CONFIGURED_IV[idx]));
         let preconfigured_state = preconfigured_state.map(|el| Word {
             inner: el.to_le_bytes(cs),
         });
@@ -105,9 +102,9 @@ impl<F: SmallField> Blake2sStateGate<F> {
         const REDUCED_ROUNDS: bool,
     >(
         &mut self,
-        cs: &mut CS,
-        block_len: usize,
-        dst: *mut [UInt32<F>; BLAKE2S_DIGEST_SIZE_U32_WORDS],
+        _cs: &mut CS,
+        _block_len: usize,
+        _dst: *mut [UInt32<F>; BLAKE2S_DIGEST_SIZE_U32_WORDS],
     ) {
         todo!()
     }
