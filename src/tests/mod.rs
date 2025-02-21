@@ -31,7 +31,6 @@ use boojum::{
     },
 };
 use std::alloc::Global;
-use std::mem::MaybeUninit;
 use zkos_verifier::prover::prover_stages::Proof;
 
 type F = boojum::field::goldilocks::GoldilocksField;
@@ -406,11 +405,10 @@ fn test_leaf_inclusion() {
     set_iterator_from_proof(&proof);
 
     let mut leaf_inclusion_verifier = CircuitBlake2sForEverythingVerifier::new(cs);
-    let skeleton = unsafe {
-        WrappedProofSkeletonInstance::from_non_determinism_source::<_, DefaultNonDeterminismSource>(
-            cs,
-        )
-    };
+    let skeleton = WrappedProofSkeletonInstance::from_non_determinism_source::<
+        _,
+        DefaultNonDeterminismSource,
+    >(cs);
 
     let _queries: [_; NUM_QUERIES] = std::array::from_fn(|_idx| unsafe {
         WrappedQueryValuesInstance::from_non_determinism_source::<_, DefaultNonDeterminismSource, _>(

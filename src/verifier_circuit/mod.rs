@@ -1,30 +1,23 @@
 use boojum::{
-    blake2::*,
-    config::CSConfig,
     cs::{
         cs_builder::{CsBuilder, CsBuilderImpl},
-        cs_builder_reference::CsReferenceImplementationBuilder,
         gates::{
-            ConstantsAllocatorGate, DotProductGate, FmaGateInBaseFieldWithoutConstant, NopGate,
-            PublicInputGate, ReductionGate, SelectionGate, U32TriAddCarryAsChunkGate, UIntXAddGate,
-            ZeroCheckGate,
+            ConstantsAllocatorGate, FmaGateInBaseFieldWithoutConstant, NopGate, PublicInputGate,
+            ReductionGate, SelectionGate, U32TriAddCarryAsChunkGate, UIntXAddGate, ZeroCheckGate,
         },
         implementations::prover::ProofConfig,
         traits::{circuit::CircuitBuilder, cs::ConstraintSystem, gate::GatePlacementStrategy},
         CSGeometry, GateConfigurationHolder, LookupParameters, StaticToolboxHolder,
     },
-    dag::CircuitResolverOpts,
     field::SmallField,
     gadgets::{
-        blake2s::{blake2s, mixing_function::Word, round_function::Blake2sControl},
         num::Num,
         tables::{
             and8::{create_and8_table, And8Table},
             byte_split::{create_byte_split_table, ByteSplitTable},
             xor8::{create_xor8_table, Xor8Table},
         },
-        traits::{allocatable::CSAllocatable, witnessable::WitnessHookable},
-        u32::UInt32,
+        traits::allocatable::CSAllocatable,
         u8::UInt8,
     },
 };
@@ -37,11 +30,8 @@ use crate::verifier::{
 };
 use zkos_verifier::concrete::size_constants::*;
 use zkos_verifier::prover::definitions::LeafInclusionVerifier;
-use zkos_verifier::{concrete::skeleton_instance::ProofSkeletonInstance, skeleton};
 
-use zkos_verifier::verifier_common::{
-    DefaultLeafInclusionVerifier, DefaultNonDeterminismSource, ProofOutput, ProofPublicInputs,
-};
+use zkos_verifier::verifier_common::{DefaultNonDeterminismSource, ProofOutput, ProofPublicInputs};
 
 use boojum::gadgets::tables::create_range_check_15_bits_table;
 use boojum::gadgets::tables::create_range_check_16_bits_table;
@@ -216,7 +206,7 @@ impl<F: SmallField, V: CircuitLeafInclusionVerifier<F>> ZKOSWrapperCircuit<F, V>
             (skeleton, queries)
         };
 
-        let (proof_state_dst, proof_input_dst) = crate::verifier::verify(cs, skeleton, queries);
+        let (_proof_state_dst, proof_input_dst) = crate::verifier::verify(cs, skeleton, queries);
 
         // TODO: check proof_state_dest
 
@@ -228,7 +218,8 @@ impl<F: SmallField, V: CircuitLeafInclusionVerifier<F>> ZKOSWrapperCircuit<F, V>
             flattened_public_input.extend_from_slice(&el.into_uint32().decompose_into_bytes(cs));
         }
 
-        let input_keccak_hash = boojum::gadgets::keccak256::keccak256(cs, &flattened_public_input);
+        let _input_keccak_hash = boojum::gadgets::keccak256::keccak256(cs, &flattened_public_input);
+        // TODO: Verify input keccak hash.
         let input_keccak_hash = [UInt8::zero(cs); 32];
         let take_by = F::CAPACITY_BITS / 8;
 
@@ -262,11 +253,10 @@ pub(crate) fn prepare_proof_for_wrapper<
 ) {
     set_iterator_from_proof(proof);
 
-    let skeleton = unsafe {
-        WrappedProofSkeletonInstance::from_non_determinism_source::<_, DefaultNonDeterminismSource>(
-            cs,
-        )
-    };
+    let skeleton = WrappedProofSkeletonInstance::from_non_determinism_source::<
+        _,
+        DefaultNonDeterminismSource,
+    >(cs);
 
     let mut leaf_inclusion_verifier = V::new(cs);
 

@@ -811,7 +811,7 @@ impl<F: SmallField> WrappedQueryValuesInstance<F> {
         proof_skeleton: &WrappedProofSkeletonInstance<F>,
         hasher: &mut V,
     ) -> Self {
-        let mut source = MaybeUninit::<QueryValuesInstance>::uninit().assume_init();
+        let mut source = unsafe { MaybeUninit::<QueryValuesInstance>::uninit().assume_init() };
         let dst = ((&mut source) as *mut <Self as CSAllocatable<F>>::Witness).cast::<u32>();
         let modulus = Mersenne31Field::CHARACTERISTICS as u32;
         // query index
@@ -822,12 +822,12 @@ impl<F: SmallField> WrappedQueryValuesInstance<F> {
             query_index,
             1u32 << BITS_FOR_QUERY_INDEX
         );
-        dst.write(query_index);
+        unsafe { dst.write(query_index) };
         let mut i = 1;
         // leaf values are field elements
         while i < BASE_CIRCUIT_QUERY_VALUES_NO_PADDING_U32_WORDS {
             // field elements mut be reduced in full
-            dst.add(i).write(I::read_reduced_field_element(modulus));
+            unsafe { dst.add(i).write(I::read_reduced_field_element(modulus)) };
             i += 1;
         }
         let query = Self::allocate(cs, source.clone());
@@ -896,7 +896,7 @@ impl<F: SmallField> WrappedQueryValuesInstance<F> {
             fri_tree_index = &mut fri_tree_index[FRI_FOLDING_SCHEDULE[fri_step]..];
             fri_path_length -= FRI_FOLDING_SCHEDULE[fri_step];
             let leaf_size = 4 * (1 << FRI_FOLDING_SCHEDULE[fri_step]);
-            let fri_leaf_slice = core::slice::from_raw_parts(fri_leaf_start, leaf_size);
+            let fri_leaf_slice = unsafe { core::slice::from_raw_parts(fri_leaf_start, leaf_size) };
             hasher.verify_leaf_inclusion::<CS, I, TREE_CAP_SIZE, NUM_COSETS>(
                 cs,
                 &coset_index,
@@ -905,7 +905,7 @@ impl<F: SmallField> WrappedQueryValuesInstance<F> {
                 fri_leaf_slice,
                 caps,
             );
-            fri_leaf_start = fri_leaf_start.add(leaf_size);
+            fri_leaf_start = unsafe { fri_leaf_start.add(leaf_size) };
         }
 
         query
@@ -924,7 +924,7 @@ pub struct WrappedBitSource<F: SmallField> {
 
 impl<F: SmallField> WrappedBitSource<F> {
     pub fn new<CS: ConstraintSystem<F>>(cs: &mut CS, uint32_values: &[UInt32<F>]) -> Self {
-        let mut bytes = uint32_values
+        let bytes = uint32_values
             .iter()
             .flat_map(|value| value.decompose_into_bytes(cs))
             .rev() // we are going to take from the top
