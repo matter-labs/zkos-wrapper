@@ -1,0 +1,20 @@
+cargo-features = ["edition2024"]
+
+[package]
+name = "wrapper_generator"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+clap = { version = "4.5.21", features = ["derive"] }
+boojum = { git = "https://github.com/matter-labs/zksync-crypto.git", package="boojum", branch = "oh_mersenne_field"}
+zkos_verifier_generator = {git="https://github.com/matter-labs/air_compiler.git", package="verifier_generator", branch="oh_for_zkos_wrapper"}
+prover = {git="https://github.com/matter-labs/air_compiler.git", package="prover", branch="oh_for_zkos_wrapper"}
+serde_json = "*"
+serde = { version = "1", default-features = false, features = ["derive", "alloc"]}
+
+
+syn = { version = "2", features = ["extra-traits", "printing", "full"]}
+quote = { version = "1" }
+proc-macro2 = "1"
+proc-macro-error = "1"
