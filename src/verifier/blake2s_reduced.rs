@@ -2,11 +2,11 @@ use super::*;
 
 use boojum::config::CSConfig;
 use boojum::config::CSWitnessEvaluationConfig;
-use boojum::cs::Place;
 use boojum::cs::gates::ConstantAllocatableCS;
+use boojum::cs::Place;
 use boojum::gadgets::blake2s::{
-    IV, SIGMAS, mixing_function::Word, mixing_function::mixing_function_g,
-    round_function::Blake2sControl,
+    mixing_function::mixing_function_g, mixing_function::Word, round_function::Blake2sControl, IV,
+    SIGMAS,
 };
 use boojum::gadgets::u8::UInt8;
 use std::mem::MaybeUninit;

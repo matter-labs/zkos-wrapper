@@ -1,28 +1,28 @@
 use std::mem::MaybeUninit;
 
-use boojum::cs::Place;
 use boojum::cs::traits::cs::ConstraintSystem;
+use boojum::cs::Place;
 use boojum::field::SmallField;
 use boojum::gadgets::blake2s::mixing_function::Word;
 use boojum::gadgets::boolean::Boolean;
-use boojum::gadgets::mersenne_field::MersenneField;
 use boojum::gadgets::mersenne_field::extension_trait::CircuitFieldExpression;
 use boojum::gadgets::mersenne_field::fourth_ext::MersenneQuartic;
 use boojum::gadgets::mersenne_field::second_ext::MersenneComplex;
+use boojum::gadgets::mersenne_field::MersenneField;
 use boojum::gadgets::num::Num;
 use boojum::gadgets::traits::allocatable::CSAllocatable;
 use boojum::gadgets::traits::selectable::Selectable;
 use boojum::gadgets::traits::witnessable::WitnessHookable;
-use boojum::gadgets::u8::UInt8;
 use boojum::gadgets::u16::UInt16;
 use boojum::gadgets::u32::UInt32;
+use boojum::gadgets::u8::UInt8;
 use std::result;
 
 use zkos_verifier::blake2s_u32::*;
 use zkos_verifier::concrete::size_constants::*;
-use zkos_verifier::concrete::skeleton_instance::BASE_CIRCUIT_QUERY_VALUES_NO_PADDING_U32_WORDS;
 use zkos_verifier::concrete::skeleton_instance::ProofSkeletonInstance;
 use zkos_verifier::concrete::skeleton_instance::QueryValuesInstance;
+use zkos_verifier::concrete::skeleton_instance::BASE_CIRCUIT_QUERY_VALUES_NO_PADDING_U32_WORDS;
 use zkos_verifier::field::*;
 use zkos_verifier::prover::cs::definitions::*;
 use zkos_verifier::prover::definitions::*;
@@ -376,13 +376,7 @@ pub fn verify<F: SmallField, CS: ConstraintSystem<F>>(
             Boolean::enforce_equal(cs, &is_zero, &boolean_false);
         }
 
-        let [
-            z_inv,
-            vanishing_inv,
-            first_row,
-            one_before_last_row,
-            last_row,
-        ] = to_batch_inverse;
+        let [z_inv, vanishing_inv, first_row, one_before_last_row, last_row] = to_batch_inverse;
 
         // everywhere except last row (x - omega^-1) / (x^n - 1)
         let mut everywhere_except_last = z_minus_omega_inv.mul(cs, &vanishing_inv);

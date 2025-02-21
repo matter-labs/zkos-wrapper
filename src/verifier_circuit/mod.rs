@@ -2,7 +2,6 @@ use boojum::{
     blake2::*,
     config::CSConfig,
     cs::{
-        CSGeometry, GateConfigurationHolder, LookupParameters, StaticToolboxHolder,
         cs_builder::{CsBuilder, CsBuilderImpl},
         cs_builder_reference::CsReferenceImplementationBuilder,
         gates::{
@@ -12,6 +11,7 @@ use boojum::{
         },
         implementations::prover::ProofConfig,
         traits::{circuit::CircuitBuilder, cs::ConstraintSystem, gate::GatePlacementStrategy},
+        CSGeometry, GateConfigurationHolder, LookupParameters, StaticToolboxHolder,
     },
     dag::CircuitResolverOpts,
     field::SmallField,
@@ -19,13 +19,13 @@ use boojum::{
         blake2s::{blake2s, mixing_function::Word, round_function::Blake2sControl},
         num::Num,
         tables::{
-            and8::{And8Table, create_and8_table},
-            byte_split::{ByteSplitTable, create_byte_split_table},
-            xor8::{Xor8Table, create_xor8_table},
+            and8::{create_and8_table, And8Table},
+            byte_split::{create_byte_split_table, ByteSplitTable},
+            xor8::{create_xor8_table, Xor8Table},
         },
         traits::{allocatable::CSAllocatable, witnessable::WitnessHookable},
-        u8::UInt8,
         u32::UInt32,
+        u8::UInt8,
     },
 };
 use std::mem::MaybeUninit;
@@ -43,10 +43,10 @@ use zkos_verifier::verifier_common::{
     DefaultLeafInclusionVerifier, DefaultNonDeterminismSource, ProofOutput, ProofPublicInputs,
 };
 
-use boojum::gadgets::tables::RangeCheck15BitsTable;
-use boojum::gadgets::tables::RangeCheck16BitsTable;
 use boojum::gadgets::tables::create_range_check_15_bits_table;
 use boojum::gadgets::tables::create_range_check_16_bits_table;
+use boojum::gadgets::tables::RangeCheck15BitsTable;
+use boojum::gadgets::tables::RangeCheck16BitsTable;
 use zkos_verifier::prover::prover_stages::Proof;
 
 const NUM_ZKOS_WRAPPER_PUBLIC_INPUTS: usize = 4;
