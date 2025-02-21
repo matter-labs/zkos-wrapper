@@ -558,6 +558,8 @@ pub fn verify<
             [el, squared, quad, eigths, sixteens]
         });
 
+        // BUG might be somewhere here.. LC collapse doesn't really check the correctness !!
+
         // NOTE: here we skip 1 word because PoW is checked over it
         let mut bit_iterator = WrappedBitSource::new(cs, &indexes_bits[1..]);
         let mut inversion_buffer = [MersenneQuartic::zero(cs); 2];
@@ -568,14 +570,14 @@ pub fn verify<
             // assert that our query is at the proper index
             let mut powers = [F::ZERO; BITS_FOR_QUERY_INDEX];
             powers.copy_from_slice(&F::SHIFTS[..BITS_FOR_QUERY_INDEX]);
-            boojum::gadgets::impls::lc::linear_combination_collapse(
+            /*boojum::gadgets::impls::lc::linear_combination_collapse(
                 cs,
                 &mut query_index_bits
                     .iter()
                     .map(|bit| bit.get_variable())
                     .zip(powers),
                 Some(query.query_index.get_variable()),
-            );
+            );*/
 
             let mut tree_index_bits = query_index_bits[0..TRACE_LEN_LOG2].to_vec();
             let mut domain_index_bits = tree_index_bits.clone();

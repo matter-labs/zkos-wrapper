@@ -1,11 +1,14 @@
 #![feature(allocator_api)]
 #![feature(array_chunks)]
+#![feature(generic_arg_infer)]
+
 use boojum::algebraic_props::round_function::AbsorptionModeOverwrite;
 use boojum::algebraic_props::sponge::GoldilocksPoseidon2Sponge;
 use boojum::config::CSConfig;
 use boojum::cs::gates::{
-    ConstantsAllocatorGate, DotProductGate, FmaGateInBaseFieldWithoutConstant, NopGate,
-    ReductionGate, SelectionGate, U32TriAddCarryAsChunkGate, UIntXAddGate, ZeroCheckGate,
+    ConstantAllocatableCS, ConstantsAllocatorGate, DotProductGate,
+    FmaGateInBaseFieldWithoutConstant, NopGate, ReductionGate, SelectionGate,
+    U32TriAddCarryAsChunkGate, UIntXAddGate, ZeroCheckGate,
 };
 use boojum::cs::implementations::pow::NoPow;
 use boojum::cs::implementations::prover::ProofConfig;
@@ -20,6 +23,7 @@ use boojum::gadgets::tables::{
     create_xor8_table, ByteSplitTable, RangeCheck15BitsTable, RangeCheck16BitsTable, Xor8Table,
 };
 use boojum::gadgets::traits::allocatable::CSAllocatable;
+use boojum::gadgets::traits::witnessable::{CSWitnessable, WitnessHookable};
 use boojum::worker::Worker;
 use serde::Deserialize;
 use std::fs::File;
@@ -101,24 +105,25 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Open the file in read-only mode with buffer.
 
     let geometry = CSGeometry {
-        num_columns_under_copy_permutation: 60,
+        // to align with scheduler.
+        num_columns_under_copy_permutation: 26 * 5, //60,
         num_witness_columns: 0,
         num_constant_columns: 4,
-        max_allowed_constraint_degree: 4,
+        max_allowed_constraint_degree: 8, //4,
     };
 
     use boojum::config::DevCSConfig;
     type RCfg = <DevCSConfig as CSConfig>::ResolverConfig;
     use boojum::cs::cs_builder_reference::*;
     let builder_impl =
-        CsReferenceImplementationBuilder::<F, F, DevCSConfig>::new(geometry, 1 << 19);
+        CsReferenceImplementationBuilder::<F, F, DevCSConfig>::new(geometry, 1 << 20);
     use boojum::cs::cs_builder::new_builder;
     let builder = new_builder::<_, F>(builder_impl);
 
     let builder = builder.allow_lookup(
         LookupParameters::UseSpecializedColumnsWithTableIdAsConstant {
             width: 3,
-            num_repetitions: 10,
+            num_repetitions: 4, //10,
             share_table_id: true,
         },
     );
@@ -132,6 +137,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         GatePlacementStrategy::UseGeneralPurposeColumns,
     );
     let builder = ReductionGate::<F, 4>::configure_builder(
+        builder,
+        GatePlacementStrategy::UseGeneralPurposeColumns,
+    );
+    let builder = PublicInputGate::configure_builder(
         builder,
         GatePlacementStrategy::UseGeneralPurposeColumns,
     );
@@ -210,8 +219,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let proof_input_dst =
         unsafe { MaybeUninit::<ProofPublicInputs<NUM_STATE_ELEMENTS>>::uninit().assume_init() };
 
-    let mut proof_state_dst = WrappedProofOutput::allocate(cs, proof_state_dst);
+    let mut proof_state_dst: WrappedProofOutput<GoldilocksField, _, 2, _, 1> =
+        WrappedProofOutput::allocate(cs, proof_state_dst);
     let mut proof_input_dst = WrappedProofPublicInputs::allocate(cs, proof_input_dst);
+
+    use boojum::cs::gates::PublicInputGate;
+    //let aa = proof_input_dst.input_state_variables[0].as_variables_set()[0];
+
+    //let gate = PublicInputGate::new(proof_input_dst.input_state_variables[0].as_variables_set()[0]);
+    //gate.add_to_cs(cs);
 
     // verify function
     crate::verifier::verify(
@@ -221,6 +237,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         skeleton,
         queries,
     );
+
+    /*for i in 0..2000 {
+        let foo = cs.allocate_constant(GoldilocksField::from_nonreduced_u64(i));
+        ZeroCheckGate::check_if_zero(cs, foo);
+    }*/
+
+    for i in 1u64..5u64 {
+        let aa = cs.allocate_constant(GoldilocksField::from_nonreduced_u64(i));
+
+        let gate = PublicInputGate::new(aa);
+        gate.add_to_cs(cs);
+    }
+
     let (final_size, finalization_hint) = cs.pad_and_shrink();
     dbg!(final_size);
     let cs_assembly = owned_cs.into_assembly::<std::alloc::Global>();
@@ -260,7 +289,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             &worker,
         );
 
-    dbg!(proof);
+    // Write proof to file
+    let proof_file = File::create("proof_output.json")?;
+    serde_json::to_writer(proof_file, &proof)?;
+
+    let vk_file = File::create("vk.json")?;
+    serde_json::to_writer(vk_file, &vk)?;
 
     // TODO: verify
     // TODO: write it to file.
