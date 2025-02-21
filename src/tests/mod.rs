@@ -360,7 +360,6 @@ fn test_transcript_circuit(len: usize) {
     assert!(owned_cs.check_if_satisfied(&worker));
 }
 
-#[ignore = "failing with stack overflow"]
 #[test]
 fn test_leaf_inclusion() {
     let geometry = CSGeometry {
@@ -567,7 +566,6 @@ use zkos_verifier::verifier_common::{
     DefaultLeafInclusionVerifier, DefaultNonDeterminismSource, ProofOutput, ProofPublicInputs,
 };
 
-#[ignore = "failing with stack overflow"]
 #[test]
 fn test_verifier_inner_function() {
     // allocate CS
@@ -797,7 +795,6 @@ fn deserialize_from_file<T: serde::de::DeserializeOwned>(filename: &str) -> T {
     serde_json::from_reader(src).unwrap()
 }
 
-#[ignore = "failing with stack overflow"]
 #[test]
 fn test_wrapper_circuit() {
     let worker = boojum::worker::Worker::new_with_num_threads(4);

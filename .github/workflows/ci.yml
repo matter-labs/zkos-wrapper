@@ -21,4 +21,5 @@ jobs:
       - name: Compile 
         run: cargo build --verbose
       - name: tests
-        run: cargo test -- --nocapture
+        # We need to increase the stack size for the tests (due to quotient computation)
+        run:  RUST_MIN_STACK=67108864 cargo test --release -- --nocapture
