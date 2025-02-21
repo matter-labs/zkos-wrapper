@@ -1,33 +1,19 @@
 use crate::verifier::transcript::*;
-// use boojum::{
-//     blake2::*, config::CSConfig, cs::{gates::{
-//         ConstantsAllocatorGate, ReductionGate, U32TriAddCarryAsChunkGate, UIntXAddGate, ZeroCheckGate,
-//     }, traits::{cs::ConstraintSystem, gate::GatePlacementStrategy}, CSGeometry}, dag::CircuitResolverOpts, gadgets::{blake2s::{blake2s, mixing_function::Word, round_function::Blake2sControl}, tables::{
-//         byte_split::{create_byte_split_table, ByteSplitTable},
-//         xor8::{create_xor8_table, Xor8Table},
-//     }, traits::{allocatable::CSAllocatable, witnessable::WitnessHookable}, u32::UInt32, u8::UInt8},
-// };
-use crate::verifier::blake2s_reduced_round_function;
+
 use crate::verifier::verifier_traits::CircuitBlake2sForEverythingVerifier;
 use crate::verifier::verifier_traits::CircuitLeafInclusionVerifier;
 use crate::verifier::Blake2sStateGate;
 use crate::verifier_circuit::*;
-use boojum::cs::cs_builder_reference::CsReferenceImplementationBuilder;
-use boojum::cs::gates::DotProductGate;
 use boojum::cs::gates::FmaGateInBaseFieldWithoutConstant;
 use boojum::cs::gates::NopGate;
 use boojum::cs::gates::SelectionGate;
 use boojum::cs::gates::ZeroCheckGate;
-use boojum::cs::traits::evaluator::GateConstraintEvaluator;
 use boojum::cs::LookupParameters;
 use boojum::gadgets::tables::create_range_check_15_bits_table;
 use boojum::gadgets::tables::create_range_check_16_bits_table;
 use boojum::gadgets::tables::RangeCheck15BitsTable;
 use boojum::gadgets::tables::RangeCheck16BitsTable;
-use boojum::worker;
 use boojum::{
-    blake2::*,
-    config::CSConfig,
     cs::{
         gates::{ConstantsAllocatorGate, ReductionGate, U32TriAddCarryAsChunkGate, UIntXAddGate},
         traits::{cs::ConstraintSystem, gate::GatePlacementStrategy},
@@ -35,40 +21,20 @@ use boojum::{
     },
     dag::CircuitResolverOpts,
     gadgets::blake2s::mixing_function::Word,
-    gadgets::blake2s::round_function::Blake2sControl,
-    gadgets::traits::allocatable::CSAllocatable,
     gadgets::{
-        blake2s::blake2s,
         tables::{
             byte_split::{create_byte_split_table, ByteSplitTable},
             xor8::{create_xor8_table, Xor8Table},
         },
         traits::witnessable::WitnessHookable,
         u32::UInt32,
-        u8::UInt8,
     },
 };
 use std::alloc::Global;
 use std::mem::MaybeUninit;
 use zkos_verifier::prover::prover_stages::Proof;
-use zkos_verifier::{blake2s_u32::CONFIGURED_IV, prover::cs::cs::circuit, skeleton};
 
 type F = boojum::field::goldilocks::GoldilocksField;
-
-// #[test]
-// fn test_transcript_circuit() {
-//     let input_len = 64;
-//     let mut input_u32: Vec<u32> = vec![];
-//     for i in 0..input_len {
-//         input_u32.push(i as u32);
-//     }
-
-// }
-
-// #[test]
-// fn test_single_round_exact() {
-//     test_blake2s(64);
-// }
 
 #[test]
 fn test_blake2s_round_function() {
@@ -169,9 +135,8 @@ fn test_blake2s_round_function() {
                 inner: circuit_input[i].to_le_bytes(cs),
             };
         });
-    unsafe {
-        hasher.run_round_function::<_, true>(cs, len, true);
-    }
+    hasher.run_round_function::<_, true>(cs, len, true);
+
     let output = hasher
         .read_state_for_output()
         .map(|el| UInt32::from_le_bytes(cs, el.inner));
@@ -190,12 +155,9 @@ fn test_transcript_circuit_initial() {
 }
 
 fn test_transcript_circuit(len: usize) {
-    use rand::{Rng, SeedableRng};
-    let mut rng = rand::rngs::StdRng::seed_from_u64(42);
-
     let mut input = vec![];
     for i in 0..len {
-        let byte: u32 = i as u32; // rng.r#gen();
+        let byte: u32 = i as u32;
         input.push(byte);
     }
 
@@ -211,13 +173,8 @@ fn test_transcript_circuit(len: usize) {
         &mut seed,
         &input,
     );
-    let mut transcript_challenges = unsafe {
-        MaybeUninit::<
-            [u32; (1usize * 4)
-                .next_multiple_of(zkos_verifier::blake2s_u32::BLAKE2S_DIGEST_SIZE_U32_WORDS)],
-        >::uninit()
-        .assume_init()
-    };
+    let mut transcript_challenges = [0u32;
+        (1usize * 4).next_multiple_of(zkos_verifier::blake2s_u32::BLAKE2S_DIGEST_SIZE_U32_WORDS)];
     zkos_verifier::transcript::Blake2sTranscript::draw_randomness_using_hasher(
         &mut transcript_hasher,
         &mut seed,
@@ -360,7 +317,6 @@ fn test_transcript_circuit(len: usize) {
     assert!(owned_cs.check_if_satisfied(&worker));
 }
 
-#[ignore = "failing with stack overflow"]
 #[test]
 fn test_leaf_inclusion() {
     let geometry = CSGeometry {
@@ -472,7 +428,6 @@ fn test_leaf_inclusion() {
     assert!(owned_cs.check_if_satisfied(&worker));
 }
 
-#[ignore = "failing"]
 #[test]
 fn test_decompose() {
     use rand::{Rng, SeedableRng};
@@ -480,7 +435,6 @@ fn test_decompose() {
 
     let input: u32 = rng.r#gen();
 
-    let reference_output: [u8; 4] = std::array::from_fn(|idx| (input >> (idx * 8)) as u8);
     let reference_output = input;
 
     let geometry = CSGeometry {
@@ -516,27 +470,14 @@ fn test_decompose() {
         builder,
         GatePlacementStrategy::UseGeneralPurposeColumns,
     );
+    let builder =
+        NopGate::configure_builder(builder, GatePlacementStrategy::UseGeneralPurposeColumns);
 
     let mut owned_cs = builder.build(CircuitResolverOpts::new(1 << 20));
 
     // add tables
     let table = create_xor8_table();
     owned_cs.add_lookup_table::<Xor8Table, 3>(table);
-
-    let table = create_byte_split_table::<F, 4>();
-    owned_cs.add_lookup_table::<ByteSplitTable<4>, 3>(table);
-
-    let table = create_byte_split_table::<F, 7>();
-    owned_cs.add_lookup_table::<ByteSplitTable<7>, 3>(table);
-
-    let table = create_byte_split_table::<F, 1>();
-    owned_cs.add_lookup_table::<ByteSplitTable<1>, 3>(table);
-
-    let table = create_byte_split_table::<F, 2>();
-    owned_cs.add_lookup_table::<ByteSplitTable<2>, 3>(table);
-
-    let table = create_byte_split_table::<F, 3>();
-    owned_cs.add_lookup_table::<ByteSplitTable<3>, 3>(table);
 
     let cs = &mut owned_cs;
 
@@ -559,15 +500,9 @@ fn test_decompose() {
 
 use crate::verifier::prover_structs::*;
 use zkos_verifier::concrete::size_constants::*;
-use zkos_verifier::concrete::skeleton_instance::{ProofSkeletonInstance, QueryValuesInstance};
 use zkos_verifier::prover::definitions::Blake2sForEverythingVerifier;
-use zkos_verifier::prover::definitions::LeafInclusionVerifier;
-use zkos_verifier::verifier_common::non_determinism_source::NonDeterminismSource;
-use zkos_verifier::verifier_common::{
-    DefaultLeafInclusionVerifier, DefaultNonDeterminismSource, ProofOutput, ProofPublicInputs,
-};
+use zkos_verifier::verifier_common::{DefaultNonDeterminismSource, ProofOutput, ProofPublicInputs};
 
-#[ignore = "failing with stack overflow"]
 #[test]
 fn test_verifier_inner_function() {
     // allocate CS
@@ -797,7 +732,6 @@ fn deserialize_from_file<T: serde::de::DeserializeOwned>(filename: &str) -> T {
     serde_json::from_reader(src).unwrap()
 }
 
-#[ignore = "failing with stack overflow"]
 #[test]
 fn test_wrapper_circuit() {
     let worker = boojum::worker::Worker::new_with_num_threads(4);
