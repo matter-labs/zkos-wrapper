@@ -2,11 +2,11 @@ use super::*;
 
 use boojum::config::CSConfig;
 use boojum::config::CSWitnessEvaluationConfig;
-use boojum::cs::gates::ConstantAllocatableCS;
 use boojum::cs::Place;
+use boojum::cs::gates::ConstantAllocatableCS;
 use boojum::gadgets::blake2s::{
-    mixing_function::mixing_function_g, mixing_function::Word, round_function::Blake2sControl, IV,
-    SIGMAS,
+    IV, SIGMAS, mixing_function::Word, mixing_function::mixing_function_g,
+    round_function::Blake2sControl,
 };
 use boojum::gadgets::u8::UInt8;
 use std::mem::MaybeUninit;
@@ -28,8 +28,7 @@ pub struct Blake2sStateGate<F: SmallField> {
 }
 
 impl<F: SmallField> Blake2sStateGate<F> {
-    // FIXME!!
-    pub const SUPPORT_SPEC_SINGLE_ROUND: bool = false;
+    // pub const SUPPORT_SPEC_SINGLE_ROUND: bool = false;
 
     pub fn new<CS: ConstraintSystem<F>>(cs: &mut CS) -> Self {
         let preconfigured_state: [UInt32<F>; BLAKE2S_STATE_WIDTH_IN_U32_WORDS] =
