@@ -16,4 +16,4 @@ serde = { version = "1", default-features = false, features = ["derive", "alloc"
 [dev-dependencies]
 rand = "0.8.4"
 hex = "0.4.3"
-zkos_verifier_worker = { path = "../air_compiler/worker", package="worker" }
+#zkos_verifier_worker = { path = "../air_compiler/worker", package="worker" }
