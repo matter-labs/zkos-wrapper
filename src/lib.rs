@@ -4,6 +4,8 @@
 mod verifier;
 mod verifier_circuit;
 
+pub mod zkos_utils;
+
 #[cfg(test)]
 mod tests;
 

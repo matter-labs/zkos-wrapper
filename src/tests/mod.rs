@@ -4,6 +4,7 @@ use crate::verifier::verifier_traits::CircuitBlake2sForEverythingVerifier;
 use crate::verifier::verifier_traits::CircuitLeafInclusionVerifier;
 use crate::verifier::Blake2sStateGate;
 use crate::verifier_circuit::*;
+use crate::zkos_utils::read_and_verify_proof;
 use boojum::cs::gates::FmaGateInBaseFieldWithoutConstant;
 use boojum::cs::gates::NopGate;
 use boojum::cs::gates::SelectionGate;
@@ -31,7 +32,6 @@ use boojum::{
     },
 };
 use std::alloc::Global;
-use zkos_verifier::prover::prover_stages::Proof;
 
 type F = boojum::field::goldilocks::GoldilocksField;
 
@@ -498,8 +498,7 @@ fn test_decompose() {
 
 use crate::verifier::prover_structs::*;
 use zkos_verifier::concrete::size_constants::*;
-use zkos_verifier::prover::definitions::Blake2sForEverythingVerifier;
-use zkos_verifier::verifier_common::{DefaultNonDeterminismSource, ProofOutput, ProofPublicInputs};
+use zkos_verifier::verifier_common::DefaultNonDeterminismSource;
 
 #[test]
 fn test_verifier_inner_function() {
@@ -705,29 +704,6 @@ fn test_verifier_inner_function() {
     owned_cs.pad_and_shrink();
     let mut owned_cs = owned_cs.into_assembly::<Global>();
     assert!(owned_cs.check_if_satisfied(&worker));
-}
-
-pub(crate) fn read_and_verify_proof(
-    proof_path: &String,
-) -> (
-    Proof,
-    ProofOutput<TREE_CAP_SIZE, NUM_COSETS, NUM_DELEGATION_CHALLENGES, NUM_AUX_BOUNDARY_VALUES>,
-    ProofPublicInputs<NUM_STATE_ELEMENTS>,
-) {
-    // read proof from file
-    println!("Verifying proof from {}", proof_path);
-    let proof: Proof = deserialize_from_file(proof_path);
-
-    // verify proof
-    let (proof_state_dst, proof_input_dst) =
-        verify_zkos_proof::<Blake2sForEverythingVerifier>(&proof);
-
-    (proof, proof_state_dst, proof_input_dst)
-}
-
-fn deserialize_from_file<T: serde::de::DeserializeOwned>(filename: &str) -> T {
-    let src = std::fs::File::open(filename).unwrap();
-    serde_json::from_reader(src).unwrap()
 }
 
 #[test]
