@@ -1,8 +1,5 @@
 use super::*;
 
-use serde::de;
-use zkos_verifier::prover::nd_source_std::ThreadLocalBasedSource;
-
 #[derive(Clone, Copy)]
 pub(crate) struct PlaceholderSource;
 
@@ -22,18 +19,6 @@ pub(crate) fn read_word<F: SmallField, CS: ConstraintSystem<F>, I: NonDeterminis
     cs: &mut CS,
 ) -> UInt32<F> {
     UInt32::allocate_checked(cs, I::read_word())
-}
-
-pub(crate) fn read_mersenne_element<
-    F: SmallField,
-    CS: ConstraintSystem<F>,
-    I: NonDeterminismSource,
->(
-    cs: &mut CS,
-) -> MersenneField<F> {
-    let modulus = Mersenne31Field::CHARACTERISTICS as u32;
-    let witness = Mersenne31Field::from_nonreduced_u32(I::read_reduced_field_element(modulus));
-    MersenneField::allocate_checked(cs, witness, false)
 }
 
 pub trait CircuitLeafInclusionVerifier<F: SmallField> {

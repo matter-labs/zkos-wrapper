@@ -1,12 +1,9 @@
 use super::*;
 
-use boojum::config::CSConfig;
-use boojum::config::CSWitnessEvaluationConfig;
-use boojum::cs::Place;
 use boojum::cs::gates::ConstantAllocatableCS;
 use boojum::gadgets::blake2s::{
-    IV, SIGMAS, mixing_function::Word, mixing_function::mixing_function_g,
-    round_function::Blake2sControl,
+    mixing_function::mixing_function_g, mixing_function::Word, round_function::Blake2sControl, IV,
+    SIGMAS,
 };
 use boojum::gadgets::u8::UInt8;
 use std::mem::MaybeUninit;
@@ -48,7 +45,7 @@ impl<F: SmallField> Blake2sStateGate<F> {
                 }
             });
         let input_buffer: [Word<F>; BLAKE2S_BLOCK_SIZE_U32_WORDS] =
-            std::array::from_fn(|idx| Word {
+            std::array::from_fn(|_idx| Word {
                 inner: [UInt8::zero(cs); 4],
             });
         let t = 0u32;
@@ -98,18 +95,6 @@ impl<F: SmallField> Blake2sStateGate<F> {
                 is_last_block: last_round,
             },
         );
-    }
-
-    pub fn spec_run_sinlge_round_into_destination<
-        CS: ConstraintSystem<F>,
-        const REDUCED_ROUNDS: bool,
-    >(
-        &mut self,
-        cs: &mut CS,
-        block_len: usize,
-        dst: *mut [UInt32<F>; BLAKE2S_DIGEST_SIZE_U32_WORDS],
-    ) {
-        todo!()
     }
 }
 

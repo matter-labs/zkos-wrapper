@@ -241,12 +241,12 @@ pub struct WrappedProofOutput<
 }
 
 impl<
-    F: SmallField,
-    const CAP_SIZE: usize,
-    const NUM_COSETS: usize,
-    const NUM_DELEGATION_CHALLENGES: usize,
-    const NUM_AUX_BOUNDARY_VALUES: usize,
-> CSAllocatable<F>
+        F: SmallField,
+        const CAP_SIZE: usize,
+        const NUM_COSETS: usize,
+        const NUM_DELEGATION_CHALLENGES: usize,
+        const NUM_AUX_BOUNDARY_VALUES: usize,
+    > CSAllocatable<F>
     for WrappedProofOutput<
         F,
         CAP_SIZE,
@@ -392,19 +392,19 @@ pub struct WrappedProofSkeleton<
 }
 
 impl<
-    F: SmallField,
-    const CAP_SIZE: usize,
-    const NUM_COSETS: usize,
-    const NUM_PUBLIC_INPUTS: usize,
-    const NUM_DELEGATION_CHALLENGES: usize,
-    const NUM_AUX_BOUNDARY_VALUES: usize,
-    const NUM_PUBLIC_INPUTS_FROM_STATE_ELEMENTS: usize,
-    const NUM_OPENINGS_AT_Z: usize,
-    const NUM_OPENINGS_AT_Z_OMEGA: usize,
-    const NUM_FRI_STEPS_WITH_ORACLES: usize,
-    const FINAL_FRI_STEP_LEAF_SIZE_PER_COSET: usize,
-    const FRI_FINAL_DEGREE: usize,
-> CSAllocatable<F>
+        F: SmallField,
+        const CAP_SIZE: usize,
+        const NUM_COSETS: usize,
+        const NUM_PUBLIC_INPUTS: usize,
+        const NUM_DELEGATION_CHALLENGES: usize,
+        const NUM_AUX_BOUNDARY_VALUES: usize,
+        const NUM_PUBLIC_INPUTS_FROM_STATE_ELEMENTS: usize,
+        const NUM_OPENINGS_AT_Z: usize,
+        const NUM_OPENINGS_AT_Z_OMEGA: usize,
+        const NUM_FRI_STEPS_WITH_ORACLES: usize,
+        const FINAL_FRI_STEP_LEAF_SIZE_PER_COSET: usize,
+        const FRI_FINAL_DEGREE: usize,
+    > CSAllocatable<F>
     for WrappedProofSkeleton<
         F,
         CAP_SIZE,
@@ -718,18 +718,18 @@ pub(crate) struct WrappedQueryValues<
 }
 
 impl<
-    F: SmallField,
-    const BITS_FOR_QUERY_INDEX: usize,
-    const DEFAULT_MERKLE_PATH_LENGTH: usize,
-    const TOTAL_FRI_ORACLES_PATHS_LENGTH: usize,
-    const LEAF_SIZE_SETUP: usize,
-    const LEAF_SIZE_WITNESS_TREE: usize,
-    const LEAF_SIZE_MEMORY_TREE: usize,
-    const LEAF_SIZE_STAGE_2: usize,
-    const LEAF_SIZE_QUOTIENT: usize,
-    const TOTAL_FRI_LEAFS_SIZES: usize,
-    const NUM_FRI_STEPS: usize,
-> CSAllocatable<F>
+        F: SmallField,
+        const BITS_FOR_QUERY_INDEX: usize,
+        const DEFAULT_MERKLE_PATH_LENGTH: usize,
+        const TOTAL_FRI_ORACLES_PATHS_LENGTH: usize,
+        const LEAF_SIZE_SETUP: usize,
+        const LEAF_SIZE_WITNESS_TREE: usize,
+        const LEAF_SIZE_MEMORY_TREE: usize,
+        const LEAF_SIZE_STAGE_2: usize,
+        const LEAF_SIZE_QUOTIENT: usize,
+        const TOTAL_FRI_LEAFS_SIZES: usize,
+        const NUM_FRI_STEPS: usize,
+    > CSAllocatable<F>
     for WrappedQueryValues<
         F,
         BITS_FOR_QUERY_INDEX,
@@ -811,7 +811,7 @@ impl<F: SmallField> WrappedQueryValuesInstance<F> {
         proof_skeleton: &WrappedProofSkeletonInstance<F>,
         hasher: &mut V,
     ) -> Self {
-        let mut source = MaybeUninit::<QueryValuesInstance>::uninit().assume_init();
+        let mut source = unsafe { MaybeUninit::<QueryValuesInstance>::uninit().assume_init() };
         let dst = ((&mut source) as *mut <Self as CSAllocatable<F>>::Witness).cast::<u32>();
         let modulus = Mersenne31Field::CHARACTERISTICS as u32;
         // query index
@@ -822,12 +822,12 @@ impl<F: SmallField> WrappedQueryValuesInstance<F> {
             query_index,
             1u32 << BITS_FOR_QUERY_INDEX
         );
-        dst.write(query_index);
+        unsafe { dst.write(query_index) };
         let mut i = 1;
         // leaf values are field elements
         while i < BASE_CIRCUIT_QUERY_VALUES_NO_PADDING_U32_WORDS {
             // field elements mut be reduced in full
-            dst.add(i).write(I::read_reduced_field_element(modulus));
+            unsafe { dst.add(i).write(I::read_reduced_field_element(modulus)) };
             i += 1;
         }
         let query = Self::allocate(cs, source.clone());
@@ -896,7 +896,7 @@ impl<F: SmallField> WrappedQueryValuesInstance<F> {
             fri_tree_index = &mut fri_tree_index[FRI_FOLDING_SCHEDULE[fri_step]..];
             fri_path_length -= FRI_FOLDING_SCHEDULE[fri_step];
             let leaf_size = 4 * (1 << FRI_FOLDING_SCHEDULE[fri_step]);
-            let fri_leaf_slice = core::slice::from_raw_parts(fri_leaf_start, leaf_size);
+            let fri_leaf_slice = unsafe { core::slice::from_raw_parts(fri_leaf_start, leaf_size) };
             hasher.verify_leaf_inclusion::<CS, I, TREE_CAP_SIZE, NUM_COSETS>(
                 cs,
                 &coset_index,
@@ -905,7 +905,7 @@ impl<F: SmallField> WrappedQueryValuesInstance<F> {
                 fri_leaf_slice,
                 caps,
             );
-            fri_leaf_start = fri_leaf_start.add(leaf_size);
+            fri_leaf_start = unsafe { fri_leaf_start.add(leaf_size) };
         }
 
         query
@@ -924,7 +924,7 @@ pub struct WrappedBitSource<F: SmallField> {
 
 impl<F: SmallField> WrappedBitSource<F> {
     pub fn new<CS: ConstraintSystem<F>>(cs: &mut CS, uint32_values: &[UInt32<F>]) -> Self {
-        let mut bytes = uint32_values
+        let bytes = uint32_values
             .iter()
             .flat_map(|value| value.decompose_into_bytes(cs))
             .rev() // we are going to take from the top

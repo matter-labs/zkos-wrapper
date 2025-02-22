@@ -1,7 +1,4 @@
-// use std::cell::Ref;
-
 use super::*;
-use boojum::cs::implementations::pow;
 use zkos_verifier::blake2s_u32::{BLAKE2S_BLOCK_SIZE_U32_WORDS, BLAKE2S_DIGEST_SIZE_U32_WORDS};
 
 pub const USE_REDUCED_BLAKE2_ROUNDS: bool = true;
