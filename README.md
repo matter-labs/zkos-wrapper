@@ -1,8 +1,12 @@
 # zkos-wrapper
 Library for verifying zkos with boojum
 
-For building run:
+It takes the zkos proof (in json format), and returns the boojum proof.
+
+Currently working only on the zkos delegation proofs.
+
+You can use it as a library, or as a cli tool:
+
 ```
-    rustup install nightly-2024-08-01
-    cargo +nightly-2024-08-01 build 
+cargo run --release -- --input delegation_proof --output boojum_proof.json
 ```
