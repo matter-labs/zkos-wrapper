@@ -1,42 +1,31 @@
 use boojum::{
     cs::{
-        CSGeometry, GateConfigurationHolder, LookupParameters, StaticToolboxHolder,
-        cs_builder::{CsBuilder, CsBuilderImpl},
-        cs_builder_reference::CsReferenceImplementationBuilder,
-        gates::{
-            ConstantsAllocatorGate, DotProductGate, FmaGateInBaseFieldWithoutConstant, NopGate,
-            PublicInputGate, ReductionGate, SelectionGate, U32AddCarryAsChunkGate,
-            U32TriAddCarryAsChunkGate, UIntXAddGate, ZeroCheckGate,
-        },
-        implementations::prover::ProofConfig,
-        traits::{circuit::CircuitBuilder, cs::ConstraintSystem, gate::GatePlacementStrategy},
+        cs_builder::{CsBuilder, CsBuilderImpl}, cs_builder_reference::CsReferenceImplementationBuilder, gates::{
+            public_input, ConstantsAllocatorGate, DotProductGate, FmaGateInBaseFieldWithoutConstant, NopGate, PublicInputGate, ReductionGate, SelectionGate, U32AddCarryAsChunkGate, U32TriAddCarryAsChunkGate, UIntXAddGate, ZeroCheckGate
+        }, implementations::prover::ProofConfig, traits::{circuit::CircuitBuilder, cs::ConstraintSystem, gate::GatePlacementStrategy}, CSGeometry, GateConfigurationHolder, LookupParameters, StaticToolboxHolder
     },
     dag::CircuitResolverOpts,
     field::SmallField,
     gadgets::{
-        blake2s::{blake2s, mixing_function::Word, round_function::Blake2sControl},
-        num::Num,
-        tables::{
-            and8::{And8Table, create_and8_table},
-            byte_split::{ByteSplitTable, create_byte_split_table},
-            xor8::{Xor8Table, create_xor8_table},
-        },
-        traits::{allocatable::CSAllocatable, witnessable::WitnessHookable},
-        u8::UInt8,
-        u32::UInt32,
+        blake2s::{blake2s, mixing_function::Word, round_function::Blake2sControl}, num::Num, tables::{
+            and8::{create_and8_table, And8Table},
+            byte_split::{create_byte_split_table, ByteSplitTable},
+            xor8::{create_xor8_table, Xor8Table},
+        }, traits::{allocatable::CSAllocatable, witnessable::WitnessHookable}, u32::UInt32, u8::UInt8
     },
 };
 use std::mem::MaybeUninit;
 
-use crate::delegation_verifier::skeleton::{
+use crate::wrapper_inner_verifier::skeleton::{
     WrappedProofSkeletonInstance, WrappedQueryValuesInstance,
 };
+use crate::wrapper_utils::prover_structs::{WrappedProofOutput, WrappedProofPublicInputs};
 use crate::wrapper_utils::verifier_traits::{CircuitLeafInclusionVerifier, PlaceholderSource};
-use zkos_verifier::concrete::size_constants::*;
-use zkos_verifier::prover::definitions::LeafInclusionVerifier;
-use zkos_verifier::{concrete::skeleton_instance::ProofSkeletonInstance, skeleton};
+use risc_verifier::concrete::size_constants::*;
+use risc_verifier::prover::definitions::LeafInclusionVerifier;
+use risc_verifier::{concrete::skeleton_instance::ProofSkeletonInstance, skeleton};
 
-use zkos_verifier::verifier_common::{
+use risc_verifier::verifier_common::{
     DefaultLeafInclusionVerifier, DefaultNonDeterminismSource, ProofOutput, ProofPublicInputs,
 };
 
@@ -44,7 +33,7 @@ use boojum::gadgets::tables::RangeCheck15BitsTable;
 use boojum::gadgets::tables::RangeCheck16BitsTable;
 use boojum::gadgets::tables::create_range_check_15_bits_table;
 use boojum::gadgets::tables::create_range_check_16_bits_table;
-use zkos_verifier::prover::prover_stages::Proof;
+use risc_verifier::prover::prover_stages::Proof;
 
 const NUM_ZKOS_WRAPPER_PUBLIC_INPUTS: usize = 4;
 
@@ -58,7 +47,7 @@ impl<F: SmallField, V: CircuitLeafInclusionVerifier<F>> CircuitBuilder<F>
 {
     fn geometry() -> CSGeometry {
         CSGeometry {
-            num_columns_under_copy_permutation: 8,
+            num_columns_under_copy_permutation: 51,
             num_witness_columns: 0,
             num_constant_columns: 4,
             max_allowed_constraint_degree: 4,
@@ -68,7 +57,7 @@ impl<F: SmallField, V: CircuitLeafInclusionVerifier<F>> CircuitBuilder<F>
     fn lookup_parameters() -> LookupParameters {
         LookupParameters::UseSpecializedColumnsWithTableIdAsConstant {
             width: 3,
-            num_repetitions: 17,
+            num_repetitions: 21,
             share_table_id: true,
         }
     }
@@ -120,24 +109,15 @@ impl<F: SmallField, V: CircuitLeafInclusionVerifier<F>> CircuitBuilder<F>
         );
         let builder = SelectionGate::configure_builder(
             builder,
-            GatePlacementStrategy::UseSpecializedColumns {
-                num_repetitions: 1,
-                share_constants: true,
-            },
+            GatePlacementStrategy::UseGeneralPurposeColumns,
         );
         let builder = U32TriAddCarryAsChunkGate::configure_builder(
             builder,
-            GatePlacementStrategy::UseSpecializedColumns {
-                num_repetitions: 1,
-                share_constants: true,
-            },
+            GatePlacementStrategy::UseGeneralPurposeColumns,
         );
         let builder = U32AddCarryAsChunkGate::configure_builder(
             builder,
-            GatePlacementStrategy::UseSpecializedColumns {
-                num_repetitions: 1,
-                share_constants: true,
-            },
+            GatePlacementStrategy::UseGeneralPurposeColumns,
         );
 
         builder
@@ -162,7 +142,7 @@ impl<F: SmallField, V: CircuitLeafInclusionVerifier<F>> ZKOSWrapperCircuit<F, V>
 
     pub fn size_hint(&self) -> (Option<usize>, Option<usize>) {
         let trace_len = 1 << 20;
-        let max_variables = 1 << 25;
+        let max_variables = 1 << 26;
         (Some(trace_len), Some(max_variables))
     }
 
@@ -226,16 +206,16 @@ impl<F: SmallField, V: CircuitLeafInclusionVerifier<F>> ZKOSWrapperCircuit<F, V>
             (skeleton, queries)
         };
 
-        let (proof_state_dst, proof_input_dst) =
-            crate::delegation_verifier::verify(cs, skeleton, queries);
+        let (proof_state, proof_input) =
+            crate::wrapper_inner_verifier::verify(cs, skeleton, queries);
 
-        // TODO: check proof_state_dest
+        check_proof_state(cs, &proof_state, &proof_input);
 
         let mut flattened_public_input = vec![];
-        for el in proof_input_dst.input_state_variables.iter() {
+        for el in proof_input.input_state_variables.iter() {
             flattened_public_input.extend_from_slice(&el.into_uint32().decompose_into_bytes(cs));
         }
-        for el in proof_input_dst.output_state_variables.iter() {
+        for el in proof_input.output_state_variables.iter() {
             flattened_public_input.extend_from_slice(&el.into_uint32().decompose_into_bytes(cs));
         }
 
@@ -270,7 +250,7 @@ pub(crate) fn prepare_proof_for_wrapper<
     WrappedProofSkeletonInstance<F>,
     [WrappedQueryValuesInstance<F>; NUM_QUERIES],
 ) {
-    set_iterator_from_proof(proof);
+    set_iterator_from_proof(proof, true);
 
     let skeleton = unsafe {
         WrappedProofSkeletonInstance::from_non_determinism_source::<_, DefaultNonDeterminismSource>(
@@ -297,7 +277,7 @@ pub(crate) fn verify_zkos_proof<V: LeafInclusionVerifier>(
     ProofOutput<TREE_CAP_SIZE, NUM_COSETS, NUM_DELEGATION_CHALLENGES, NUM_AUX_BOUNDARY_VALUES>,
     ProofPublicInputs<NUM_STATE_ELEMENTS>,
 ) {
-    set_iterator_from_proof(proof);
+    set_iterator_from_proof(proof, true);
 
     let mut proof_state_dst = unsafe {
         MaybeUninit::<
@@ -314,7 +294,7 @@ pub(crate) fn verify_zkos_proof<V: LeafInclusionVerifier>(
         unsafe { MaybeUninit::<ProofPublicInputs<NUM_STATE_ELEMENTS>>::uninit().assume_init() };
 
     unsafe {
-        zkos_verifier::verify_with_configuration::<DefaultNonDeterminismSource, V>(
+        risc_verifier::verify_with_configuration::<DefaultNonDeterminismSource, V>(
             &mut proof_state_dst,
             &mut proof_input_dst,
         );
@@ -323,22 +303,44 @@ pub(crate) fn verify_zkos_proof<V: LeafInclusionVerifier>(
     (proof_state_dst, proof_input_dst)
 }
 
-pub(crate) fn set_iterator_from_proof(proof: &Proof) {
+pub(crate) fn set_iterator_from_proof(proof: &Proof, shuffle_ram_inits_and_teardowns: bool) {
     let mut oracle_data = vec![];
 
-    let shuffle_ram_inits_and_teardowns = true;
-
     oracle_data.extend(
-        zkos_verifier::verifier_common::proof_flattener::flatten_proof_for_skeleton(
+        risc_verifier::verifier_common::proof_flattener::flatten_proof_for_skeleton(
             &proof,
             shuffle_ram_inits_and_teardowns,
         ),
     );
+    let idx = oracle_data.len();
+    dbg!(oracle_data.len());
     for query in proof.queries.iter() {
-        oracle_data.extend(zkos_verifier::verifier_common::proof_flattener::flatten_query(query));
+        oracle_data.extend(risc_verifier::verifier_common::proof_flattener::flatten_query(query));
     }
+    dbg!(oracle_data.len(), &oracle_data[idx]);
 
     let it = oracle_data.into_iter();
 
-    zkos_verifier::prover::nd_source_std::set_iterator(it.clone());
+    risc_verifier::prover::nd_source_std::set_iterator(it.clone());
+}
+
+pub(crate) fn check_proof_state<F: SmallField, CS: ConstraintSystem<F>>(
+    cs: &mut CS,
+    proof_state: &WrappedProofOutput<F, TREE_CAP_SIZE, NUM_COSETS, NUM_DELEGATION_CHALLENGES, NUM_AUX_BOUNDARY_VALUES>,
+    public_input: &WrappedProofPublicInputs<F, NUM_STATE_ELEMENTS>
+) {
+
+    // pub setup_caps: [WrappedMerkleTreeCap<F, CAP_SIZE>; NUM_COSETS],
+    // pub memory_caps: [WrappedMerkleTreeCap<F, CAP_SIZE>; NUM_COSETS],
+    // pub memory_challenges: WrappedExternalMemoryArgumentChallenges<F>,
+    // pub delegation_challenges:
+    //     [WrappedExternalDelegationArgumentChallenges<F>; NUM_DELEGATION_CHALLENGES],
+    // pub lazy_init_boundary_values: [WrappedAuxArgumentsBoundaryValues<F>; NUM_AUX_BOUNDARY_VALUES],
+    // pub memory_grand_product_accumulator: MersenneQuartic<F>,
+    // pub delegation_argument_accumulator: [MersenneQuartic<F>; NUM_DELEGATION_CHALLENGES],
+    // pub circuit_sequence: UInt32<F>,
+    // pub delegation_type: UInt32<F>,
+    // TODO: check proof_state_dest
+
+    // todo!()
 }

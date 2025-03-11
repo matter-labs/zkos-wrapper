@@ -50,7 +50,7 @@ pub trait CircuitLeafInclusionVerifier<F: SmallField> {
     );
 }
 
-use zkos_verifier::blake2s_u32::{BLAKE2S_BLOCK_SIZE_U32_WORDS, BLAKE2S_DIGEST_SIZE_U32_WORDS};
+use risc_verifier::blake2s_u32::{BLAKE2S_BLOCK_SIZE_U32_WORDS, BLAKE2S_DIGEST_SIZE_U32_WORDS};
 
 #[derive(Debug)]
 pub struct CircuitBlake2sForEverythingVerifier<F: SmallField> {

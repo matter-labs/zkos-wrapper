@@ -14,15 +14,15 @@ use boojum::gadgets::u8::UInt8;
 use boojum::gadgets::u16::UInt16;
 use boojum::gadgets::u32::UInt32;
 
-use zkos_verifier::blake2s_u32::*;
-use zkos_verifier::concrete::skeleton_instance::BASE_CIRCUIT_QUERY_VALUES_NO_PADDING_U32_WORDS;
-use zkos_verifier::concrete::skeleton_instance::ProofSkeletonInstance;
-use zkos_verifier::concrete::skeleton_instance::QueryValuesInstance;
-use zkos_verifier::prover::cs::definitions::*;
-use zkos_verifier::prover::definitions::*;
-use zkos_verifier::skeleton::{ProofSkeleton, QueryValues};
-use zkos_verifier::verifier_common::non_determinism_source::NonDeterminismSource;
-use zkos_verifier::verifier_common::{ProofOutput, ProofPublicInputs};
+use risc_verifier::blake2s_u32::*;
+// use zkos_verifier::concrete::skeleton_instance::BASE_CIRCUIT_QUERY_VALUES_NO_PADDING_U32_WORDS;
+// use zkos_verifier::concrete::skeleton_instance::ProofSkeletonInstance;
+// use zkos_verifier::concrete::skeleton_instance::QueryValuesInstance;
+use risc_verifier::prover::cs::definitions::*;
+use risc_verifier::prover::definitions::*;
+// use zkos_verifier::skeleton::{ProofSkeleton, QueryValues};
+use risc_verifier::verifier_common::non_determinism_source::NonDeterminismSource;
+use risc_verifier::verifier_common::{ProofOutput, ProofPublicInputs};
 
 mod blake2s_reduced;
 

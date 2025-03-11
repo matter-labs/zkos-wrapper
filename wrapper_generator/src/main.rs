@@ -63,14 +63,10 @@ fn format_rust_code(code: &str) -> Result<String, String> {
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
 struct Cli {
-    #[arg(long, default_value = "../src/delegation_verifier/imports")]
+    #[arg(long, default_value = "../src/wrapper_inner_verifier/imports")]
     output_dir: String,
-    #[arg(long, default_value = "delegation_layout")]
+    #[arg(long, default_value = "layout")]
     input_layout_file: String,
-    #[arg(long, default_value = "../src/blake2s_delegator_verifier/imports")]
-    blake2s_output_dir: String,
-    #[arg(long, default_value = "blake2s_delegator_layout")]
-    blake2s_input_layout_file: String,
 }
 
 fn deserialize_from_file<T: serde::de::DeserializeOwned>(filename: &str) -> T {
@@ -94,17 +90,4 @@ fn main() {
         inline_verifier,
     )
     .expect(&format!("Failed to write to {}", output_dir));
-
-    // let blake2s_input_layout_file = cli.blake2s_input_layout_file;
-
-    // let compiled_circuit: CompiledCircuitArtifact<Mersenne31Field> =
-    //     deserialize_from_file(&blake2s_input_layout_file);
-    // let (blake2s_verifier, blake2s_inline_verifier) = generate_verifier_files(&compiled_circuit);
-    // std::fs::write(Path::new(&output_dir).join("circuit_layout.rs"), blake2s_verifier)
-    //     .expect(&format!("Failed to write to {}", output_dir));
-    // std::fs::write(
-    //     Path::new(&output_dir).join("circuit_quotient.rs"),
-    //     blake2s_inline_verifier,
-    // )
-    // .expect(&format!("Failed to write to {}", output_dir));
 }

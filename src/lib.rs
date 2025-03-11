@@ -1,7 +1,7 @@
 #![feature(allocator_api)]
 #![feature(array_chunks)]
 
-mod delegation_verifier;
+mod wrapper_inner_verifier;
 mod transcript;
 mod verifier_circuit;
 mod wrapper_utils;
@@ -29,7 +29,7 @@ use boojum::cs::traits::circuit::CircuitBuilderProxy;
 use boojum::worker::*;
 use verifier_circuit::*;
 use wrapper_utils::verifier_traits::CircuitBlake2sForEverythingVerifier;
-use zkos_verifier::prover::prover_stages::Proof as ZkosProof;
+use risc_verifier::prover::prover_stages::Proof as RiskProof;
 
 type F = boojum::field::goldilocks::GoldilocksField;
 type EXT = boojum::field::goldilocks::GoldilocksExt2;
@@ -90,8 +90,8 @@ pub fn get_zkos_wrapper_setup(
     )
 }
 
-pub fn get_zkos_wrapper_proof(
-    zkos_proof: ZkosProof,
+pub fn prove_zkos_wrapper(
+    zkos_proof: RiskProof,
     finalization_hint: &FinalizationHintsForProver,
     setup_base: &SetupBaseStorage<F>,
     setup: &SetupStorage<F>,

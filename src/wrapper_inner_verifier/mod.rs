@@ -12,20 +12,21 @@ use boojum::gadgets::mersenne_field::second_ext::MersenneComplex;
 use boojum::gadgets::num::Num;
 use boojum::gadgets::traits::allocatable::CSAllocatable;
 use boojum::gadgets::traits::selectable::Selectable;
+use boojum::gadgets::traits::witnessable::WitnessHookable;
 use boojum::gadgets::u8::UInt8;
 use boojum::gadgets::u16::UInt16;
 use boojum::gadgets::u32::UInt32;
 
-use zkos_verifier::blake2s_u32::*;
-use zkos_verifier::concrete::size_constants::*;
-use zkos_verifier::concrete::skeleton_instance::BASE_CIRCUIT_QUERY_VALUES_NO_PADDING_U32_WORDS;
-use zkos_verifier::concrete::skeleton_instance::ProofSkeletonInstance;
-use zkos_verifier::concrete::skeleton_instance::QueryValuesInstance;
-use zkos_verifier::field::*;
-use zkos_verifier::prover::cs::definitions::*;
-use zkos_verifier::skeleton::{ProofSkeleton, QueryValues};
-use zkos_verifier::verifier_common::non_determinism_source::NonDeterminismSource;
-use zkos_verifier::verifier_common::{ProofOutput, ProofPublicInputs};
+use risc_verifier::blake2s_u32::*;
+use risc_verifier::concrete::size_constants::*;
+use risc_verifier::concrete::skeleton_instance::BASE_CIRCUIT_QUERY_VALUES_NO_PADDING_U32_WORDS;
+use risc_verifier::concrete::skeleton_instance::ProofSkeletonInstance;
+use risc_verifier::concrete::skeleton_instance::QueryValuesInstance;
+use risc_verifier::field::*;
+use risc_verifier::prover::cs::definitions::*;
+use risc_verifier::skeleton::{ProofSkeleton, QueryValues};
+use risc_verifier::verifier_common::non_determinism_source::NonDeterminismSource;
+use risc_verifier::verifier_common::{ProofOutput, ProofPublicInputs};
 
 use crate::wrapper_utils::prover_structs::*;
 
@@ -643,6 +644,8 @@ pub fn verify<F: SmallField, CS: ConstraintSystem<F>>(
                 &taus_inversed[0],
             );
             let mut leaf_src: &[MersenneField<F>] = &query.fri_oracles_leafs;
+
+            expected_value = expected_value.mul_by_base(cs, &tau_in_domain_by_half_inversed_power);
             for (step, folding_degree_log_2) in FRI_FOLDING_SCHEDULE.iter().enumerate() {
                 let leaf_size = (1 << *folding_degree_log_2) * 4;
                 let leaf_size_log = folding_degree_log_2 + 2;
@@ -772,6 +775,8 @@ pub fn verify<F: SmallField, CS: ConstraintSystem<F>>(
 
             let value_from_monomial_form =
                 evaluate_monomial_form(cs, &skeleton.monomial_coeffs, &evaluation_point);
+
+            expected_value = expected_value.mul_by_base(cs, &taus_in_domain_by_half_power);
 
             value_from_monomial_form.enforce_equal(cs, &expected_value);
         }
@@ -1142,7 +1147,7 @@ pub fn fri_fold_by_log_n<
     for bit in tree_index_bits[remaining_len..].iter_mut() {
         *bit = Boolean::allocated_constant(cs, false);
     }
-    for bit in domain_index_bits[(*domain_size_log_2 - FOLDING_DEGREE_LOG2)..].iter_mut() {
+    for bit in domain_index_bits[*domain_size_log_2..].iter_mut() {
         *bit = Boolean::allocated_constant(cs, false);
     }
 }
