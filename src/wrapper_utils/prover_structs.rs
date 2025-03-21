@@ -89,6 +89,15 @@ impl<F: SmallField> WrappedExternalMemoryArgumentChallenges<F> {
         result.extend_from_slice(&self.memory_argument_gamma.into_uint32s());
         result
     }
+
+    pub(crate) fn enforce_equal<CS: ConstraintSystem<F>>(&self, cs: &mut CS, other: &Self) {
+        for i in 0..NUM_MEM_ARGUMENT_LINEARIZATION_CHALLENGES {
+            self.memory_argument_linearization_challenges[i]
+                .enforce_equal(cs, &other.memory_argument_linearization_challenges[i]);
+        }
+        self.memory_argument_gamma
+            .enforce_equal(cs, &other.memory_argument_gamma)
+    }
 }
 
 impl<F: SmallField> CSAllocatable<F> for WrappedExternalMemoryArgumentChallenges<F> {
@@ -141,6 +150,15 @@ impl<F: SmallField> WrappedExternalDelegationArgumentChallenges<F> {
         }
         result.extend_from_slice(&self.delegation_argument_gamma.into_uint32s());
         result
+    }
+
+    pub(crate) fn enforce_equal<CS: ConstraintSystem<F>>(&self, cs: &mut CS, other: &Self) {
+        for i in 0..NUM_DELEGATION_ARGUMENT_LINEARIZATION_CHALLENGES {
+            self.delegation_argument_linearization_challenges[i]
+                .enforce_equal(cs, &other.delegation_argument_linearization_challenges[i]);
+        }
+        self.delegation_argument_gamma
+            .enforce_equal(cs, &other.delegation_argument_gamma)
     }
 }
 

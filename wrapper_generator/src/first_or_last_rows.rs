@@ -65,14 +65,20 @@ pub(crate) fn transform_first_or_last_rows(
     for (i, (location, column_address)) in public_inputs.iter().enumerate() {
         match location {
             BoundaryConstraintLocation::FirstRow => {
-                first_row_boundary_constraints.push((*column_address, quote! {
-                    #public_inputs_ident[#i]
-                }));
+                first_row_boundary_constraints.push((
+                    *column_address,
+                    quote! {
+                        #public_inputs_ident[#i]
+                    },
+                ));
             }
             BoundaryConstraintLocation::OneBeforeLastRow => {
-                one_before_last_row_boundary_constraints.push((*column_address, quote! {
-                    #public_inputs_ident[#i]
-                }));
+                one_before_last_row_boundary_constraints.push((
+                    *column_address,
+                    quote! {
+                        #public_inputs_ident[#i]
+                    },
+                ));
             }
             BoundaryConstraintLocation::LastRow => {
                 panic!("public inputs on the last row are not supported");
