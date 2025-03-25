@@ -32,7 +32,6 @@ use boojum::gadgets::recursion::recursive_tree_hasher::CircuitGoldilocksPoseidon
 use boojum::implementations::poseidon2::Poseidon2Goldilocks;
 use boojum::worker::*;
 use circuits::*;
-use risc_verifier::prover::prover_stages::Proof as RiscProof;
 use wrapper_utils::verifier_traits::CircuitBlake2sForEverythingVerifier;
 
 pub type GL = boojum::field::goldilocks::GoldilocksField;

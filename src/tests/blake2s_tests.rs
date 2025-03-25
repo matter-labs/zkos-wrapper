@@ -1,5 +1,3 @@
-use crate::transcript;
-
 use super::*;
 
 // #[test]
@@ -503,15 +501,36 @@ fn test_buffering_transcript() {
     use risc_verifier::prover::transcript::Blake2sBufferingTranscript;
 
     let mut transcript = Blake2sBufferingTranscript::new();
+    let mut transcript_2 = Blake2sBufferingTranscript::new();
     let mut circuit_transcript = Blake2sWrappedBufferingTranscript::new(cs);
+    let mut circuit_transcript_2 = Blake2sWrappedBufferingTranscript::new(cs);
 
     transcript.absorb(&witness);
+    for w in witness.iter() {
+        transcript_2.absorb(&[*w]);
+    }
+    dbg!("1");
     circuit_transcript.absorb(cs, &vars);
+    dbg!("2");
+    for v in vars.iter() {
+        dbg!("2.1");
+        circuit_transcript_2.absorb(cs, &[*v]);
+    }
 
     let witness_result = transcript.finalize_reset();
+    let witness_result_2 = transcript_2.finalize_reset();
     let circuit_result = circuit_transcript.finalize_reset(cs);
+    let circuit_result_2 = circuit_transcript_2.finalize_reset(cs);
+
+    for (a, b) in witness_result.0.iter().zip(witness_result_2.0.iter()) {
+        assert_eq!(a, b);
+    }
 
     for (a, b) in witness_result.0.iter().zip(circuit_result.0.iter()) {
+        assert_eq!(a.to_le_bytes(), b.inner.witness_hook(cs)().unwrap());
+    }
+
+    for (a, b) in witness_result.0.iter().zip(circuit_result_2.0.iter()) {
         assert_eq!(a.to_le_bytes(), b.inner.witness_hook(cs)().unwrap());
     }
 

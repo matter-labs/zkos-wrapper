@@ -45,7 +45,7 @@ impl<F: SmallField> Blake2sStateGate<F> {
                 }
             });
         let input_buffer: [Word<F>; BLAKE2S_BLOCK_SIZE_U32_WORDS] =
-            std::array::from_fn(|idx| Word {
+            std::array::from_fn(|_idx| Word {
                 inner: [UInt8::zero(cs); 4],
             });
         let t = 0u32;

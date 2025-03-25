@@ -6,14 +6,12 @@ use super::*;
 pub(crate) fn risc_wrapper_full_test() {
     let worker = boojum::worker::Worker::new_with_num_threads(4);
 
-    let mut final_registers_state = [0u32; 32 * 2];
-    final_registers_state[1] = 134217726;
+    let final_registers_state: Vec<u32> = deserialize_from_file(RISC_REGISTER_FINAL_STATE_PATH);
     let risc_proof = deserialize_from_file(RISC_PROOF_PATH);
 
     let risc_wrapper_witness = RiscWrapperWitness {
-        final_registers_state,
+        final_registers_state: final_registers_state.try_into().unwrap(),
         proof: risc_proof,
-        preimage: [0u32; 8 * 2],
     };
 
     let (

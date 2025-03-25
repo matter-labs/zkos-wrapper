@@ -2,19 +2,16 @@ use boojum::{
     cs::{
         CSGeometry, GateConfigurationHolder, LookupParameters, StaticToolboxHolder,
         cs_builder::{CsBuilder, CsBuilderImpl},
-        cs_builder_reference::CsReferenceImplementationBuilder,
         gates::{
-            ConstantsAllocatorGate, DotProductGate, FmaGateInBaseFieldWithoutConstant, NopGate,
-            PublicInputGate, ReductionGate, SelectionGate, U32AddCarryAsChunkGate,
-            U32TriAddCarryAsChunkGate, UIntXAddGate, ZeroCheckGate, public_input,
+            ConstantsAllocatorGate, FmaGateInBaseFieldWithoutConstant, NopGate, PublicInputGate,
+            ReductionGate, SelectionGate, U32AddCarryAsChunkGate, U32TriAddCarryAsChunkGate,
+            UIntXAddGate, ZeroCheckGate,
         },
         implementations::prover::ProofConfig,
         traits::{circuit::CircuitBuilder, cs::ConstraintSystem, gate::GatePlacementStrategy},
     },
-    dag::CircuitResolverOpts,
     field::SmallField,
     gadgets::{
-        blake2s::{blake2s, mixing_function::Word, round_function::Blake2sControl},
         mersenne_field::{
             MersenneField, extension_trait::CircuitFieldExpression, fourth_ext::MersenneQuartic,
         },
@@ -25,13 +22,15 @@ use boojum::{
             xor8::{Xor8Table, create_xor8_table},
         },
         traits::{allocatable::CSAllocatable, witnessable::WitnessHookable},
-        u8::UInt8,
         u16::UInt16,
         u32::UInt32,
     },
 };
 use std::mem::MaybeUninit;
 
+use crate::wrapper_inner_verifier::imports::{
+    FINAL_RISC_CIRCUIT_AUX_REGISTERS_VALUES, FINAL_RISC_CIRCUIT_END_PARAMS,
+};
 use crate::wrapper_inner_verifier::skeleton::{
     WrappedProofSkeletonInstance, WrappedQueryValuesInstance,
 };
@@ -43,13 +42,10 @@ use risc_verifier::concrete::size_constants::*;
 use risc_verifier::prover::definitions::LeafInclusionVerifier;
 use risc_verifier::prover::field::Mersenne31Field;
 use risc_verifier::prover::risc_v_simulator::cycle::state::NUM_REGISTERS;
-use risc_verifier::{concrete::skeleton_instance::ProofSkeletonInstance, skeleton};
 
 use risc_verifier::prover::cs::definitions::*;
 
-use risc_verifier::verifier_common::{
-    DefaultLeafInclusionVerifier, DefaultNonDeterminismSource, ProofOutput, ProofPublicInputs,
-};
+use risc_verifier::verifier_common::{DefaultNonDeterminismSource, ProofOutput, ProofPublicInputs};
 
 use boojum::gadgets::tables::RangeCheck15BitsTable;
 use boojum::gadgets::tables::RangeCheck16BitsTable;
@@ -62,7 +58,6 @@ const NUM_RISC_WRAPPER_PUBLIC_INPUTS: usize = 4;
 pub struct RiscWrapperWitness {
     pub final_registers_state: [u32; NUM_REGISTERS * 2],
     pub proof: RiscProof,
-    pub preimage: [u32; BLAKE2S_DIGEST_SIZE_U32_WORDS * 2],
 }
 
 pub struct RiscWrapperCircuit<F: SmallField, V: CircuitLeafInclusionVerifier<F>> {
@@ -184,17 +179,8 @@ impl<F: SmallField, V: CircuitLeafInclusionVerifier<F>> RiscWrapperCircuit<F, V>
         let table = create_xor8_table();
         cs.add_lookup_table::<Xor8Table, 3>(table);
 
-        let table = create_and8_table();
-        cs.add_lookup_table::<And8Table, 3>(table);
-
         let table = create_byte_split_table::<F, 1>();
         cs.add_lookup_table::<ByteSplitTable<1>, 3>(table);
-
-        let table = create_byte_split_table::<F, 2>();
-        cs.add_lookup_table::<ByteSplitTable<2>, 3>(table);
-
-        let table = create_byte_split_table::<F, 3>();
-        cs.add_lookup_table::<ByteSplitTable<3>, 3>(table);
 
         let table = create_byte_split_table::<F, 4>();
         cs.add_lookup_table::<ByteSplitTable<4>, 3>(table);
@@ -214,20 +200,14 @@ impl<F: SmallField, V: CircuitLeafInclusionVerifier<F>> RiscWrapperCircuit<F, V>
     }
 
     pub fn synthesize_into_cs<CS: ConstraintSystem<F>>(&self, cs: &mut CS) {
-        let (final_registers_state_witness, preimage_witness) = if let Some(witness) = &self.witness
-        {
-            (witness.final_registers_state, witness.preimage)
+        let final_registers_state_witness = if let Some(witness) = &self.witness {
+            witness.final_registers_state
         } else {
-            (
-                [0u32; NUM_REGISTERS * 2],
-                [0u32; BLAKE2S_DIGEST_SIZE_U32_WORDS * 2],
-            )
+            [0u32; NUM_REGISTERS * 2]
         };
 
-        let (final_registers_state, preimage) = (
-            <[UInt32<F>; NUM_REGISTERS * 2]>::allocate(cs, final_registers_state_witness),
-            <[UInt32<F>; BLAKE2S_DIGEST_SIZE_U32_WORDS * 2]>::allocate(cs, preimage_witness),
-        );
+        let final_registers_state =
+            <[UInt32<F>; NUM_REGISTERS * 2]>::allocate(cs, final_registers_state_witness);
 
         let (skeleton, queries) = if let Some(witness) = &self.witness {
             prepare_proof_for_wrapper::<_, _, V>(cs, &witness.proof)
@@ -252,32 +232,24 @@ impl<F: SmallField, V: CircuitLeafInclusionVerifier<F>> RiscWrapperCircuit<F, V>
         let (proof_state, proof_input) =
             crate::wrapper_inner_verifier::verify(cs, skeleton, queries);
 
-        check_proof_state(
-            cs,
-            final_registers_state,
-            &proof_state,
-            &proof_input,
-            preimage,
-        );
+        check_proof_state(cs, final_registers_state, &proof_state, &proof_input);
 
-        let mut flattened_public_input = vec![];
-        for el in proof_input.input_state_variables.iter() {
-            flattened_public_input.extend_from_slice(&el.into_uint32().decompose_into_bytes(cs));
-        }
-        for el in proof_input.output_state_variables.iter() {
-            flattened_public_input.extend_from_slice(&el.into_uint32().decompose_into_bytes(cs));
-        }
+        // we carry registers 10-17 to the next layer - those are the output of the base program
+        let mut output_registers_values: Vec<_> = final_registers_state
+            .chunks(2)
+            .skip(10)
+            .take(8)
+            .flat_map(|chunk| chunk[0].decompose_into_bytes(cs))
+            .collect();
 
-        let input_keccak_hash = boojum::gadgets::keccak256::keccak256(cs, &flattened_public_input);
         let take_by = F::CAPACITY_BITS / 8;
-
-        for chunk in input_keccak_hash
+        for chunk in output_registers_values
             .chunks_exact(take_by)
             .take(NUM_RISC_WRAPPER_PUBLIC_INPUTS)
         {
             let mut lc = Vec::with_capacity(chunk.len());
-            // treat as BE
-            for (idx, el) in chunk.iter().rev().enumerate() {
+            // treat as LE
+            for (idx, el) in chunk.iter().enumerate() {
                 lc.push((el.get_variable(), F::SHIFTS[idx * 8]));
             }
             let as_num = Num::linear_combination(cs, &lc);
@@ -384,19 +356,7 @@ pub(crate) fn check_proof_state<F: SmallField, CS: ConstraintSystem<F>>(
         NUM_AUX_BOUNDARY_VALUES,
     >,
     public_input: &WrappedProofPublicInputs<F, NUM_STATE_ELEMENTS>,
-    preimage: [UInt32<F>; BLAKE2S_DIGEST_SIZE_U32_WORDS * 2],
 ) {
-    // pub setup_caps: [WrappedMerkleTreeCap<F, CAP_SIZE>; NUM_COSETS],
-    // pub memory_caps: [WrappedMerkleTreeCap<F, CAP_SIZE>; NUM_COSETS],
-    // pub memory_challenges: WrappedExternalMemoryArgumentChallenges<F>,
-    // pub delegation_challenges:
-    //     [WrappedExternalDelegationArgumentChallenges<F>; NUM_DELEGATION_CHALLENGES],
-    // pub lazy_init_boundary_values: [WrappedAuxArgumentsBoundaryValues<F>; NUM_AUX_BOUNDARY_VALUES],
-    // pub memory_grand_product_accumulator: MersenneQuartic<F>,
-    // pub delegation_argument_accumulator: [MersenneQuartic<F>; NUM_DELEGATION_CHALLENGES],
-    // pub circuit_sequence: UInt32<F>,
-    // pub delegation_type: UInt32<F>,
-
     let mut transcript = Blake2sWrappedBufferingTranscript::new(cs);
 
     // x0 is always 0, for sanity
@@ -412,11 +372,15 @@ pub(crate) fn check_proof_state<F: SmallField, CS: ConstraintSystem<F>>(
     Num::enforce_equal(cs, &proof_state.delegation_type.into_num(), &zero);
 
     for cap in proof_state.setup_caps.iter() {
-        transcript.absorb(cs, &cap.to_slice());
+        for chunk in cap.cap.iter() {
+            transcript.absorb(cs, chunk);
+        }
     }
 
     for cap in proof_state.memory_caps.iter() {
-        transcript.absorb(cs, &cap.to_slice());
+        for chunk in cap.cap.iter() {
+            transcript.absorb(cs, chunk);
+        }
     }
 
     for pc_chunk in public_input.input_state_variables.iter() {
@@ -496,26 +460,30 @@ pub(crate) fn check_proof_state<F: SmallField, CS: ConstraintSystem<F>>(
     let mut result_hasher = Blake2sWrappedBufferingTranscript::new(cs);
     result_hasher.absorb(cs, &[end_pc]);
     for cap in proof_state.setup_caps.iter() {
-        transcript.absorb(cs, &cap.to_slice());
+        for chunk in cap.cap.iter() {
+            result_hasher.absorb(cs, chunk);
+        }
     }
     let end_params_output = result_hasher.finalize_reset(cs);
 
-    // we require that 8 registers (18 - 25) are some hash output in nature, that encodes our
-    // chain of executed programs
+    // We know exactly what program should be executed, so end_params_output should be constant
 
-    result_hasher.absorb(cs, &preimage);
-    let preimage_hash = result_hasher.finalize_reset(cs);
+    for i in 0..8 {
+        let end_params_word = UInt32::from_le_bytes(cs, end_params_output.0[i].inner);
+        let expected_word = UInt32::allocate_constant(cs, FINAL_RISC_CIRCUIT_END_PARAMS[i]);
+        Num::enforce_equal(cs, &expected_word.into_num(), &end_params_word.into_num());
+    }
+
+    // we require that 8 registers (18 - 25) are some hash output in nature, that encodes our
+    // chain of executed programs the is also constant
 
     for i in 0..8 {
         let aux_register_idx = (i + 18) * 2;
         let aux_register = final_registers_state[aux_register_idx];
-        let hash_word = UInt32::from_le_bytes(cs, preimage_hash.0[i].inner);
-        // Num::enforce_equal(cs, &hash_word.into_num(), &aux_register.into_num());
-    }
-
-    for i in 0..8 {
-        let end_params_word = UInt32::from_le_bytes(cs, end_params_output.0[i].inner);
-        // Num::enforce_equal(cs, &preimage[i + 8].into_num(), &end_params_word.into_num());
+        // For now we use zeroes for testing
+        let expected_word = UInt32::allocate_constant(cs, 0u32);
+        // let expected_word = UInt32::allocate_constant(cs, FINAL_RISC_CIRCUIT_AUX_REGISTERS_VALUES[i]);
+        Num::enforce_equal(cs, &expected_word.into_num(), &aux_register.into_num());
     }
 }
 

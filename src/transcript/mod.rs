@@ -1,28 +1,13 @@
 use boojum::cs::traits::cs::ConstraintSystem;
 use boojum::field::SmallField;
-use boojum::gadgets::blake2s;
 use boojum::gadgets::blake2s::mixing_function::Word;
-use boojum::gadgets::boolean::Boolean;
-use boojum::gadgets::mersenne_field::MersenneField;
-use boojum::gadgets::mersenne_field::extension_trait::CircuitFieldExpression;
-use boojum::gadgets::mersenne_field::fourth_ext::MersenneQuartic;
-use boojum::gadgets::mersenne_field::second_ext::MersenneComplex;
-use boojum::gadgets::num::Num;
 use boojum::gadgets::traits::allocatable::CSAllocatable;
-use boojum::gadgets::traits::selectable::Selectable;
+use boojum::gadgets::traits::witnessable::WitnessHookable;
 use boojum::gadgets::u8::UInt8;
 use boojum::gadgets::u16::UInt16;
 use boojum::gadgets::u32::UInt32;
 
 use risc_verifier::blake2s_u32::*;
-// use zkos_verifier::concrete::skeleton_instance::BASE_CIRCUIT_QUERY_VALUES_NO_PADDING_U32_WORDS;
-// use zkos_verifier::concrete::skeleton_instance::ProofSkeletonInstance;
-// use zkos_verifier::concrete::skeleton_instance::QueryValuesInstance;
-use risc_verifier::prover::cs::definitions::*;
-use risc_verifier::prover::definitions::*;
-// use zkos_verifier::skeleton::{ProofSkeleton, QueryValues};
-use risc_verifier::verifier_common::non_determinism_source::NonDeterminismSource;
-use risc_verifier::verifier_common::{ProofOutput, ProofPublicInputs};
 
 mod blake2s_reduced;
 
@@ -290,9 +275,11 @@ impl<F: SmallField> Blake2sWrappedBufferingTranscript<F> {
         let mut to_absorb = values.len();
         let mut src_offset = 0;
         while to_absorb > 0 {
+            // dbg!(self.buffer_offset, to_absorb);
             let absorb_this_round =
                 core::cmp::min(to_absorb, BLAKE2S_BLOCK_SIZE_U32_WORDS - self.buffer_offset);
-            for (dst, src) in self.state.input_buffer[..absorb_this_round]
+            for (dst, src) in self.state.input_buffer
+                [self.buffer_offset..self.buffer_offset + absorb_this_round]
                 .iter_mut()
                 .zip(values[src_offset..(src_offset + absorb_this_round)].iter())
             {
@@ -308,11 +295,25 @@ impl<F: SmallField> Blake2sWrappedBufferingTranscript<F> {
             if to_absorb > 0 {
                 self.run_absorb(cs);
             }
+            // dbg!(self.buffer_offset, absorb_this_round);
         }
     }
 
     fn run_absorb<CS: ConstraintSystem<F>>(&mut self, cs: &mut CS) {
         debug_assert_eq!(self.buffer_offset, BLAKE2S_BLOCK_SIZE_U32_WORDS);
+
+        let witness = self
+            .state
+            .input_buffer
+            .iter()
+            .map(|el| {
+                let uint = UInt32::from_le_bytes(cs, el.inner);
+                uint.witness_hook(cs)()
+            })
+            .filter(|x| x.is_some())
+            .map(|x| x.unwrap())
+            .collect::<Vec<_>>();
+        // dbg!(witness);
 
         self.state
             .run_round_function::<_, USE_REDUCED_BLAKE2_ROUNDS>(

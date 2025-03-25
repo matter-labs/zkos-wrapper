@@ -1,6 +1,3 @@
-use boojum::cs::implementations::verifier::VerificationKeyCircuitGeometry;
-use rescue_poseidon::franklin_crypto::plonk::circuit::custom_rescue_gate::Rescue5CustomGate;
-
 use bellman::plonk::better_better_cs::cs::ConstraintSystem as SnarkConstraintSystem;
 use snark_wrapper::traits::circuit::ErasedBuilderForWrapperVerifier;
 use snark_wrapper::traits::circuit::ProofWrapperFunction;
