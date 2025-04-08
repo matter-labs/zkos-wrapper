@@ -53,8 +53,8 @@ pub type CircuitRiscWrapperTreeHasher = CircuitGoldilocksPoseidon2Sponge;
 pub type RiscWrapperCircuitBuilder = CircuitBuilderProxy<GL, RiscWrapper>;
 
 pub use rescue_poseidon::franklin_crypto::bellman::pairing::bn256::{Bn256, Fr};
-use rescue_poseidon::poseidon2::Poseidon2Sponge;
 use rescue_poseidon::poseidon2::transcript::Poseidon2Transcript;
+use rescue_poseidon::poseidon2::Poseidon2Sponge;
 
 use snark_wrapper::implementations::poseidon2::tree_hasher::AbsorptionModeReplacement;
 
@@ -74,8 +74,8 @@ use bellman::plonk::better_better_cs::cs::PlonkCsWidth4WithNextStepAndCustomGate
 use bellman::plonk::better_better_cs::cs::{ProvingAssembly, SetupAssembly};
 use bellman::plonk::better_better_cs::gates::selector_optimized_with_d_next::SelectorOptimizedWidth4MainGateWithDNext;
 use bellman::plonk::better_better_cs::verifier::verify as verify_snark;
-use snark_wrapper::implementations::poseidon2::CircuitPoseidon2Sponge;
 use snark_wrapper::implementations::poseidon2::transcript::CircuitPoseidon2Transcript;
+use snark_wrapper::implementations::poseidon2::CircuitPoseidon2Sponge;
 
 use bellman::worker::Worker as BellmanWorker;
 
@@ -302,7 +302,7 @@ pub fn verify_compression_proof(proof: &CompressionProof, vk: &CompressionVK) ->
 }
 
 // Stark -> Snark Wrapper
-const L1_VERIFIER_DOMAIN_SIZE_LOG: usize = 24;
+pub const L1_VERIFIER_DOMAIN_SIZE_LOG: usize = 24;
 
 pub fn get_snark_wrapper_setup(
     compression_vk: CompressionVK,
