@@ -304,7 +304,6 @@ fn test_blake2s_round_function() {
 //     assert!(owned_cs.check_if_satisfied(&worker));
 // }
 
-#[ignore = "currently failing with index out of bounds"]
 #[test]
 fn test_leaf_inclusion() {
     let geometry = CSGeometry {
@@ -366,7 +365,7 @@ fn test_leaf_inclusion() {
     let builder =
         NopGate::configure_builder(builder, GatePlacementStrategy::UseGeneralPurposeColumns);
 
-    let mut owned_cs = builder.build(CircuitResolverOpts::new(1 << 25));
+    let mut owned_cs = builder.build(CircuitResolverOpts::new(1 << 26));
 
     // add tables
     let table = create_range_check_16_bits_table::<3, F>();
