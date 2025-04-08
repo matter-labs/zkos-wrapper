@@ -5,6 +5,13 @@ name = "zkos-wrapper"
 version = "0.1.0"
 edition = "2024"
 
+[lib]
+path = "src/lib.rs"
+
+[[bin]]
+name = "cli"
+path = "src/main.rs"
+
 [dependencies]
 boojum = { git = "https://github.com/matter-labs/zksync-crypto.git", package="boojum", branch = "oh_mersenne_field" }
 # boojum = { path = "../zksync-crypto/crates/boojum"}
@@ -17,8 +24,9 @@ risc_verifier = {git="https://github.com/matter-labs/air_compiler.git", package=
 # risc_verifier = {path="../air_compiler/circuit_defs/reduced_machine_for_wrapper/verifier", package="reduced_machine_for_wrapper_verifier", features=["proof_utils"]}
 serde_json = { version = "*" }
 serde = { version = "1", default-features = false, features = ["derive", "alloc"]}
+clap = { version = "4.5.21", features = ["derive"] }
 
 [dev-dependencies]
 rand = "0.8.4"
 hex = "0.4.3"
-zkos_verifier_worker = { path = "../air_compiler/worker", package="worker" }
+#zkos_verifier_worker = { path = "../air_compiler/worker", package="worker" }

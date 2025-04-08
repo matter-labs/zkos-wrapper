@@ -7,6 +7,8 @@ mod transcript;
 mod wrapper_inner_verifier;
 mod wrapper_utils;
 
+pub mod zkos_utils;
+
 #[cfg(test)]
 mod tests;
 

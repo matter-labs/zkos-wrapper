@@ -3,19 +3,19 @@ use std::mem::MaybeUninit;
 use boojum::cs::traits::cs::ConstraintSystem;
 use boojum::field::SmallField;
 use boojum::gadgets::boolean::Boolean;
-use boojum::gadgets::mersenne_field::MersenneField;
 use boojum::gadgets::mersenne_field::extension_trait::CircuitFieldExpression;
 use boojum::gadgets::mersenne_field::fourth_ext::MersenneQuartic;
 use boojum::gadgets::mersenne_field::second_ext::MersenneComplex;
+use boojum::gadgets::mersenne_field::MersenneField;
 use boojum::gadgets::traits::allocatable::CSAllocatable;
 use boojum::gadgets::traits::selectable::Selectable;
 use boojum::gadgets::u32::UInt32;
 
 use risc_verifier::blake2s_u32::*;
 use risc_verifier::concrete::size_constants::*;
-use risc_verifier::concrete::skeleton_instance::BASE_CIRCUIT_QUERY_VALUES_NO_PADDING_U32_WORDS;
 use risc_verifier::concrete::skeleton_instance::ProofSkeletonInstance;
 use risc_verifier::concrete::skeleton_instance::QueryValuesInstance;
+use risc_verifier::concrete::skeleton_instance::BASE_CIRCUIT_QUERY_VALUES_NO_PADDING_U32_WORDS;
 use risc_verifier::field::*;
 use risc_verifier::prover::cs::definitions::*;
 use risc_verifier::skeleton::{ProofSkeleton, QueryValues};
@@ -360,13 +360,7 @@ pub fn verify<F: SmallField, CS: ConstraintSystem<F>>(
             Boolean::enforce_equal(cs, &is_zero, &boolean_false);
         }
 
-        let [
-            z_inv,
-            vanishing_inv,
-            first_row,
-            one_before_last_row,
-            last_row,
-        ] = to_batch_inverse;
+        let [z_inv, vanishing_inv, first_row, one_before_last_row, last_row] = to_batch_inverse;
 
         // everywhere except last row (x - omega^-1) / (x^n - 1)
         let everywhere_except_last = z_minus_omega_inv.mul(cs, &vanishing_inv);
@@ -883,15 +877,13 @@ fn accumulate_over_row_for_consistency_check<F: SmallField, CS: ConstraintSystem
     use imports::VERIFIER_COMPILED_LAYOUT;
 
     // now we can do consistency check
-    let mut accumulated_at_z = MersenneQuartic::zero(cs);
-
     // quotient is just a single value
-    {
+    let mut accumulated_at_z = {
         let leaf_el = MersenneQuartic::from_coeffs(query.quotient_leaf);
         // NOTE: we compute quotient at non-main domain first, and then LDE, so we do NOT have adjustment
         // there, and we should cancel one below
-        accumulated_at_z = leaf_el.mul_by_base(cs, &tau_in_domain_by_half_inversed);
-    }
+        leaf_el.mul_by_base(cs, &tau_in_domain_by_half_inversed)
+    };
 
     for leaf_el in query.stage_2_leaf[VERIFIER_COMPILED_LAYOUT.stage_2_layout.ext4_polys_offset..]
         .array_chunks::<4>()
@@ -933,10 +925,8 @@ fn accumulate_over_row_for_consistency_check<F: SmallField, CS: ConstraintSystem
     let mut simulated_from_z = precompute_with_evals_at_z.sub(cs, &accumulated_at_z);
     simulated_from_z = simulated_from_z.mul(cs, &divisor_for_z);
 
-    let mut accumulated_at_z_omega = MersenneQuartic::zero(cs);
-
     // single element for stage 2
-    {
+    let mut accumulated_at_z_omega = {
         let leaf_el =
             query.stage_2_leaf[VERIFIER_COMPILED_LAYOUT.stage_2_layout.ext4_polys_offset
                 + (MEMORY_GRAND_PRODUCT_ACCUMULATOR_POLY_INDEX
@@ -948,8 +938,9 @@ fn accumulate_over_row_for_consistency_check<F: SmallField, CS: ConstraintSystem
                 .next()
                 .unwrap();
         let leaf_el = MersenneQuartic::from_coeffs(*leaf_el);
-        accumulated_at_z_omega = leaf_el;
-    }
+        leaf_el
+    };
+
     for index in MEMORY_NEXT_ROW_OPENING_INDEXES.iter().rev() {
         let leaf_el = MersenneQuartic::from_base(cs, query.memory_leaf[*index]);
         accumulated_at_z_omega = accumulated_at_z_omega.mul_and_add(cs, &deep_poly_alpha, &leaf_el);
