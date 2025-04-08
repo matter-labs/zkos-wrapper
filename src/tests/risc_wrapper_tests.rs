@@ -54,7 +54,6 @@ pub(crate) fn risc_wrapper_setup_test() {
     serialize_to_file(&vk, RISC_WRAPPER_VK_PATH);
 }
 
-#[ignore = "currently failing"]
 #[test]
 fn test_verifier_inner_function() {
     // allocate CS
@@ -149,7 +148,7 @@ fn test_verifier_inner_function() {
 
     // read proof and set iterator
     let (proof, expected_proof_state_dst, expected_proof_input_dst) =
-        read_and_verify_risc_proof(&"proof".to_string());
+        read_and_verify_risc_proof(&"testing_data/risc_proof".to_string());
 
     // use boojum::gadgets::traits::allocatable::CSAllocatable;
     // use crate::wrapper_utils::verifier_traits::PlaceholderSource;
