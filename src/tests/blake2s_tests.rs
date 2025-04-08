@@ -543,7 +543,6 @@ fn test_buffering_transcript() {
     assert!(owned_cs.check_if_satisfied(&worker));
 }
 
-#[ignore = "currently failing"]
 #[test]
 fn test_decompose() {
     use rand::{Rng, SeedableRng};
@@ -586,27 +585,14 @@ fn test_decompose() {
         builder,
         GatePlacementStrategy::UseGeneralPurposeColumns,
     );
+    let builder =
+        NopGate::configure_builder(builder, GatePlacementStrategy::UseGeneralPurposeColumns);
 
     let mut owned_cs = builder.build(CircuitResolverOpts::new(1 << 20));
 
     // add tables
     let table = create_xor8_table();
     owned_cs.add_lookup_table::<Xor8Table, 3>(table);
-
-    let table = create_byte_split_table::<F, 4>();
-    owned_cs.add_lookup_table::<ByteSplitTable<4>, 3>(table);
-
-    let table = create_byte_split_table::<F, 7>();
-    owned_cs.add_lookup_table::<ByteSplitTable<7>, 3>(table);
-
-    let table = create_byte_split_table::<F, 1>();
-    owned_cs.add_lookup_table::<ByteSplitTable<1>, 3>(table);
-
-    let table = create_byte_split_table::<F, 2>();
-    owned_cs.add_lookup_table::<ByteSplitTable<2>, 3>(table);
-
-    let table = create_byte_split_table::<F, 3>();
-    owned_cs.add_lookup_table::<ByteSplitTable<3>, 3>(table);
 
     let cs = &mut owned_cs;
 
