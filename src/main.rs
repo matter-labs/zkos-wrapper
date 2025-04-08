@@ -13,6 +13,8 @@ struct Cli {
     #[arg(short, long)]
     input: String,
     #[arg(short, long)]
+    registers_input: String,
+    #[arg(short, long)]
     output: String,
 }
 
@@ -20,7 +22,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli = Cli::parse();
 
     let worker = boojum::worker::Worker::new_with_num_threads(4);
-    let risc_wrapper_witness = read_and_verify_proof(&cli.input);
+    let risc_wrapper_witness = read_and_verify_proof(&cli.input, &cli.registers_input);
 
     let (
         finalization_hint,

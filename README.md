@@ -3,10 +3,10 @@ Library for verifying zkos with boojum
 
 It takes the zkos proof (in json format), and returns the boojum proof.
 
-Currently working only on the zkos delegation proofs.
+Currently it also requires you to provide the file with final register inputs.
 
 You can use it as a library, or as a cli tool:
 
 ```
-cargo run --release -- --input delegation_proof --output boojum_proof.json
+cargo run --release -- --input testing_data/risc_proof  --registers-input testing_data/register_final_values --output tmp.json
 ```
