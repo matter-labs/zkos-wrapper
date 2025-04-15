@@ -8,7 +8,7 @@ use boojum::gadgets::blake2s::{
 use boojum::gadgets::u8::UInt8;
 use std::mem::MaybeUninit;
 
-use zkos_verifier::blake2s_u32::{
+use risc_verifier::blake2s_u32::{
     BLAKE2S_BLOCK_SIZE_U32_WORDS, BLAKE2S_DIGEST_SIZE_U32_WORDS,
     BLAKE2S_EXTENDED_STATE_WIDTH_IN_U32_WORDS, BLAKE2S_STATE_WIDTH_IN_U32_WORDS, CONFIGURED_IV,
 };
@@ -29,7 +29,7 @@ impl<F: SmallField> Blake2sStateGate<F> {
 
     pub fn new<CS: ConstraintSystem<F>>(cs: &mut CS) -> Self {
         let preconfigured_state: [UInt32<F>; BLAKE2S_STATE_WIDTH_IN_U32_WORDS] =
-            std::array::from_fn(|idx| UInt32::allocate(cs, CONFIGURED_IV[idx]));
+            std::array::from_fn(|idx| UInt32::allocate_constant(cs, CONFIGURED_IV[idx]));
         let preconfigured_state = preconfigured_state.map(|el| Word {
             inner: el.to_le_bytes(cs),
         });
@@ -95,6 +95,18 @@ impl<F: SmallField> Blake2sStateGate<F> {
                 is_last_block: last_round,
             },
         );
+    }
+
+    pub fn spec_run_sinlge_round_into_destination<
+        CS: ConstraintSystem<F>,
+        const REDUCED_ROUNDS: bool,
+    >(
+        &mut self,
+        _cs: &mut CS,
+        _block_len: usize,
+        _dst: *mut [UInt32<F>; BLAKE2S_DIGEST_SIZE_U32_WORDS],
+    ) {
+        todo!()
     }
 }
 

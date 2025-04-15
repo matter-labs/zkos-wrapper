@@ -1,5 +1,17 @@
-use super::*;
-use zkos_verifier::blake2s_u32::{BLAKE2S_BLOCK_SIZE_U32_WORDS, BLAKE2S_DIGEST_SIZE_U32_WORDS};
+use boojum::cs::traits::cs::ConstraintSystem;
+use boojum::field::SmallField;
+use boojum::gadgets::blake2s::mixing_function::Word;
+use boojum::gadgets::traits::allocatable::CSAllocatable;
+use boojum::gadgets::traits::witnessable::WitnessHookable;
+use boojum::gadgets::u8::UInt8;
+use boojum::gadgets::u16::UInt16;
+use boojum::gadgets::u32::UInt32;
+
+use risc_verifier::blake2s_u32::*;
+
+mod blake2s_reduced;
+
+pub use blake2s_reduced::*;
 
 pub const USE_REDUCED_BLAKE2_ROUNDS: bool = true;
 
@@ -111,6 +123,15 @@ impl Blake2sWrappedTranscript {
         offset: usize,
     ) {
         hasher.run_round_function::<CS, USE_REDUCED_BLAKE2_ROUNDS>(cs, offset, true);
+    }
+
+    pub fn draw_randomness<F: SmallField, CS: ConstraintSystem<F>>(
+        cs: &mut CS,
+        seed: &mut SeedWrapped<F>,
+        dst: &mut [UInt32<F>],
+    ) {
+        let mut hasher = Blake2sStateGate::new(cs);
+        Self::draw_randomness_using_hasher(cs, &mut hasher, seed, dst);
     }
 
     pub fn draw_randomness_using_hasher<F: SmallField, CS: ConstraintSystem<F>>(
@@ -229,5 +250,129 @@ impl Blake2sWrappedTranscript {
 
         // copy it out
         *seed = SeedWrapped(hasher.read_state_for_output());
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct Blake2sWrappedBufferingTranscript<F: SmallField> {
+    state: Blake2sStateGate<F>,
+    buffer_offset: usize,
+}
+
+impl<F: SmallField> Blake2sWrappedBufferingTranscript<F> {
+    pub fn new<CS: ConstraintSystem<F>>(cs: &mut CS) -> Self {
+        Self {
+            state: Blake2sStateGate::new(cs),
+            buffer_offset: 0,
+        }
+    }
+
+    pub fn get_current_buffer_offset(&self) -> usize {
+        self.buffer_offset
+    }
+
+    pub fn absorb<CS: ConstraintSystem<F>>(&mut self, cs: &mut CS, values: &[UInt32<F>]) {
+        let mut to_absorb = values.len();
+        let mut src_offset = 0;
+        while to_absorb > 0 {
+            // dbg!(self.buffer_offset, to_absorb);
+            let absorb_this_round =
+                core::cmp::min(to_absorb, BLAKE2S_BLOCK_SIZE_U32_WORDS - self.buffer_offset);
+            for (dst, src) in self.state.input_buffer
+                [self.buffer_offset..self.buffer_offset + absorb_this_round]
+                .iter_mut()
+                .zip(values[src_offset..(src_offset + absorb_this_round)].iter())
+            {
+                *dst = Word {
+                    inner: src.to_le_bytes(cs),
+                };
+            }
+
+            src_offset += absorb_this_round;
+            self.buffer_offset += absorb_this_round;
+            to_absorb -= absorb_this_round;
+            // if we have more - run round function, otherwise - we will do final one in finalize
+            if to_absorb > 0 {
+                self.run_absorb(cs);
+            }
+            // dbg!(self.buffer_offset, absorb_this_round);
+        }
+    }
+
+    fn run_absorb<CS: ConstraintSystem<F>>(&mut self, cs: &mut CS) {
+        debug_assert_eq!(self.buffer_offset, BLAKE2S_BLOCK_SIZE_U32_WORDS);
+
+        let witness = self
+            .state
+            .input_buffer
+            .iter()
+            .map(|el| {
+                let uint = UInt32::from_le_bytes(cs, el.inner);
+                uint.witness_hook(cs)()
+            })
+            .filter(|x| x.is_some())
+            .map(|x| x.unwrap())
+            .collect::<Vec<_>>();
+        // dbg!(witness);
+
+        self.state
+            .run_round_function::<_, USE_REDUCED_BLAKE2_ROUNDS>(
+                cs,
+                BLAKE2S_BLOCK_SIZE_U32_WORDS,
+                false,
+            );
+
+        self.buffer_offset = 0;
+    }
+
+    // Pad whatever is in the buffer by 0s and run round function. This
+    // works as-if we absorbed enough zeroes, but allows to only keep the state
+    // and `t` and not buffer state if we want to propagate it into another
+    // computation
+    pub unsafe fn pad<CS: ConstraintSystem<F>>(&mut self, cs: &mut CS) {
+        self.state.input_buffer[self.buffer_offset..]
+            .iter_mut()
+            .for_each(|el| {
+                *el = Word {
+                    inner: [UInt8::zero(cs); 4],
+                };
+            });
+        self.buffer_offset = BLAKE2S_BLOCK_SIZE_U32_WORDS;
+    }
+
+    pub fn finalize<CS: ConstraintSystem<F>>(mut self, cs: &mut CS) -> SeedWrapped<F> {
+        // easy - always run a final round
+        self.state.input_buffer[self.buffer_offset..]
+            .iter_mut()
+            .for_each(|el| {
+                *el = Word {
+                    inner: [UInt8::zero(cs); 4],
+                };
+            });
+        self.state
+            .run_round_function::<_, USE_REDUCED_BLAKE2_ROUNDS>(cs, self.buffer_offset, true);
+
+        SeedWrapped(self.state.read_state_for_output())
+    }
+
+    pub fn finalize_reset<CS: ConstraintSystem<F>>(&mut self, cs: &mut CS) -> SeedWrapped<F> {
+        // easy - always run a final round
+        self.state.input_buffer[self.buffer_offset..]
+            .iter_mut()
+            .for_each(|el| {
+                *el = Word {
+                    inner: [UInt8::zero(cs); 4],
+                };
+            });
+
+        self.state
+            .run_round_function::<_, USE_REDUCED_BLAKE2_ROUNDS>(cs, self.buffer_offset, true);
+
+        let seed = SeedWrapped(self.state.read_state_for_output());
+
+        self.state.reset();
+        self.buffer_offset = 0;
+
+        seed
     }
 }

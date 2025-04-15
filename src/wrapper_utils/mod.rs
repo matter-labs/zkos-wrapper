@@ -1,4 +1,27 @@
-use super::*;
+use boojum::cs::traits::cs::ConstraintSystem;
+use boojum::field::SmallField;
+use boojum::gadgets::blake2s::mixing_function::Word;
+use boojum::gadgets::boolean::Boolean;
+use boojum::gadgets::mersenne_field::MersenneField;
+use boojum::gadgets::mersenne_field::fourth_ext::MersenneQuartic;
+use boojum::gadgets::num::Num;
+use boojum::gadgets::traits::allocatable::CSAllocatable;
+use boojum::gadgets::traits::selectable::Selectable;
+use boojum::gadgets::u8::UInt8;
+use boojum::gadgets::u32::UInt32;
+
+use risc_verifier::field::*;
+use risc_verifier::prover::cs::definitions::*;
+use risc_verifier::prover::definitions::*;
+use risc_verifier::verifier_common::non_determinism_source::NonDeterminismSource;
+use risc_verifier::verifier_common::{ProofOutput, ProofPublicInputs};
+
+use crate::transcript::*;
+
+pub mod prover_structs;
+pub mod verifier_traits;
+
+use prover_structs::*;
 
 pub fn binary_parallel_select<
     F: SmallField,

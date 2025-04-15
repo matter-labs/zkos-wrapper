@@ -610,7 +610,7 @@ pub(crate) fn transform_batch_ram_memory_accumulators(
 
             let previous_contribution_stream = if access_idx == 0 {
                 quote! {
-                    let previous = Mersenne31Quartic::ONE;
+                    let previous = MersenneQuartic::one(cs);
                 }
             } else {
                 let previous_offset = stage_2_layout
@@ -685,7 +685,7 @@ pub(crate) fn transform_batch_ram_memory_accumulators(
                             let mut t = #memory_argument_linearization_challenges_ident
                                 [MEM_ARGUMENT_CHALLENGE_POWERS_VALUE_HIGH_IDX];
                             t = t.mul(cs, &write_value_high);
-                            write_value_contibution = write_value_contibution.add(&t);
+                            write_value_contibution = write_value_contibution.add(cs, &t);
 
                             let mut denom = numerator;
 

@@ -985,7 +985,7 @@ pub(crate) fn transform_batch_ram_conventions(
         let predicate = #predicate_expr;
         let mut predicate_minus_one = predicate;
         let one = MersenneField::one(cs);
-        predicate_minus_one = predicate_minus_one.sub_base(&one);
+        predicate_minus_one = predicate_minus_one.sub_base(cs, &one);
 
         let mem_abi_offset = #mem_abi_offset_expr;
         let write_timestamp_low = #write_timestamp_low_expr;
@@ -1310,13 +1310,13 @@ pub(crate) fn transform_delegation_requests_processing(
 
                 let mem_abi_offset = #src_1_expr;
                 let mut t = #delegation_argument_linearization_challenges_ident[0];
-                t = t.mul(&mem_abi_offset);
-                denom = denom.add(&t);
+                t = t.mul(cs, &mem_abi_offset);
+                denom = denom.add(cs, &t);
 
                 let t = #delegation_type_ident;
                 denom = denom.add_base(cs, &t);
 
-                denom = denom.add(&#delegation_argument_gamma_ident);
+                denom = denom.add(cs, &#delegation_argument_gamma_ident);
 
                 let mut #individual_term_ident = denom;
                 #individual_term_ident = #individual_term_ident.mul(cs, & #accumulator_expr);

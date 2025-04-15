@@ -15,10 +15,18 @@ impl NonDeterminismSource for PlaceholderSource {
 }
 
 // wrapping NonDeterminismSource functions:
-pub(crate) fn read_word<F: SmallField, CS: ConstraintSystem<F>, I: NonDeterminismSource>(
+pub fn read_word<F: SmallField, CS: ConstraintSystem<F>, I: NonDeterminismSource>(
     cs: &mut CS,
 ) -> UInt32<F> {
     UInt32::allocate_checked(cs, I::read_word())
+}
+
+pub fn read_mersenne_element<F: SmallField, CS: ConstraintSystem<F>, I: NonDeterminismSource>(
+    cs: &mut CS,
+) -> MersenneField<F> {
+    let modulus = Mersenne31Field::CHARACTERISTICS as u32;
+    let witness = Mersenne31Field::from_nonreduced_u32(I::read_reduced_field_element(modulus));
+    MersenneField::allocate_checked(cs, witness, false)
 }
 
 pub trait CircuitLeafInclusionVerifier<F: SmallField> {
@@ -42,7 +50,7 @@ pub trait CircuitLeafInclusionVerifier<F: SmallField> {
     );
 }
 
-use zkos_verifier::blake2s_u32::{BLAKE2S_BLOCK_SIZE_U32_WORDS, BLAKE2S_DIGEST_SIZE_U32_WORDS};
+use risc_verifier::blake2s_u32::{BLAKE2S_BLOCK_SIZE_U32_WORDS, BLAKE2S_DIGEST_SIZE_U32_WORDS};
 
 #[derive(Debug)]
 pub struct CircuitBlake2sForEverythingVerifier<F: SmallField> {

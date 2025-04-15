@@ -546,7 +546,7 @@ pub fn generate_inlined(compiled_circuit: CompiledCircuitArtifact<Mersenne31Fiel
 
     quote! {
 
-        #[allow(unused_braces, unused_mut, unused_variables)]
+        #[allow(unused_braces, unused_mut, unused_variables, unsafe_op_in_unsafe_fn)]
         unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>(
             #cs: &mut CS,
             #random_point_ident: MersenneQuartic<F>,
@@ -579,7 +579,7 @@ pub fn generate_inlined(compiled_circuit: CompiledCircuitArtifact<Mersenne31Fiel
             every_row_except_last_contribution
         }
 
-        #[allow(unused_braces, unused_mut, unused_variables)]
+        #[allow(unused_braces, unused_mut, unused_variables, unsafe_op_in_unsafe_fn)]
         unsafe fn evaluate_every_row_except_two<F: SmallField, CS: ConstraintSystem<F>>(
             #cs: &mut CS,
             #random_point_ident: MersenneQuartic<F>,
@@ -612,7 +612,7 @@ pub fn generate_inlined(compiled_circuit: CompiledCircuitArtifact<Mersenne31Fiel
             every_row_except_two_last_contribution
         }
 
-        #[allow(unused_braces, unused_mut, unused_variables)]
+        #[allow(unused_braces, unused_mut, unused_variables, unsafe_op_in_unsafe_fn)]
         unsafe fn evaluate_last_row_and_zero<F: SmallField, CS: ConstraintSystem<F>>(
             #cs: &mut CS,
             #random_point_ident: MersenneQuartic<F>,
@@ -645,7 +645,7 @@ pub fn generate_inlined(compiled_circuit: CompiledCircuitArtifact<Mersenne31Fiel
             last_row_and_zero_contribution
         }
 
-        #[allow(unused_braces, unused_mut, unused_variables)]
+        #[allow(unused_braces, unused_mut, unused_variables, unsafe_op_in_unsafe_fn)]
         pub unsafe fn evaluate_quotient<F: SmallField, CS: ConstraintSystem<F>>(
             #cs: &mut CS,
             #random_point_ident: MersenneQuartic<F>,
@@ -673,7 +673,7 @@ pub fn generate_inlined(compiled_circuit: CompiledCircuitArtifact<Mersenne31Fiel
             #delegation_type_ident: MersenneField<F>,
             #delegation_argument_interpolant_linear_coeff_ident: MersenneQuartic<F>,
         ) -> MersenneQuartic<F> {
-            let every_row_except_last_contribution = evaluate_every_row_except_last(
+            let every_row_except_last_contribution = unsafe{ evaluate_every_row_except_last(
                 #cs,
                 #random_point_ident,
                 #witness_values_ident,
@@ -699,9 +699,9 @@ pub fn generate_inlined(compiled_circuit: CompiledCircuitArtifact<Mersenne31Fiel
                 #memory_timestamp_high_from_sequence_idx_ident,
                 #delegation_type_ident,
                 #delegation_argument_interpolant_linear_coeff_ident,
-            );
+            )};
 
-            let every_row_except_two_last_contribution = evaluate_every_row_except_two(
+            let every_row_except_two_last_contribution = unsafe{ evaluate_every_row_except_two(
                 #cs,
                 #random_point_ident,
                 #witness_values_ident,
@@ -727,9 +727,9 @@ pub fn generate_inlined(compiled_circuit: CompiledCircuitArtifact<Mersenne31Fiel
                 #memory_timestamp_high_from_sequence_idx_ident,
                 #delegation_type_ident,
                 #delegation_argument_interpolant_linear_coeff_ident,
-            );
+            )};
 
-            let last_row_and_zero_contribution = evaluate_last_row_and_zero(
+            let last_row_and_zero_contribution = unsafe{ evaluate_last_row_and_zero(
                 #cs,
                 #random_point_ident,
                 #witness_values_ident,
@@ -755,7 +755,7 @@ pub fn generate_inlined(compiled_circuit: CompiledCircuitArtifact<Mersenne31Fiel
                 #memory_timestamp_high_from_sequence_idx_ident,
                 #delegation_type_ident,
                 #delegation_argument_interpolant_linear_coeff_ident,
-            );
+            )};
 
             #first_row
 
