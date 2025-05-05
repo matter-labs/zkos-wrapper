@@ -9,10 +9,14 @@ edition = "2024"
 clap = { version = "4.5.21", features = ["derive"] }
 boojum = { git = "https://github.com/matter-labs/zksync-crypto.git", package="boojum", branch = "oh_mersenne_field"}
 # boojum = { path = "../../zksync-crypto/crates/boojum"}
-zkos_verifier_generator = {git="https://github.com/matter-labs/air_compiler.git", package="verifier_generator", branch="oh_for_zkos_wrapper"}
+zkos_verifier_generator = {git="https://github.com/matter-labs/air_compiler.git", package="verifier_generator", branch="oh_binaries_updated"}
 # zkos_verifier_generator = {path="../../air_compiler/verifier_generator", package="verifier_generator"}
-prover = {git="https://github.com/matter-labs/air_compiler.git", package="prover", branch="oh_for_zkos_wrapper"}
+prover = {git="https://github.com/matter-labs/air_compiler.git", package="prover", branch="oh_binaries_updated"}
 # prover = {path="../../air_compiler/prover", package="prover"}
+execution_utils = {git="https://github.com/matter-labs/air_compiler.git", package="execution_utils", branch="oh_binaries_updated"}
+# execution_utils = {path="../../air_compiler/execution_utils"}
+setups = {git="https://github.com/matter-labs/air_compiler.git", package="setups", branch="oh_binaries_updated"}
+# setups = {path="../../air_compiler/circuit_defs/setups"}
 serde_json = "*"
 serde = { version = "1", default-features = false, features = ["derive", "alloc"]}
 

@@ -205,7 +205,6 @@ pub fn generate_inlined(compiled_circuit: CompiledCircuitArtifact<Mersenne31Fiel
         let expr = transform_degree_1_constraint(el, &idents);
         common_constraints.push(expr);
     }
-
     every_low_except_last_subexprs.push((None, common_constraints));
 
     // special compiler-defined constraints. Note that all timestamp comparisons are effectively
@@ -236,29 +235,16 @@ pub fn generate_inlined(compiled_circuit: CompiledCircuitArtifact<Mersenne31Fiel
                 .array_chunks::<2>()
                 .enumerate()
             {
-                if i < shuffle_ram_special_case_bound {
-                    let (common, t) = transform_range_checks_16_pair(
-                        pair,
-                        i,
-                        stage_2_layout.intermediate_polys_for_range_check_16,
-                        &idents,
-                        &stage_2_layout,
-                        false,
-                    );
+                let (common, t) = transform_width_1_range_checks_pair(
+                    pair,
+                    i,
+                    stage_2_layout.intermediate_polys_for_range_check_16,
+                    &idents,
+                    &stage_2_layout,
+                    false,
+                );
 
-                    every_low_except_last_subexprs.push((Some(common), t));
-                } else {
-                    let (common, t) = transform_range_checks_16_pair(
-                        pair,
-                        i,
-                        stage_2_layout.intermediate_polys_for_range_check_16,
-                        &idents,
-                        &stage_2_layout,
-                        true,
-                    );
-
-                    every_low_except_last_subexprs.push((Some(common), t));
-                }
+                every_low_except_last_subexprs.push((Some(common), t));
             }
         }
 
@@ -285,15 +271,65 @@ pub fn generate_inlined(compiled_circuit: CompiledCircuitArtifact<Mersenne31Fiel
         }
     }
 
-    // now generic lookup
+    // timestamp range checks
+    {
+        let bound = stage_2_layout
+            .intermediate_polys_for_timestamp_range_checks
+            .num_pairs;
+        assert_eq!(
+            bound,
+            witness_layout
+                .timestamp_range_check_lookup_expressions
+                .len()
+                / 2
+        );
+        let num_shuffle_ram_accesses = memory_layout.shuffle_ram_access_sets.len();
+        let shuffle_ram_special_case_bound = bound - num_shuffle_ram_accesses;
+        assert!(
+            witness_layout
+                .timestamp_range_check_lookup_expressions
+                .len()
+                % 2
+                == 0
+        );
+        for (i, pair) in witness_layout
+            .timestamp_range_check_lookup_expressions
+            .array_chunks::<2>()
+            .enumerate()
+        {
+            if i < shuffle_ram_special_case_bound {
+                let (common, t) = transform_width_1_range_checks_pair(
+                    pair,
+                    i,
+                    stage_2_layout.intermediate_polys_for_timestamp_range_checks,
+                    &idents,
+                    &stage_2_layout,
+                    false,
+                );
 
+                every_low_except_last_subexprs.push((Some(common), t));
+            } else {
+                let (common, t) = transform_width_1_range_checks_pair(
+                    pair,
+                    i,
+                    stage_2_layout.intermediate_polys_for_timestamp_range_checks,
+                    &idents,
+                    &stage_2_layout,
+                    true,
+                );
+
+                every_low_except_last_subexprs.push((Some(common), t));
+            }
+        }
+    }
+
+    // now generic lookup
     {
         let t = transform_generic_lookup(&witness_layout, &stage_2_layout, &setup_layout, &idents);
         every_low_except_last_subexprs.push((None, t));
     }
 
     // multiplicities
-
     {
         let t = transform_multiplicities(&witness_layout, &stage_2_layout, &setup_layout, &idents);
         every_low_except_last_subexprs.push((None, t));
@@ -316,6 +352,17 @@ pub fn generate_inlined(compiled_circuit: CompiledCircuitArtifact<Mersenne31Fiel
     if memory_layout.delegation_processor_layout.is_some() {
         let t = transform_delegation_requests_processing(&memory_layout, &stage_2_layout, &idents);
         every_low_except_last_subexprs.push((None, t));
+    }
+
+    // check padding of lazy-init
+    if let Some(shuffle_ram_inits_and_teardowns) = memory_layout.shuffle_ram_inits_and_teardowns {
+        let lazy_init_address_aux_vars = lazy_init_address_aux_vars.as_ref().expect("exists");
+        let (common, exprs) = transform_shuffle_ram_lazy_init_padding(
+            shuffle_ram_inits_and_teardowns,
+            &lazy_init_address_aux_vars,
+            &idents,
+        );
+        every_low_except_last_subexprs.push((Some(common), exprs));
     }
 
     // shuffle RAM memory accumulators
@@ -390,12 +437,12 @@ pub fn generate_inlined(compiled_circuit: CompiledCircuitArtifact<Mersenne31Fiel
     // and shuffle RAM lazy init if it exists
     if let Some(shuffle_ram_inits_and_teardowns) = memory_layout.shuffle_ram_inits_and_teardowns {
         let lazy_init_address_aux_vars = lazy_init_address_aux_vars.as_ref().expect("exists");
-        let t = transform_shuffle_ram_lazy_init(
+        let (common, exprs) = transform_shuffle_ram_lazy_init(
             shuffle_ram_inits_and_teardowns,
             &lazy_init_address_aux_vars,
             &idents,
         );
-        every_low_except_last_two_subexprs.push((None, t));
+        every_low_except_last_two_subexprs.push((Some(common), exprs));
     }
 
     let mut is_first = true;

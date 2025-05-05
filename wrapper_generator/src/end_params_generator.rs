@@ -1,8 +1,10 @@
 use proc_macro2::TokenStream;
 use prover::merkle_trees::MerkleTreeCapVarLength;
-use prover::transcript::Blake2sBufferingTranscript;
 use prover::transcript::blake2s_u32::BLAKE2S_DIGEST_SIZE_U32_WORDS;
+use prover::transcript::Blake2sBufferingTranscript;
+use prover::worker::Worker;
 use quote::quote;
+use std::alloc::Global;
 
 #[derive(Clone, Debug, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct ExpectedFinalStateData {
@@ -11,39 +13,34 @@ pub struct ExpectedFinalStateData {
 }
 
 pub fn generate_constants(
-    base_layer_data: &ExpectedFinalStateData,
-    first_recursion_layer_data: &ExpectedFinalStateData,
-    next_recursion_layer_data: &ExpectedFinalStateData,
-    final_circuit_data: &ExpectedFinalStateData,
+    base_layer_bin: &[u8],
+    first_recursion_layer_bin: &[u8],
+    next_recursion_layer_bin: &[u8],
+    first_final_recursion_bin: &[u8],
+    next_final_recursion_bin: &[u8],
 ) -> TokenStream {
+    let worker = Worker::new_with_num_threads(8);
+
+    let expected_final_pc = execution_utils::find_binary_exit_point(next_final_recursion_bin);
+    let binary = execution_utils::get_padded_binary(next_final_recursion_bin);
+    let main_circuit_precomputations =
+        setups::get_final_reduced_riscv_circuit_setup::<Global>(&binary, &worker);
+
+    let end_params =
+        execution_utils::compute_end_parameters(expected_final_pc, &main_circuit_precomputations);
+
     let aux_registers_values = compute_commitment_for_chain_of_programs(
-        base_layer_data,
-        first_recursion_layer_data,
-        next_recursion_layer_data,
+        base_layer_bin,
+        first_recursion_layer_bin,
+        next_recursion_layer_bin,
+        first_final_recursion_bin,
+        &worker,
     );
 
-    let end_params = compute_end_params_output(final_circuit_data);
-
-    let [
-        end_params_0,
-        end_params_1,
-        end_params_2,
-        end_params_3,
-        end_params_4,
-        end_params_5,
-        end_params_6,
-        end_params_7,
-    ] = end_params;
-    let [
-        aux_registers_values_0,
-        aux_registers_values_1,
-        aux_registers_values_2,
-        aux_registers_values_3,
-        aux_registers_values_4,
-        aux_registers_values_5,
-        aux_registers_values_6,
-        aux_registers_values_7,
-    ] = aux_registers_values;
+    let [end_params_0, end_params_1, end_params_2, end_params_3, end_params_4, end_params_5, end_params_6, end_params_7] =
+        end_params;
+    let [aux_registers_values_0, aux_registers_values_1, aux_registers_values_2, aux_registers_values_3, aux_registers_values_4, aux_registers_values_5, aux_registers_values_6, aux_registers_values_7] =
+        aux_registers_values;
 
     quote! {
         pub(crate) const FINAL_RISC_CIRCUIT_END_PARAMS: [u32; #BLAKE2S_DIGEST_SIZE_U32_WORDS] = [
@@ -77,13 +74,39 @@ pub fn generate_constants(
 ///     || next_recursion_step_end_params
 /// )
 fn compute_commitment_for_chain_of_programs(
-    base_layer_data: &ExpectedFinalStateData,
-    first_recursion_layer_data: &ExpectedFinalStateData,
-    next_recursion_layer_data: &ExpectedFinalStateData,
+    base_layer_bin: &[u8],
+    first_recursion_layer_bin: &[u8],
+    next_recursion_layer_bin: &[u8],
+    first_final_recursion_bin: &[u8],
+    worker: &Worker,
 ) -> [u32; BLAKE2S_DIGEST_SIZE_U32_WORDS] {
-    let base_layer_end_params = compute_end_params_output(base_layer_data);
-    let first_recursion_layer_end_params = compute_end_params_output(first_recursion_layer_data);
-    let next_recursion_layer_end_params = compute_end_params_output(next_recursion_layer_data);
+    let expected_final_pc = execution_utils::find_binary_exit_point(base_layer_bin);
+    let binary = execution_utils::get_padded_binary(base_layer_bin);
+    let main_circuit_precomputations =
+        setups::get_main_riscv_circuit_setup::<Global>(&binary, &worker);
+    let base_layer_end_params =
+        execution_utils::compute_end_parameters(expected_final_pc, &main_circuit_precomputations);
+
+    let expected_final_pc = execution_utils::find_binary_exit_point(first_recursion_layer_bin);
+    let binary = execution_utils::get_padded_binary(first_recursion_layer_bin);
+    let main_circuit_precomputations =
+        setups::get_reduced_riscv_circuit_setup::<Global>(&binary, &worker);
+    let first_recursion_layer_end_params =
+        execution_utils::compute_end_parameters(expected_final_pc, &main_circuit_precomputations);
+
+    let expected_final_pc = execution_utils::find_binary_exit_point(next_recursion_layer_bin);
+    let binary = execution_utils::get_padded_binary(next_recursion_layer_bin);
+    let main_circuit_precomputations =
+        setups::get_reduced_riscv_circuit_setup::<Global>(&binary, &worker);
+    let next_recursion_layer_end_params =
+        execution_utils::compute_end_parameters(expected_final_pc, &main_circuit_precomputations);
+
+    let expected_final_pc = execution_utils::find_binary_exit_point(first_final_recursion_bin);
+    let binary = execution_utils::get_padded_binary(first_final_recursion_bin);
+    let main_circuit_precomputations =
+        setups::get_final_reduced_riscv_circuit_setup::<Global>(&binary, &worker);
+    let first_final_recursion_end_params =
+        execution_utils::compute_end_parameters(expected_final_pc, &main_circuit_precomputations);
 
     let mut hasher = Blake2sBufferingTranscript::new();
     hasher.absorb(&[0u32; BLAKE2S_DIGEST_SIZE_U32_WORDS]);
@@ -96,6 +119,10 @@ fn compute_commitment_for_chain_of_programs(
 
     hasher.absorb(&tmp);
     hasher.absorb(&next_recursion_layer_end_params);
+    let tmp = hasher.finalize_reset().0;
+
+    hasher.absorb(&tmp);
+    hasher.absorb(&first_final_recursion_end_params);
     hasher.finalize_reset().0
 }
 

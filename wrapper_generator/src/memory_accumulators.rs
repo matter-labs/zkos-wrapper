@@ -5,12 +5,13 @@ use proc_macro2::TokenStream;
 use quote::quote;
 
 use prover::cs::one_row_compiler::{
-    BatchedRamAccessColumns, ColumnAddress, LookupAndMemoryArgumentLayout,
-    MEM_ARGUMENT_CHALLENGE_POWERS_ADDRESS_HIGH_IDX, MEM_ARGUMENT_CHALLENGE_POWERS_ADDRESS_LOW_IDX,
+    BatchedRamAccessColumns, ColumnAddress, LookupAndMemoryArgumentLayout, MemorySubtree,
+    RegisterOnlyAccessAddress, RegisterOrRamAccessAddress, SetupLayout, ShuffleRamAddress,
+    ShuffleRamQueryColumns, MEM_ARGUMENT_CHALLENGE_POWERS_ADDRESS_HIGH_IDX,
+    MEM_ARGUMENT_CHALLENGE_POWERS_ADDRESS_LOW_IDX,
     MEM_ARGUMENT_CHALLENGE_POWERS_TIMESTAMP_HIGH_IDX,
     MEM_ARGUMENT_CHALLENGE_POWERS_TIMESTAMP_LOW_IDX, MEM_ARGUMENT_CHALLENGE_POWERS_VALUE_HIGH_IDX,
-    MEM_ARGUMENT_CHALLENGE_POWERS_VALUE_LOW_IDX, MemorySubtree, RegisterOnlyAccessAddress,
-    RegisterOrRamAccessAddress, SetupLayout, ShuffleRamAddress, ShuffleRamQueryColumns,
+    MEM_ARGUMENT_CHALLENGE_POWERS_VALUE_LOW_IDX,
 };
 
 pub(crate) fn transform_shuffle_ram_memory_accumulators(

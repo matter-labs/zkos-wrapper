@@ -56,7 +56,7 @@ use risc_verifier::prover::prover_stages::Proof as RiscProof;
 const NUM_RISC_WRAPPER_PUBLIC_INPUTS: usize = 4;
 
 pub struct RiscWrapperWitness {
-    pub final_registers_state: [u32; NUM_REGISTERS * 2],
+    pub final_registers_state: [u32; NUM_REGISTERS * 3],
     pub proof: RiscProof,
 }
 
@@ -203,11 +203,11 @@ impl<F: SmallField, V: CircuitLeafInclusionVerifier<F>> RiscWrapperCircuit<F, V>
         let final_registers_state_witness = if let Some(witness) = &self.witness {
             witness.final_registers_state
         } else {
-            [0u32; NUM_REGISTERS * 2]
+            [0u32; NUM_REGISTERS * 3]
         };
 
         let final_registers_state =
-            <[UInt32<F>; NUM_REGISTERS * 2]>::allocate(cs, final_registers_state_witness);
+            <[UInt32<F>; NUM_REGISTERS * 3]>::allocate(cs, final_registers_state_witness);
 
         let (skeleton, queries) = if let Some(witness) = &self.witness {
             prepare_proof_for_wrapper::<_, _, V>(cs, &witness.proof)
@@ -334,11 +334,9 @@ pub(crate) fn set_iterator_from_proof(proof: &RiscProof, shuffle_ram_inits_and_t
         ),
     );
     let idx = oracle_data.len();
-    dbg!(oracle_data.len());
     for query in proof.queries.iter() {
         oracle_data.extend(risc_verifier::verifier_common::proof_flattener::flatten_query(query));
     }
-    dbg!(oracle_data.len(), &oracle_data[idx]);
 
     let it = oracle_data.into_iter();
 
@@ -347,7 +345,7 @@ pub(crate) fn set_iterator_from_proof(proof: &RiscProof, shuffle_ram_inits_and_t
 
 pub(crate) fn check_proof_state<F: SmallField, CS: ConstraintSystem<F>>(
     cs: &mut CS,
-    final_registers_state: [UInt32<F>; NUM_REGISTERS * 2],
+    final_registers_state: [UInt32<F>; NUM_REGISTERS * 3],
     proof_state: &WrappedProofOutput<
         F,
         TREE_CAP_SIZE,
@@ -478,11 +476,9 @@ pub(crate) fn check_proof_state<F: SmallField, CS: ConstraintSystem<F>>(
     // chain of executed programs the is also constant
 
     for i in 0..8 {
-        let aux_register_idx = (i + 18) * 2;
+        let aux_register_idx = (i + 18) * 3;
         let aux_register = final_registers_state[aux_register_idx];
-        // For now we use zeroes for testing
-        let expected_word = UInt32::allocate_constant(cs, 0u32);
-        // let expected_word = UInt32::allocate_constant(cs, FINAL_RISC_CIRCUIT_AUX_REGISTERS_VALUES[i]);
+        let expected_word = UInt32::allocate_constant(cs, FINAL_RISC_CIRCUIT_AUX_REGISTERS_VALUES[i]);
         Num::enforce_equal(cs, &expected_word.into_num(), &aux_register.into_num());
     }
 }
@@ -492,7 +488,7 @@ pub fn produce_register_contribution_into_memory_accumulator_raw<
     CS: ConstraintSystem<F>,
 >(
     cs: &mut CS,
-    register_final_data: &[UInt32<F>; NUM_REGISTERS * 2],
+    register_final_data: &[UInt32<F>; NUM_REGISTERS * 3],
     memory_argument_linearization_challenges: [MersenneQuartic<F>;
         NUM_MEM_ARGUMENT_LINEARIZATION_CHALLENGES],
     memory_argument_gamma: MersenneQuartic<F>,
@@ -512,10 +508,10 @@ pub fn produce_register_contribution_into_memory_accumulator_raw<
 
     let mut read_set_contribution = MersenneQuartic::one(cs);
     // all registers are write 0 at timestamp 0
-    for (reg_idx, value_and_timestamp) in register_final_data.chunks(2).enumerate() {
+    for (reg_idx, value_and_timestamp) in register_final_data.chunks(3).enumerate() {
         let [value_low, value_high] = split_uint32_into_pair_mersenne(cs, &value_and_timestamp[0]);
-        let [timestamp_low, timestamp_high] =
-            split_uint32_into_pair_mersenne(cs, &value_and_timestamp[1]);
+        let timestamp_low = MersenneField::from_variable_checked(cs, value_and_timestamp[1].get_variable(), false);
+        let timestamp_high = MersenneField::from_variable_checked(cs, value_and_timestamp[2].get_variable(), false);
 
         let mut contribution = MersenneQuartic::one(cs); // is_register == 1, without challenge
         let mut t =

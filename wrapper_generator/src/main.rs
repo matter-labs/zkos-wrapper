@@ -1,5 +1,6 @@
 #![feature(array_chunks)]
 #![feature(slice_from_ptr_range)]
+#![feature(allocator_api)]
 
 mod everywhere_except_last;
 mod everywhere_except_last_two;
@@ -15,7 +16,7 @@ use clap::Parser;
 use end_params_generator::*;
 use prover::{cs::one_row_compiler::CompiledCircuitArtifact, field::Mersenne31Field};
 use quotient_generator::generate_inlined;
-use std::io::Write;
+use std::io::{Read, Write};
 use std::path::Path;
 use std::process::Command;
 use std::process::Stdio;
@@ -71,8 +72,8 @@ struct Cli {
     output_dir: String,
     #[arg(long, default_value = "layout")]
     input_layout_file: String,
-    #[arg(long, default_value = "final_circuit_data")]
-    input_final_circuit_data_file: String,
+    #[arg(long, default_value = "binaries")]
+    input_bin_dir: String,
 }
 
 fn deserialize_from_file<T: serde::de::DeserializeOwned>(filename: &str) -> T {
@@ -97,20 +98,15 @@ fn main() {
     )
     .expect(&format!("Failed to write to {}", output_dir));
 
-    let input_final_circuit_data_file = cli.input_final_circuit_data_file;
-    let final_circuit_data = deserialize_from_file(&input_final_circuit_data_file);
-
-    // For now
-    let base_layer_data = ExpectedFinalStateData::default();
-    let first_recursion_layer_data = ExpectedFinalStateData::default();
-    let next_recursion_layer_data = ExpectedFinalStateData::default();
+    let binaries = get_binaries(&cli.input_bin_dir);
 
     let end_params_constants = format_rust_code(
         &generate_constants(
-            &base_layer_data,
-            &first_recursion_layer_data,
-            &next_recursion_layer_data,
-            &final_circuit_data,
+            &binaries[0],
+            &binaries[1],
+            &binaries[2],
+            &binaries[3],
+            &binaries[4],
         )
         .to_string(),
     )
@@ -121,4 +117,22 @@ fn main() {
         end_params_constants,
     )
     .expect(&format!("Failed to write to {}", output_dir));
+}
+
+fn get_binaries(bin_dir: &str) -> [Vec<u8>; 5] {
+    [
+        "app.bin",
+        "base_layer.bin",
+        "recursion_layer.bin",
+        "recursion_layer_no_delegation.bin",
+        "final_recursion_layer.bin",
+    ]
+    .map(|bin_file| {
+        let mut binary = vec![];
+        std::fs::File::open(Path::new(&bin_dir).join(bin_file))
+            .unwrap()
+            .read_to_end(&mut binary)
+            .unwrap();
+        binary
+    })
 }

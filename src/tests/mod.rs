@@ -44,8 +44,11 @@ mod snark_wrapper_tests;
 
 #[test]
 fn all_layers_full_test() {
+    println!("Testing Risc wrapper");
     risc_wrapper_tests::risc_wrapper_full_test();
+    println!("Testing compression");
     compression_tests::compression_full_test();
+    println!("Testing Snark wrapper");
     snark_wrapper_tests::snark_wrapper_full_test();
 }
 

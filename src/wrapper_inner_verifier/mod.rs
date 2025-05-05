@@ -407,10 +407,7 @@ pub fn verify<F: SmallField, CS: ConstraintSystem<F>>(
         let aux_boundary_values = if skeleton.aux_boundary_values.len() > 0 {
             skeleton.aux_boundary_values[0]
         } else {
-            WrappedAuxArgumentsBoundaryValues {
-                lazy_init_first_row: [MersenneField::zero(cs); REGISTER_SIZE],
-                lazy_init_one_before_last_row: [MersenneField::zero(cs); REGISTER_SIZE],
-            }
+            WrappedAuxArgumentsBoundaryValues::zero(cs)
         };
 
         let shift = UInt32::allocate_constant(cs, 1 << CIRCUIT_SEQUENCE_BITS_SHIFT as u32);
