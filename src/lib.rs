@@ -14,7 +14,7 @@ mod tests;
 
 use boojum::algebraic_props::round_function::AbsorptionModeOverwrite;
 use boojum::algebraic_props::sponge::GoldilocksPoseidon2Sponge;
-use boojum::config::{ProvingCSConfig, DevCSConfig, SetupCSConfig};
+use boojum::config::{DevCSConfig, ProvingCSConfig, SetupCSConfig};
 use boojum::cs::cs_builder::new_builder;
 use boojum::cs::cs_builder_reference::CsReferenceImplementationBuilder;
 use boojum::cs::implementations::hints::DenseVariablesCopyHint;

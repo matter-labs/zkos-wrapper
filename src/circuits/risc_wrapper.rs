@@ -1,6 +1,5 @@
 use boojum::{
     cs::{
-        CSGeometry, GateConfigurationHolder, LookupParameters, StaticToolboxHolder,
         cs_builder::{CsBuilder, CsBuilderImpl},
         gates::{
             ConstantsAllocatorGate, FmaGateInBaseFieldWithoutConstant, NopGate, PublicInputGate,
@@ -9,17 +8,18 @@ use boojum::{
         },
         implementations::prover::ProofConfig,
         traits::{circuit::CircuitBuilder, cs::ConstraintSystem, gate::GatePlacementStrategy},
+        CSGeometry, GateConfigurationHolder, LookupParameters, StaticToolboxHolder,
     },
     field::SmallField,
     gadgets::{
         mersenne_field::{
-            MersenneField, extension_trait::CircuitFieldExpression, fourth_ext::MersenneQuartic,
+            extension_trait::CircuitFieldExpression, fourth_ext::MersenneQuartic, MersenneField,
         },
         num::Num,
         tables::{
-            and8::{And8Table, create_and8_table},
-            byte_split::{ByteSplitTable, create_byte_split_table},
-            xor8::{Xor8Table, create_xor8_table},
+            and8::{create_and8_table, And8Table},
+            byte_split::{create_byte_split_table, ByteSplitTable},
+            xor8::{create_xor8_table, Xor8Table},
         },
         traits::{allocatable::CSAllocatable, witnessable::WitnessHookable},
         u16::UInt16,
@@ -45,12 +45,15 @@ use risc_verifier::prover::risc_v_simulator::cycle::state::NUM_REGISTERS;
 
 use risc_verifier::prover::cs::definitions::*;
 
-use risc_verifier::verifier_common::{DefaultNonDeterminismSource, ProofOutput, ProofPublicInputs};
+use risc_verifier::verifier_common::{
+    transcript::Blake2sBufferingTranscript, DefaultNonDeterminismSource, ProofOutput,
+    ProofPublicInputs,
+};
 
-use boojum::gadgets::tables::RangeCheck15BitsTable;
-use boojum::gadgets::tables::RangeCheck16BitsTable;
 use boojum::gadgets::tables::create_range_check_15_bits_table;
 use boojum::gadgets::tables::create_range_check_16_bits_table;
+use boojum::gadgets::tables::RangeCheck15BitsTable;
+use boojum::gadgets::tables::RangeCheck16BitsTable;
 use risc_verifier::prover::prover_stages::Proof as RiscProof;
 
 const NUM_RISC_WRAPPER_PUBLIC_INPUTS: usize = 4;
@@ -58,6 +61,55 @@ const NUM_RISC_WRAPPER_PUBLIC_INPUTS: usize = 4;
 pub struct RiscWrapperWitness {
     pub final_registers_state: [u32; NUM_REGISTERS * 3],
     pub proof: RiscProof,
+}
+
+impl RiscWrapperWitness {
+    pub fn from_full_proof(full_proof: execution_utils::ProgramProof) -> Self {
+        let execution_utils::ProgramProof {
+            base_layer_proofs,
+            delegation_proofs,
+            register_final_values,
+            end_params,
+            recursion_chain_preimage,
+            recursion_chain_hash,
+        } = full_proof;
+
+        assert!(base_layer_proofs.len() == 1);
+        assert!(delegation_proofs.is_empty());
+        assert!(register_final_values.len() == NUM_REGISTERS);
+        assert_eq!(end_params, FINAL_RISC_CIRCUIT_END_PARAMS);
+
+        assert!(recursion_chain_preimage.is_some());
+        let mut result_hasher = Blake2sBufferingTranscript::new();
+        result_hasher.absorb(&recursion_chain_preimage.unwrap());
+
+        assert!(recursion_chain_hash.is_some());
+        assert_eq!(
+            recursion_chain_hash.unwrap(),
+            result_hasher.finalize_reset().0
+        );
+        assert_eq!(
+            recursion_chain_hash.unwrap(),
+            FINAL_RISC_CIRCUIT_AUX_REGISTERS_VALUES
+        );
+
+        let final_registers_state: Vec<_> = register_final_values
+            .into_iter()
+            .flat_map(|final_values| {
+                let (low, high) = risc_verifier::prover::cs::definitions::split_timestamp(
+                    final_values.last_access_timestamp,
+                );
+                [final_values.value, low, high]
+            })
+            .collect();
+
+        let base_proof = base_layer_proofs.into_iter().next().unwrap();
+
+        Self {
+            final_registers_state: final_registers_state.try_into().unwrap(),
+            proof: base_proof,
+        }
+    }
 }
 
 pub struct RiscWrapperCircuit<F: SmallField, V: CircuitLeafInclusionVerifier<F>> {
@@ -478,7 +530,8 @@ pub(crate) fn check_proof_state<F: SmallField, CS: ConstraintSystem<F>>(
     for i in 0..8 {
         let aux_register_idx = (i + 18) * 3;
         let aux_register = final_registers_state[aux_register_idx];
-        let expected_word = UInt32::allocate_constant(cs, FINAL_RISC_CIRCUIT_AUX_REGISTERS_VALUES[i]);
+        let expected_word =
+            UInt32::allocate_constant(cs, FINAL_RISC_CIRCUIT_AUX_REGISTERS_VALUES[i]);
         Num::enforce_equal(cs, &expected_word.into_num(), &aux_register.into_num());
     }
 }
@@ -510,8 +563,10 @@ pub fn produce_register_contribution_into_memory_accumulator_raw<
     // all registers are write 0 at timestamp 0
     for (reg_idx, value_and_timestamp) in register_final_data.chunks(3).enumerate() {
         let [value_low, value_high] = split_uint32_into_pair_mersenne(cs, &value_and_timestamp[0]);
-        let timestamp_low = MersenneField::from_variable_checked(cs, value_and_timestamp[1].get_variable(), false);
-        let timestamp_high = MersenneField::from_variable_checked(cs, value_and_timestamp[2].get_variable(), false);
+        let timestamp_low =
+            MersenneField::from_variable_checked(cs, value_and_timestamp[1].get_variable(), false);
+        let timestamp_high =
+            MersenneField::from_variable_checked(cs, value_and_timestamp[2].get_variable(), false);
 
         let mut contribution = MersenneQuartic::one(cs); // is_register == 1, without challenge
         let mut t =

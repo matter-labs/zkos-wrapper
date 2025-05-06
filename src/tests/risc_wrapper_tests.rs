@@ -7,25 +7,7 @@ pub(crate) fn risc_wrapper_full_test() {
     let worker = boojum::worker::Worker::new_with_num_threads(4);
 
     let program_proof: execution_utils::ProgramProof = deserialize_from_file(RISC_PROOF_PATH);
-
-    let execution_utils::ProgramProof {
-        base_layer_proofs,
-        delegation_proofs,
-        register_final_values,
-        end_params,
-        recursion_chain_preimage,
-        recursion_chain_hash,
-    } = program_proof;
-
-    let final_registers_state: Vec<_> = register_final_values.into_iter().flat_map(|final_values| {
-        let (low, high) = risc_verifier::prover::cs::definitions::split_timestamp(final_values.last_access_timestamp);
-        [final_values.value, low, high]
-    }).collect();
-
-    let risc_wrapper_witness = RiscWrapperWitness {
-        final_registers_state: final_registers_state.try_into().unwrap(),
-        proof: base_layer_proofs[0].clone(),
-    };
+    let risc_wrapper_witness = RiscWrapperWitness::from_full_proof(program_proof);
 
     let (
         finalization_hint,

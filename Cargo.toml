@@ -23,6 +23,8 @@ snark_wrapper = { git = "https://github.com/matter-labs/zksync-crypto.git", pack
 # snark_wrapper = { path = "../zksync-crypto/crates/snark-wrapper"}
 risc_verifier = {git="https://github.com/matter-labs/air_compiler.git", package="final_reduced_risc_v_machine_verifier", features=["proof_utils"], branch="oh_binaries_updated"}
 # risc_verifier = {path="../air_compiler/circuit_defs/final_reduced_risc_v_machine/verifier", package="final_reduced_risc_v_machine_verifier", features=["proof_utils"]}
+execution_utils = {git="https://github.com/matter-labs/air_compiler.git", package="execution_utils", branch="oh_binaries_updated"}
+# execution_utils = {path="../air_compiler/execution_utils"}
 serde_json = { version = "*" }
 serde = { version = "1", default-features = false, features = ["derive", "alloc"]}
 clap = { version = "4.5.21", features = ["derive"] }
@@ -30,5 +32,3 @@ clap = { version = "4.5.21", features = ["derive"] }
 [dev-dependencies]
 rand = "0.8.4"
 hex = "0.4.3"
-execution_utils = {git="https://github.com/matter-labs/air_compiler.git", package="execution_utils", branch="oh_binaries_updated"}
-# execution_utils = {path="../air_compiler/execution_utils"}

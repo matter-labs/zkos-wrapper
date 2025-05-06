@@ -3,9 +3,9 @@ use boojum::field::SmallField;
 use boojum::gadgets::blake2s::mixing_function::Word;
 use boojum::gadgets::traits::allocatable::CSAllocatable;
 use boojum::gadgets::traits::witnessable::WitnessHookable;
-use boojum::gadgets::u8::UInt8;
 use boojum::gadgets::u16::UInt16;
 use boojum::gadgets::u32::UInt32;
+use boojum::gadgets::u8::UInt8;
 
 use risc_verifier::blake2s_u32::*;
 

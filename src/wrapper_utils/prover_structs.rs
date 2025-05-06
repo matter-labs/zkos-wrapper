@@ -212,8 +212,16 @@ impl<F: SmallField> WrappedAuxArgumentsBoundaryValues<F> {
         result.extend_from_slice(&self.teardown_value_first_row.map(|x| x.into_uint32()));
         result.extend_from_slice(&self.teardown_timestamp_first_row.map(|x| x.into_uint32()));
         result.extend_from_slice(&self.lazy_init_one_before_last_row.map(|x| x.into_uint32()));
-        result.extend_from_slice(&self.teardown_value_one_before_last_row.map(|x| x.into_uint32()));
-        result.extend_from_slice(&self.teardown_timestamp_one_before_last_row.map(|x| x.into_uint32()));
+        result.extend_from_slice(
+            &self
+                .teardown_value_one_before_last_row
+                .map(|x| x.into_uint32()),
+        );
+        result.extend_from_slice(
+            &self
+                .teardown_timestamp_one_before_last_row
+                .map(|x| x.into_uint32()),
+        );
         result
     }
 
@@ -302,12 +310,12 @@ pub struct WrappedProofOutput<
 }
 
 impl<
-    F: SmallField,
-    const CAP_SIZE: usize,
-    const NUM_COSETS: usize,
-    const NUM_DELEGATION_CHALLENGES: usize,
-    const NUM_AUX_BOUNDARY_VALUES: usize,
-> CSAllocatable<F>
+        F: SmallField,
+        const CAP_SIZE: usize,
+        const NUM_COSETS: usize,
+        const NUM_DELEGATION_CHALLENGES: usize,
+        const NUM_AUX_BOUNDARY_VALUES: usize,
+    > CSAllocatable<F>
     for WrappedProofOutput<
         F,
         CAP_SIZE,
