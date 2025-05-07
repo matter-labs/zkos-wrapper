@@ -12,9 +12,9 @@ use bellman::kate_commitment::{Crs, CrsForMonomialForm};
 use bellman::worker::Worker as BellmanWorker;
 
 use zkos_wrapper::{
-    get_compression_setup, get_risc_wrapper_setup, get_snark_wrapper_setup, prove_compression,
-    prove_risc_wrapper, prove_snark_wrapper, verify_compression_proof, verify_risc_wrapper_proof,
-    verify_snark_wrapper_proof, zkos_utils::read_and_verify_proof,
+    circuits::RiscWrapperWitness, get_compression_setup, get_risc_wrapper_setup,
+    get_snark_wrapper_setup, prove_compression, prove_risc_wrapper, prove_snark_wrapper,
+    verify_compression_proof, verify_risc_wrapper_proof, verify_snark_wrapper_proof,
 };
 use zkos_wrapper::{Bn256, L1_VERIFIER_DOMAIN_SIZE_LOG};
 
@@ -24,9 +24,6 @@ struct Cli {
     #[arg(short, long)]
     input: String,
     #[arg(short, long)]
-    /// File where the values of the registers are stored.
-    registers_input: String,
-    #[arg(short, long)]
     output_dir: String,
 }
 
@@ -35,11 +32,18 @@ fn serialize_to_file<T: serde::ser::Serialize>(content: &T, filename: &Path) {
     serde_json::to_writer_pretty(src, content).unwrap();
 }
 
+fn deserialize_from_file<T: serde::de::DeserializeOwned>(filename: &str) -> T {
+    let src = std::fs::File::open(filename).unwrap();
+    serde_json::from_reader(src).unwrap()
+}
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli = Cli::parse();
 
     let worker = boojum::worker::Worker::new_with_num_threads(4);
-    let risc_wrapper_witness = read_and_verify_proof(&cli.input, &cli.registers_input);
+
+    let program_proof = deserialize_from_file(&cli.input);
+    let risc_wrapper_witness = RiscWrapperWitness::from_full_proof(program_proof);
 
     let (
         finalization_hint,
