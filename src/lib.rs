@@ -3,9 +3,9 @@
 #![feature(generic_const_exprs)]
 
 pub mod circuits;
-mod transcript;
+pub mod transcript;
 mod wrapper_inner_verifier;
-mod wrapper_utils;
+pub mod wrapper_utils;
 
 #[cfg(test)]
 mod tests;

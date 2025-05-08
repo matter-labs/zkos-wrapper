@@ -12,12 +12,8 @@ use boojum::{
     },
     field::SmallField,
     gadgets::{
-        mersenne_field::{
-            extension_trait::CircuitFieldExpression, fourth_ext::MersenneQuartic, MersenneField,
-        },
         num::Num,
         tables::{
-            and8::{create_and8_table, And8Table},
             byte_split::{create_byte_split_table, ByteSplitTable},
             xor8::{create_xor8_table, Xor8Table},
         },
@@ -25,6 +21,9 @@ use boojum::{
         u16::UInt16,
         u32::UInt32,
     },
+};
+use circuit_mersenne_field::{
+    extension_trait::CircuitFieldExpression, MersenneField, MersenneQuartic,
 };
 use std::mem::MaybeUninit;
 
@@ -287,7 +286,7 @@ impl<F: SmallField, V: CircuitLeafInclusionVerifier<F>> RiscWrapperCircuit<F, V>
         check_proof_state(cs, final_registers_state, &proof_state, &proof_input);
 
         // we carry registers 10-17 to the next layer - those are the output of the base program
-        let mut output_registers_values: Vec<_> = final_registers_state
+        let output_registers_values: Vec<_> = final_registers_state
             .chunks(2)
             .skip(10)
             .take(8)
@@ -385,7 +384,6 @@ pub(crate) fn set_iterator_from_proof(proof: &RiscProof, shuffle_ram_inits_and_t
             shuffle_ram_inits_and_teardowns,
         ),
     );
-    let idx = oracle_data.len();
     for query in proof.queries.iter() {
         oracle_data.extend(risc_verifier::verifier_common::proof_flattener::flatten_query(query));
     }
