@@ -15,19 +15,31 @@ impl<F: SmallField> MersenneField<F> {
     pub fn zero<CS: ConstraintSystem<F>>(cs: &mut CS) -> Self {
         let variable = cs.allocate_constant(F::from_u64_unchecked(0));
 
-        Self { variable, reduced: true, _marker: std::marker::PhantomData }
+        Self {
+            variable,
+            reduced: true,
+            _marker: std::marker::PhantomData,
+        }
     }
 
     pub fn one<CS: ConstraintSystem<F>>(cs: &mut CS) -> Self {
         let variable = cs.allocate_constant(F::from_u64_unchecked(1));
 
-        Self { variable, reduced: true, _marker: std::marker::PhantomData }
+        Self {
+            variable,
+            reduced: true,
+            _marker: std::marker::PhantomData,
+        }
     }
 
     pub fn minus_one<CS: ConstraintSystem<F>>(cs: &mut CS) -> Self {
         let variable = cs.allocate_constant(F::from_u64_unchecked(M31_MODULUS - 1));
 
-        Self { variable, reduced: true, _marker: std::marker::PhantomData }
+        Self {
+            variable,
+            reduced: true,
+            _marker: std::marker::PhantomData,
+        }
     }
 
     pub fn get_modulus_num<CS: ConstraintSystem<F>>(cs: &mut CS) -> Num<F> {
@@ -47,7 +59,11 @@ impl<F: SmallField> MersenneField<F> {
     }
 
     /// The value should be in range [0, 2^31 - 2]
-    pub fn from_variable_checked<CS: ConstraintSystem<F>>(cs: &mut CS, variable: Variable, reduced: bool) -> Self {
+    pub fn from_variable_checked<CS: ConstraintSystem<F>>(
+        cs: &mut CS,
+        variable: Variable,
+        reduced: bool,
+    ) -> Self {
         let mut result = Self {
             variable,
             reduced: false,
@@ -64,7 +80,10 @@ impl<F: SmallField> MersenneField<F> {
     }
 
     /// The value should be in range [0, 2^31 - 2]
-    pub fn allocate_checked_without_value<CS: ConstraintSystem<F>>(cs: &mut CS, reduced: bool) -> Self {
+    pub fn allocate_checked_without_value<CS: ConstraintSystem<F>>(
+        cs: &mut CS,
+        reduced: bool,
+    ) -> Self {
         let variable = cs.alloc_variable_without_value();
 
         Self::from_variable_checked(cs, variable, reduced)
@@ -75,14 +94,17 @@ impl<F: SmallField> MersenneField<F> {
         witness: Mersenne31Field,
         reduced: bool,
     ) -> Self {
-        let variable = cs.alloc_single_variable_from_witness(
-            F::from_u64_unchecked(witness.to_reduced_u32() as u64)
-        );
+        let variable = cs.alloc_single_variable_from_witness(F::from_u64_unchecked(
+            witness.to_reduced_u32() as u64,
+        ));
 
         Self::from_variable_checked(cs, variable, reduced)
     }
 
-    pub fn from_uint32_with_reduction<CS: ConstraintSystem<F>>(cs: &mut CS, value: UInt32<F>) -> Self {
+    pub fn from_uint32_with_reduction<CS: ConstraintSystem<F>>(
+        cs: &mut CS,
+        value: UInt32<F>,
+    ) -> Self {
         // We will use the following system of constraints:
         // (1) value - reduce * modulus = result
         // (2) reduce has 8 bits
@@ -94,10 +116,10 @@ impl<F: SmallField> MersenneField<F> {
         if <CS::Config as CSConfig>::WitnessConfig::EVALUATE_WITNESS {
             let value_fn = move |inputs: [F; 1]| {
                 let value = inputs[0].as_u64();
-                
+
                 let reduce = value / M31_MODULUS;
                 let result = value % M31_MODULUS;
-                assert!(reduce < 1<<32);
+                assert!(reduce < 1 << 32);
 
                 [F::from_u64_unchecked(reduce), F::from_u64_unchecked(result)]
             };
@@ -190,11 +212,11 @@ impl<F: SmallField> MersenneField<F> {
         let tmp = self.into_num().add(cs, &other.into_num()); // 1st constraint
         let reduce = Boolean::allocate_without_value(cs); // 3rd constraint
         let result = Self::allocate_checked_without_value(cs, false); // 4th constraint
-        
+
         if <CS::Config as CSConfig>::WitnessConfig::EVALUATE_WITNESS {
             let value_fn = move |inputs: [F; 1]| {
                 let sum = inputs[0].as_u64();
-                
+
                 let (reduce, result) = if sum >= M31_MODULUS {
                     (F::ONE, sum - M31_MODULUS)
                 } else {
@@ -241,15 +263,15 @@ impl<F: SmallField> MersenneField<F> {
 
         let reduce = Boolean::allocate_without_value(cs); // 2nd constraint
         let result = Self::allocate_checked_without_value(cs, false); // 3rd constraint
-        
+
         if <CS::Config as CSConfig>::WitnessConfig::EVALUATE_WITNESS {
             let value_fn = move |inputs: [F; 1]| {
                 let a = inputs[0].as_u64();
-                
-                let (reduce, result) = if a >= 1<<30 {
-                    (F::ONE, 2*a - M31_MODULUS)
+
+                let (reduce, result) = if a >= 1 << 30 {
+                    (F::ONE, 2 * a - M31_MODULUS)
                 } else {
-                    (F::ZERO, 2*a)
+                    (F::ZERO, 2 * a)
                 };
 
                 [reduce, F::from_u64_unchecked(result)]
@@ -296,7 +318,7 @@ impl<F: SmallField> MersenneField<F> {
         if <CS::Config as CSConfig>::WitnessConfig::EVALUATE_WITNESS {
             let value_fn = move |inputs: [F; 1]| {
                 let a = inputs[0].as_u64();
-                
+
                 let (reduce, result) = if a == 0 {
                     (F::ZERO, 0)
                 } else {
@@ -346,12 +368,12 @@ impl<F: SmallField> MersenneField<F> {
         let tmp = self.into_num().sub(cs, &other.into_num()); // 1st constraint
         let reduce = Boolean::allocate_without_value(cs); // 3rd constraint
         let result = Self::allocate_checked_without_value(cs, false); // 4th constraint
-        
+
         if <CS::Config as CSConfig>::WitnessConfig::EVALUATE_WITNESS {
             let value_fn = move |inputs: [F; 2]| {
                 let a = inputs[0].as_u64();
                 let b = inputs[1].as_u64();
-                
+
                 let (reduce, result) = if a < b {
                     (F::ONE, M31_MODULUS + a - b)
                 } else {
@@ -395,20 +417,20 @@ impl<F: SmallField> MersenneField<F> {
         // (1) self * other = result + reduce * modulus
         // (2) reduce has 32 bits
         // (3) result has 31 bits
-        
+
         let reduce = Num::allocate_without_value(cs);
         range_check_32_bits(cs, reduce.get_variable()); // 2nd constraint
         let result = Self::allocate_checked_without_value(cs, false); // 3rd constraint
-        
+
         if <CS::Config as CSConfig>::WitnessConfig::EVALUATE_WITNESS {
             let value_fn = move |inputs: [F; 2]| {
                 let a = inputs[0].as_u64();
                 let b = inputs[1].as_u64();
-                
+
                 let prod = a * b;
                 let reduce = prod / M31_MODULUS;
                 let result = prod % M31_MODULUS;
-                assert!(reduce < 1<<32);
+                assert!(reduce < 1 << 32);
 
                 [F::from_u64_unchecked(reduce), F::from_u64_unchecked(result)]
             };
@@ -481,7 +503,7 @@ impl<F: SmallField> MersenneField<F> {
         let one = Self::one(cs);
         let mut result = Self::conditionally_select(cs, *power_bits.last().unwrap(), &self, &one);
 
-        for bit in power_bits.iter().rev().skip(1){
+        for bit in power_bits.iter().rev().skip(1) {
             result = result.square(cs);
 
             let res_mul = result.mul(cs, &self);
@@ -497,16 +519,16 @@ impl<F: SmallField> MersenneField<F> {
         // (1) reduce * modulus - self * other = result
         // (2) reduce has 32 bits
         // (3) result has 31 bits
-        
+
         let reduce = Num::allocate_without_value(cs);
         range_check_32_bits(cs, reduce.get_variable()); // 2nd constraint
         let result = Self::allocate_checked_without_value(cs, false); // 3rd constraint
-        
+
         if <CS::Config as CSConfig>::WitnessConfig::EVALUATE_WITNESS {
             let value_fn = move |inputs: [F; 2]| {
                 let a = inputs[0].as_u64();
                 let b = inputs[1].as_u64();
-                
+
                 let prod = a * b;
                 let mut reduce = prod / M31_MODULUS;
                 let mut result = prod % M31_MODULUS;
@@ -515,7 +537,7 @@ impl<F: SmallField> MersenneField<F> {
                     result = M31_MODULUS - result;
                 }
 
-                assert!(reduce < 1<<32);
+                assert!(reduce < 1 << 32);
 
                 [F::from_u64_unchecked(reduce), F::from_u64_unchecked(result)]
             };
@@ -558,20 +580,20 @@ impl<F: SmallField> MersenneField<F> {
         // NOTE: max value of number is 2^31 - 1, so the max value of 2*a*b is 2*(2^31-1)^2
         // 2*(2^31-1)^2 = 2*(2^62 - 2*2^31 + 1) = 2^63 - 4*2^31 + 2 fits to 63 bits, so no Goldilocks overflow
         // also the max reduce value we can have is 2*(2^31 - 1) = 2^32 - 2 fits to 32 bits
-        
+
         let reduce = Num::allocate_without_value(cs);
         range_check_32_bits(cs, reduce.get_variable()); // 2nd constraint
         let result = Self::allocate_checked_without_value(cs, false); // 3rd constraint
-        
+
         if <CS::Config as CSConfig>::WitnessConfig::EVALUATE_WITNESS {
             let value_fn = move |inputs: [F; 2]| {
                 let a = inputs[0].as_u64();
                 let b = inputs[1].as_u64();
-                
+
                 let prod = 2 * a * b;
                 let reduce = prod / M31_MODULUS;
                 let result = prod % M31_MODULUS;
-                assert!(reduce < 1<<32);
+                assert!(reduce < 1 << 32);
 
                 [F::from_u64_unchecked(reduce), F::from_u64_unchecked(result)]
             };
@@ -606,34 +628,45 @@ impl<F: SmallField> MersenneField<F> {
     }
 
     /// Computes self * other_mul + other_add
-    pub fn mul_and_add<CS: ConstraintSystem<F>>(&self, cs: &mut CS, other_mul: &Self, other_add: &Self) -> Self {
+    pub fn mul_and_add<CS: ConstraintSystem<F>>(
+        &self,
+        cs: &mut CS,
+        other_mul: &Self,
+        other_add: &Self,
+    ) -> Self {
         // We will use the following system of constraints:
         // (1) self * other_mul + other_add = tmp
         // (2) tmp - reduce * modulus = result
         // (3) reduce has 32 bits
         // (4) result has 31 bits
-        
+
         let tmp = Num::allocate_without_value(cs);
         let reduce = Num::allocate_without_value(cs);
         range_check_32_bits(cs, reduce.get_variable()); // 3rd constraint
         let result = Self::allocate_checked_without_value(cs, false); // 4th constraint
-        
+
         if <CS::Config as CSConfig>::WitnessConfig::EVALUATE_WITNESS {
             let value_fn = move |inputs: [F; 3]| {
                 let a = inputs[0].as_u64();
                 let b = inputs[1].as_u64();
                 let c = inputs[2].as_u64();
-                
+
                 let tmp = a * b + c;
                 let reduce = tmp / M31_MODULUS;
                 let result = tmp % M31_MODULUS;
-                assert!(reduce < 1<<32);
+                assert!(reduce < 1 << 32);
 
-                [F::from_u64_unchecked(tmp), F::from_u64_unchecked(reduce), F::from_u64_unchecked(result)]
+                [
+                    F::from_u64_unchecked(tmp),
+                    F::from_u64_unchecked(reduce),
+                    F::from_u64_unchecked(result),
+                ]
             };
 
-            let dependencies = Place::from_variables([self.variable, other_mul.variable, other_add.variable]);
-            let outputs = Place::from_variables([tmp.get_variable(), reduce.get_variable(), result.variable]);
+            let dependencies =
+                Place::from_variables([self.variable, other_mul.variable, other_add.variable]);
+            let outputs =
+                Place::from_variables([tmp.get_variable(), reduce.get_variable(), result.variable]);
 
             cs.set_values_with_dependencies(&dependencies, &outputs, value_fn);
         }
@@ -677,8 +710,8 @@ impl<F: SmallField> MersenneField<F> {
 
     /// Computes self * other_mul + other_add_1 * other_add_2
     pub fn two_mul_and_add<CS: ConstraintSystem<F>>(
-        &self, 
-        cs: &mut CS, 
+        &self,
+        cs: &mut CS,
         other_mul: &Self,
         other_add_1: &Self,
         other_add_2: &Self,
@@ -691,33 +724,42 @@ impl<F: SmallField> MersenneField<F> {
         // Note that max value of number is 2^31 - 1, so the max value of a*b + c*d is 2*(2^31-1)^2
         // 2*(2^31-1)^2 = 2*(2^62 - 2*2^31 + 1) = 2^63 - 4*2^31 + 2 fits to 63 bits, so no Goldilocks overflow
         // also the max reduce value we can have is 2*(2^31 - 1) = 2^32 - 2 fits to 32 bits
-        
+
         let tmp = Num::allocate_without_value(cs);
         let reduce = Num::allocate_without_value(cs);
         range_check_32_bits(cs, reduce.get_variable()); // 3rd constraint
         let result = Self::allocate_checked_without_value(cs, false); // 4th constraint
-        
+
         if <CS::Config as CSConfig>::WitnessConfig::EVALUATE_WITNESS {
             let value_fn = move |inputs: [F; 4]| {
                 let a = inputs[0].as_u64();
                 let b = inputs[1].as_u64();
                 let c = inputs[2].as_u64();
                 let d = inputs[3].as_u64();
-                
+
                 let unredused_result = a * b + c * d;
                 let reduce = unredused_result / M31_MODULUS;
                 let result = unredused_result % M31_MODULUS;
-                assert!(reduce < 1<<32);
+                assert!(reduce < 1 << 32);
 
                 let mut tmp = F::from_u64_unchecked(a * b);
                 tmp.sub_assign(&F::from_u64_unchecked(reduce * M31_MODULUS));
 
-                [tmp, F::from_u64_unchecked(reduce), F::from_u64_unchecked(result)]
+                [
+                    tmp,
+                    F::from_u64_unchecked(reduce),
+                    F::from_u64_unchecked(result),
+                ]
             };
 
             let dependencies = Place::from_variables([
-                self.variable, other_mul.variable, other_add_1.variable, other_add_2.variable]);
-            let outputs = Place::from_variables([tmp.get_variable(), reduce.get_variable(), result.variable]);
+                self.variable,
+                other_mul.variable,
+                other_add_1.variable,
+                other_add_2.variable,
+            ]);
+            let outputs =
+                Place::from_variables([tmp.get_variable(), reduce.get_variable(), result.variable]);
 
             cs.set_values_with_dependencies(&dependencies, &outputs, value_fn);
         }
@@ -761,8 +803,8 @@ impl<F: SmallField> MersenneField<F> {
 
     /// Computes self * other_mul + other_add_1 * other_add_2 + third_add
     pub fn two_mul_and_two_add<CS: ConstraintSystem<F>>(
-        &self, 
-        cs: &mut CS, 
+        &self,
+        cs: &mut CS,
         other_mul: &Self,
         other_add_1: &Self,
         other_add_2: &Self,
@@ -778,13 +820,13 @@ impl<F: SmallField> MersenneField<F> {
         // 2*(2^31-1)^2 + (2^31-1) = 2*(2^62 - 2*2^31 + 1) + (2^31-1) = 2^63 - 3*2^31 + 1
         // This fits to 63 bits, so no Goldilocks overflow
         // Also the max reduce value we can have is 2*(2^31 - 1) + 1 = 2^32 - 1 fits to 32 bits
-        
+
         let tmp = Num::allocate_without_value(cs);
         let tmp2 = Num::allocate_without_value(cs);
         let reduce = Num::allocate_without_value(cs);
         range_check_32_bits(cs, reduce.get_variable()); // 4th constraint
         let result = Self::allocate_checked_without_value(cs, false); // 5th constraint
-        
+
         if <CS::Config as CSConfig>::WitnessConfig::EVALUATE_WITNESS {
             let value_fn = move |inputs: [F; 5]| {
                 let a = inputs[0].as_u64();
@@ -792,25 +834,34 @@ impl<F: SmallField> MersenneField<F> {
                 let c = inputs[2].as_u64();
                 let d = inputs[3].as_u64();
                 let e = inputs[4].as_u64();
-                
+
                 let tmp = a * b + e;
                 let tmp2 = tmp + c * d;
                 let reduce = tmp2 / M31_MODULUS;
                 let result = tmp2 % M31_MODULUS;
-                assert!(reduce < 1<<32);
+                assert!(reduce < 1 << 32);
 
                 [
                     F::from_u64_unchecked(tmp),
                     F::from_u64_unchecked(tmp2),
                     F::from_u64_unchecked(reduce),
-                    F::from_u64_unchecked(result)
+                    F::from_u64_unchecked(result),
                 ]
             };
 
-            let dependencies = Place::from_variables(
-                [self.variable, other_mul.variable, other_add_1.variable, other_add_2.variable, third_add.variable]);
-            let outputs = Place::from_variables(
-                [tmp.get_variable(), tmp2.get_variable(), reduce.get_variable(), result.variable]);
+            let dependencies = Place::from_variables([
+                self.variable,
+                other_mul.variable,
+                other_add_1.variable,
+                other_add_2.variable,
+                third_add.variable,
+            ]);
+            let outputs = Place::from_variables([
+                tmp.get_variable(),
+                tmp2.get_variable(),
+                reduce.get_variable(),
+                result.variable,
+            ]);
 
             cs.set_values_with_dependencies(&dependencies, &outputs, value_fn);
         }
@@ -868,8 +919,8 @@ impl<F: SmallField> MersenneField<F> {
 
     /// Computes self * other_mul - other_sub_1 * other_sub_2
     pub fn two_mul_and_sub<CS: ConstraintSystem<F>>(
-        &self, 
-        cs: &mut CS, 
+        &self,
+        cs: &mut CS,
         other_mul: &Self,
         other_sub_1: &Self,
         other_sub_2: &Self,
@@ -883,34 +934,46 @@ impl<F: SmallField> MersenneField<F> {
         // Note that max value of number is 2^31 - 1, so the value of a*b - c*d + modulus^2 is between 0 and 2*(2^31-1)^2
         // 2*(2^31-1)^2 = 2*(2^62 - 2*2^31 + 1) = 2^63 - 4*2^31 + 2 fits to 63 bits, so no Goldilocks overflow
         // also the max reduce value we can have is 2*(2^31 - 1) = 2^32 - 2 fits to 32 bits
-        
+
         let tmp = Num::allocate_without_value(cs);
         let tmp2 = Num::allocate_without_value(cs);
         let reduce = Num::allocate_without_value(cs);
         range_check_32_bits(cs, reduce.get_variable()); // 4rd constraint
         let result = Self::allocate_checked_without_value(cs, false); // 5th constraint
-        
+
         if <CS::Config as CSConfig>::WitnessConfig::EVALUATE_WITNESS {
             let value_fn = move |inputs: [F; 4]| {
                 let a = inputs[0].as_u64();
                 let b = inputs[1].as_u64();
                 let c = inputs[2].as_u64();
                 let d = inputs[3].as_u64();
-                
+
                 let tmp = a * b + M31_MODULUS * M31_MODULUS;
                 let tmp2 = tmp - c * d;
-                
+
                 let reduce = tmp2 / M31_MODULUS;
                 let result = tmp2 % M31_MODULUS;
 
-
-                [F::from_u64_unchecked(tmp), F::from_u64_unchecked(tmp2), F::from_u64_unchecked(reduce), F::from_u64_unchecked(result)]
+                [
+                    F::from_u64_unchecked(tmp),
+                    F::from_u64_unchecked(tmp2),
+                    F::from_u64_unchecked(reduce),
+                    F::from_u64_unchecked(result),
+                ]
             };
 
             let dependencies = Place::from_variables([
-                self.variable, other_mul.variable, other_sub_1.variable, other_sub_2.variable]);
-            let outputs = Place::from_variables(
-                [tmp.get_variable(), tmp2.get_variable(), reduce.get_variable(), result.variable]);
+                self.variable,
+                other_mul.variable,
+                other_sub_1.variable,
+                other_sub_2.variable,
+            ]);
+            let outputs = Place::from_variables([
+                tmp.get_variable(),
+                tmp2.get_variable(),
+                reduce.get_variable(),
+                result.variable,
+            ]);
 
             cs.set_values_with_dependencies(&dependencies, &outputs, value_fn);
         }
@@ -964,13 +1027,12 @@ impl<F: SmallField> MersenneField<F> {
         }
 
         result
-    }    
-
+    }
 
     /// Computes self * other_mul - other_sub_1 * other_sub_2 + third_add
     pub fn two_mul_and_sub_and_add<CS: ConstraintSystem<F>>(
-        &self, 
-        cs: &mut CS, 
+        &self,
+        cs: &mut CS,
         other_mul: &Self,
         other_sub_1: &Self,
         other_sub_2: &Self,
@@ -986,14 +1048,14 @@ impl<F: SmallField> MersenneField<F> {
         // Note that max value of number is 2^31 - 1, so the value of a*b - c*d + e modulus^2 is between 0 and 2*(2^31-1)^2 + (2^31-1)
         // 2*(2^31-1)^2 + (2^31-1) = 2*(2^62 - 2*2^31 + 1) + (2^31-1) = 2^63 - 3*2^31 + 1 fits to 63 bits, so no Goldilocks overflow
         // also the max reduce value we can have is 2*(2^31 - 1) + 1 = 2^32 - 1 fits to 32 bits
-        
+
         let tmp = Num::allocate_without_value(cs);
         let tmp2 = Num::allocate_without_value(cs);
         let tmp3 = Num::allocate_without_value(cs);
         let reduce = Num::allocate_without_value(cs);
         range_check_32_bits(cs, reduce.get_variable()); // 5th constraint
         let result = Self::allocate_checked_without_value(cs, false); // 6th constraint
-        
+
         if <CS::Config as CSConfig>::WitnessConfig::EVALUATE_WITNESS {
             let value_fn = move |inputs: [F; 5]| {
                 let a = inputs[0].as_u64();
@@ -1001,28 +1063,38 @@ impl<F: SmallField> MersenneField<F> {
                 let c = inputs[2].as_u64();
                 let d = inputs[3].as_u64();
                 let e = inputs[4].as_u64();
-                
+
                 let tmp = a * b + M31_MODULUS * M31_MODULUS;
                 let tmp2 = tmp - c * d;
                 let tmp3 = tmp2 + e;
-                
+
                 let reduce = tmp3 / M31_MODULUS;
                 let result = tmp3 % M31_MODULUS;
-                assert!(reduce < 1<<32);
+                assert!(reduce < 1 << 32);
 
                 [
                     F::from_u64_unchecked(tmp),
                     F::from_u64_unchecked(tmp2),
                     F::from_u64_unchecked(tmp3),
                     F::from_u64_unchecked(reduce),
-                    F::from_u64_unchecked(result)
+                    F::from_u64_unchecked(result),
                 ]
             };
 
-            let dependencies = Place::from_variables(
-                [self.variable, other_mul.variable, other_sub_1.variable, other_sub_2.variable, third_add.variable]);
-            let outputs = Place::from_variables(
-                [tmp.get_variable(), tmp2.get_variable(), tmp3.get_variable(), reduce.get_variable(), result.variable]);
+            let dependencies = Place::from_variables([
+                self.variable,
+                other_mul.variable,
+                other_sub_1.variable,
+                other_sub_2.variable,
+                third_add.variable,
+            ]);
+            let outputs = Place::from_variables([
+                tmp.get_variable(),
+                tmp2.get_variable(),
+                tmp3.get_variable(),
+                reduce.get_variable(),
+                result.variable,
+            ]);
 
             cs.set_values_with_dependencies(&dependencies, &outputs, value_fn);
         }
@@ -1090,7 +1162,7 @@ impl<F: SmallField> MersenneField<F> {
         }
 
         result
-    }    
+    }
 
     /// Computes the division of the value by the other value or zero if the other value is zero
     pub fn div<CS: ConstraintSystem<F>>(&self, cs: &mut CS, other: &Self) -> Self {
@@ -1130,11 +1202,19 @@ impl<F: SmallField> MersenneField<F> {
                     (1, (a * a_inv) / M31_MODULUS)
                 };
 
-                [F::from_u64_unchecked(a_inv), F::from_u64_unchecked(not_zero), F::from_u64_unchecked(reduce)]
+                [
+                    F::from_u64_unchecked(a_inv),
+                    F::from_u64_unchecked(not_zero),
+                    F::from_u64_unchecked(reduce),
+                ]
             };
 
             let dependencies = Place::from_variables([self.variable]);
-            let outputs = Place::from_variables([result.variable, not_zero.get_variable(), reduce.get_variable()]);
+            let outputs = Place::from_variables([
+                result.variable,
+                not_zero.get_variable(),
+                reduce.get_variable(),
+            ]);
 
             cs.set_values_with_dependencies(&dependencies, &outputs, value_fn);
         }
@@ -1214,7 +1294,11 @@ impl<F: SmallField> MersenneField<F> {
         }
     }
 
-    pub fn mask_negated<CS: ConstraintSystem<F>>(&self, cs: &mut CS, masking_bit: Boolean<F>) -> Self {
+    pub fn mask_negated<CS: ConstraintSystem<F>>(
+        &self,
+        cs: &mut CS,
+        masking_bit: Boolean<F>,
+    ) -> Self {
         let inner = self.into_num().mask_negated(cs, masking_bit);
         Self {
             variable: inner.get_variable(),
@@ -1224,36 +1308,30 @@ impl<F: SmallField> MersenneField<F> {
     }
 }
 
-fn range_check_32_bits<F: SmallField, CS: ConstraintSystem<F>>(
-    cs: &mut CS,
-    variable: Variable,
-) {
+fn range_check_32_bits<F: SmallField, CS: ConstraintSystem<F>>(cs: &mut CS, variable: Variable) {
+    use boojum::gadgets::impls::limbs_decompose::decompose_into_limbs;
     use boojum::gadgets::non_native_field::implementations::get_16_bits_range_check_table;
     use boojum::gadgets::u8::get_8_by_8_range_check_table;
-    use boojum::gadgets::impls::limbs_decompose::decompose_into_limbs;
 
     if let Some(table_id) = get_16_bits_range_check_table(&*cs) {
-        let limbs = decompose_into_limbs::<F, CS, 2>(
-            cs,
-            F::from_u64_unchecked(1u64 << 16),
-            variable,
-        );
+        let limbs =
+            decompose_into_limbs::<F, CS, 2>(cs, F::from_u64_unchecked(1u64 << 16), variable);
 
-        let zero = cs.allocate_constant(F::ZERO );
+        let zero = cs.allocate_constant(F::ZERO);
         match cs.get_lookup_params().lookup_width() {
             1 => {
                 cs.enforce_lookup::<1>(table_id, &[limbs[0]]);
                 cs.enforce_lookup::<1>(table_id, &[limbs[1]]);
-            },
+            }
             3 => {
                 cs.enforce_lookup::<3>(table_id, &[limbs[0], zero, zero]);
                 cs.enforce_lookup::<3>(table_id, &[limbs[1], zero, zero]);
-            },
+            }
             4 => {
                 cs.enforce_lookup::<4>(table_id, &[limbs[0], zero, zero, zero]);
                 cs.enforce_lookup::<4>(table_id, &[limbs[1], zero, zero, zero]);
-            },
-            _ => unimplemented!()
+            }
+            _ => unimplemented!(),
         }
     } else if let Some(_table_id) = get_8_by_8_range_check_table(&*cs) {
         let _ = UInt32::from_variable_checked(cs, variable);
@@ -1262,37 +1340,32 @@ fn range_check_32_bits<F: SmallField, CS: ConstraintSystem<F>>(
     }
 }
 
-fn range_check_31_bits<F: SmallField, CS: ConstraintSystem<F>>(
-    cs: &mut CS,
-    variable: Variable,
-) {
-    use boojum::gadgets::non_native_field::implementations::get_16_bits_range_check_table;
+fn range_check_31_bits<F: SmallField, CS: ConstraintSystem<F>>(cs: &mut CS, variable: Variable) {
     use boojum::gadgets::impls::limbs_decompose::decompose_into_limbs;
+    use boojum::gadgets::non_native_field::implementations::get_16_bits_range_check_table;
 
-    if let (Some(table_id_16), Some(table_id_15)) 
-        = (get_16_bits_range_check_table(&*cs), get_15_bits_range_check_table(&*cs)) 
-    {
-        let limbs = decompose_into_limbs::<F, CS, 2>(
-            cs,
-            F::from_u64_unchecked(1u64 << 16),
-            variable,
-        );
+    if let (Some(table_id_16), Some(table_id_15)) = (
+        get_16_bits_range_check_table(&*cs),
+        get_15_bits_range_check_table(&*cs),
+    ) {
+        let limbs =
+            decompose_into_limbs::<F, CS, 2>(cs, F::from_u64_unchecked(1u64 << 16), variable);
 
-        let zero = cs.allocate_constant(F::ZERO );
+        let zero = cs.allocate_constant(F::ZERO);
         match cs.get_lookup_params().lookup_width() {
             1 => {
                 cs.enforce_lookup::<1>(table_id_16, &[limbs[0]]);
                 cs.enforce_lookup::<1>(table_id_15, &[limbs[1]]);
-            },
+            }
             3 => {
                 cs.enforce_lookup::<3>(table_id_16, &[limbs[0], zero, zero]);
                 cs.enforce_lookup::<3>(table_id_15, &[limbs[1], zero, zero]);
-            },
+            }
             4 => {
                 cs.enforce_lookup::<4>(table_id_16, &[limbs[0], zero, zero, zero]);
                 cs.enforce_lookup::<4>(table_id_15, &[limbs[1], zero, zero, zero]);
-            },
-            _ => unimplemented!()
+            }
+            _ => unimplemented!(),
         }
     } else {
         unimplemented!()
@@ -1335,7 +1408,10 @@ pub fn reduce_mersenne31<F: SmallField, CS: ConstraintSystem<F>>(
         let value_fn = move |inputs: [F; 1]| {
             let unreduced_a = inputs[0].as_u64();
 
-            [F::from_u64_unchecked(unreduced_a % M31_MODULUS), F::from_u64_unchecked(unreduced_a / M31_MODULUS)]
+            [
+                F::from_u64_unchecked(unreduced_a % M31_MODULUS),
+                F::from_u64_unchecked(unreduced_a / M31_MODULUS),
+            ]
         };
 
         let dependencies = Place::from_variables([unreduced_a]);
@@ -1392,7 +1468,11 @@ impl<F: SmallField> CSAllocatable<F> for MersenneField<F> {
     fn allocate_constant<CS: ConstraintSystem<F>>(cs: &mut CS, witness: Self::Witness) -> Self {
         let variable = cs.allocate_constant(F::from_u64_unchecked(witness.to_reduced_u32() as u64));
 
-        Self { variable, reduced: true, _marker: std::marker::PhantomData }
+        Self {
+            variable,
+            reduced: true,
+            _marker: std::marker::PhantomData,
+        }
     }
 }
 
@@ -1465,13 +1545,11 @@ impl<F: SmallField> Selectable<F> for MersenneField<F> {
         let b_nums = b.map(|el| Num::from_variable(el.variable));
 
         let tmp = Num::parallel_select(cs, flag, &a_nums, &b_nums);
-        let mut res = tmp.map(|el| 
-            Self {
-                variable: el.variable,
-                reduced: false,
-                _marker: std::marker::PhantomData,
-            }
-        );
+        let mut res = tmp.map(|el| Self {
+            variable: el.variable,
+            reduced: false,
+            _marker: std::marker::PhantomData,
+        });
 
         for i in 0..N {
             if a[i].reduced && b[i].reduced {
@@ -1495,8 +1573,8 @@ mod tests {
     use boojum::dag::CircuitResolverOpts;
     use boojum::field::goldilocks::GoldilocksField;
     use boojum::gadgets::tables::range_check_16_bits::{
-        create_range_check_16_bits_table, RangeCheck16BitsTable,
-        create_range_check_15_bits_table, RangeCheck15BitsTable,
+        create_range_check_15_bits_table, create_range_check_16_bits_table, RangeCheck15BitsTable,
+        RangeCheck16BitsTable,
     };
     use boojum::gadgets::traits::witnessable::WitnessHookable;
     use boojum::worker::Worker;
@@ -1513,7 +1591,6 @@ mod tests {
         };
 
         use boojum::config::DevCSConfig;
-        type RCfg = <DevCSConfig as CSConfig>::ResolverConfig;
         use boojum::cs::cs_builder_reference::*;
         let builder_impl =
             CsReferenceImplementationBuilder::<F, F, DevCSConfig>::new(geometry, 1 << 18);
@@ -1571,8 +1648,10 @@ mod tests {
 
         let cs = &mut owned_cs;
 
-        let rand_witness = [0; 4].map(|_| Mersenne31Field::new(rand::random::<u32>() % M31_MODULUS as u32));
-        let mut rand_vars = rand_witness.map(|w| MersenneField::<F>::allocate_checked(cs, w, false));
+        let rand_witness =
+            [0; 4].map(|_| Mersenne31Field::new(rand::random::<u32>() % M31_MODULUS as u32));
+        let mut rand_vars =
+            rand_witness.map(|w| MersenneField::<F>::allocate_checked(cs, w, false));
 
         // enforce reduced
         for var in rand_vars.iter_mut() {
@@ -1624,7 +1703,7 @@ mod tests {
 
         // mul_times_2
         let mut res_witness = rand_witness[0];
-        res_witness.mul_assign(&rand_witness[1]);   
+        res_witness.mul_assign(&rand_witness[1]);
         res_witness.double();
         let res_var = rand_vars[0].mul_times_2(cs, &rand_vars[1]);
         assert_eq!(res_witness, res_var.witness_hook(&*cs)().unwrap());
@@ -1666,10 +1745,9 @@ mod tests {
         let res_var = rand_vars[0].inverse_or_zero(cs);
         assert_eq!(res_witness, res_var.witness_hook(&*cs)().unwrap());
 
-
         let worker = Worker::new_with_num_threads(8);
 
-        drop(cs);
+        let _ = cs;
         owned_cs.pad_and_shrink();
         let mut owned_cs = owned_cs.into_assembly::<Global>();
         assert!(owned_cs.check_if_satisfied(&worker));

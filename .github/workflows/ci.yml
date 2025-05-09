@@ -22,4 +22,49 @@ jobs:
         run: cargo build --verbose
       - name: tests
         # We need to increase the stack size for the tests (due to quotient computation)
-        run:  RUST_MIN_STACK=67108864 cargo test --release -- --nocapture --test-threads=1
+        run:  RUST_MIN_STACK=67108864 cargo test all_layers_full_test --release -- --nocapture
+
+  mersenne_tests:
+    name: mersenne_tests
+    runs-on: [matterlabs-ci-runner-c3d]
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          rustflags: ""
+      - name: Setup
+        run: |
+          rustup set profile minimal
+          git config --global --add url."https://${{ secrets.ZKSYNC_ADMIN_BOT_ORG_REPO_WRITE }}:x-oauth-basic@github.com/".insteadOf https://github.com/
+      - name: Compile
+        working-directory: ./circuit_mersenne_field
+        run: cargo build --verbose
+      - name: tests
+        working-directory: ./circuit_mersenne_field
+        run: cargo test --release -- --nocapture --test-threads=1
+
+  wrapper_generated:
+    name: wrapper_generated
+    runs-on: [matterlabs-ci-runner-c3d]
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          rustflags: ""
+      - name: Setup
+        run: |
+          rustup set profile default
+          git config --global --add url."https://${{ secrets.ZKSYNC_ADMIN_BOT_ORG_REPO_WRITE }}:x-oauth-basic@github.com/".insteadOf https://github.com/
+      - name: Regenerate wrapper
+        working-directory: ./wrapper_generator
+        run: cargo run --release
+      - name: Check if anything has changed
+        run: |
+          MODIFIED_FILES=$(git status --porcelain)
+          if [ -n "$MODIFIED_FILES" ]; then
+            echo "The following files were modified - did you run wrapper_generator? "
+            echo "$MODIFIED_FILES"
+            exit 1
+          else
+            echo "No files were modified."
+          fi

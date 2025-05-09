@@ -1,3 +1,4 @@
+#![expect(warnings)]
 #![feature(array_chunks)]
 #![feature(slice_from_ptr_range)]
 #![feature(allocator_api)]
@@ -70,11 +71,6 @@ fn format_rust_code(code: &str) -> Result<String, String> {
 struct Cli {
     #[arg(long, default_value = "../src/wrapper_inner_verifier/imports")]
     output_dir: String,
-}
-
-fn deserialize_from_file<T: serde::de::DeserializeOwned>(filename: &str) -> T {
-    let src = std::fs::File::open(filename).unwrap();
-    serde_json::from_reader(src).unwrap()
 }
 
 fn main() {

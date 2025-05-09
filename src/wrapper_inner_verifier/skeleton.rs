@@ -239,9 +239,9 @@ impl<F: SmallField> WrappedProofSkeletonInstance<F> {
         cs: &mut CS,
     ) -> Self {
         let witness = unsafe {
-            let mut skeleton = MaybeUninit::<ProofSkeletonInstance>::uninit().assume_init();
-            ProofSkeletonInstance::fill::<I>((&mut skeleton) as *mut _);
-            skeleton
+            let mut skeleton = MaybeUninit::<ProofSkeletonInstance>::uninit();
+            ProofSkeletonInstance::fill::<I>(skeleton.as_mut_ptr());
+            skeleton.assume_init()
         };
 
         Self::allocate(cs, witness)
@@ -476,8 +476,8 @@ impl<F: SmallField> WrappedQueryValuesInstance<F> {
         proof_skeleton: &WrappedProofSkeletonInstance<F>,
         hasher: &mut V,
     ) -> Self {
-        let mut source = unsafe { MaybeUninit::<QueryValuesInstance>::uninit().assume_init() };
-        let dst = ((&mut source) as *mut <Self as CSAllocatable<F>>::Witness).cast::<u32>();
+        let mut source = MaybeUninit::<QueryValuesInstance>::uninit();
+        let dst = source.as_mut_ptr().cast::<u32>();
         let modulus = Mersenne31Field::CHARACTERISTICS as u32;
         // query index
         let query_index = I::read_word();
@@ -495,6 +495,7 @@ impl<F: SmallField> WrappedQueryValuesInstance<F> {
             unsafe { dst.add(i).write(I::read_reduced_field_element(modulus)) };
             i += 1;
         }
+        let source = unsafe{ source.assume_init() };
         let query = Self::allocate(cs, source.clone());
 
         // for all except FRI the following is valid

@@ -1,5 +1,5 @@
-use mersenne_field::Mersenne31Complex;
 use mersenne_field::field::BaseField;
+use mersenne_field::Mersenne31Complex;
 
 use super::*;
 
@@ -53,7 +53,11 @@ impl<F: SmallField> MersenneComplex<F> {
     }
 
     /// The coordinate values should be in range [0, 2^31 - 2]
-    pub fn from_variables_checked<CS: ConstraintSystem<F>>(cs: &mut CS, variables: [Variable; 2], reduced: bool) -> Self {
+    pub fn from_variables_checked<CS: ConstraintSystem<F>>(
+        cs: &mut CS,
+        variables: [Variable; 2],
+        reduced: bool,
+    ) -> Self {
         Self {
             x: MersenneField::from_variable_checked(cs, variables[0], reduced),
             y: MersenneField::from_variable_checked(cs, variables[1], reduced),
@@ -61,7 +65,10 @@ impl<F: SmallField> MersenneComplex<F> {
     }
 
     /// The coordinate values should be in range [0, 2^31 - 2]
-    pub fn allocate_checked_without_value<CS: ConstraintSystem<F>>(cs: &mut CS, reduced: bool) -> Self {
+    pub fn allocate_checked_without_value<CS: ConstraintSystem<F>>(
+        cs: &mut CS,
+        reduced: bool,
+    ) -> Self {
         Self {
             x: MersenneField::allocate_checked_without_value(cs, reduced),
             y: MersenneField::allocate_checked_without_value(cs, reduced),
@@ -133,20 +140,23 @@ impl<F: SmallField> MersenneComplex<F> {
         }
     }
 
-    pub fn mul_and_add<CS: ConstraintSystem<F>>(&self, cs: &mut CS, other_mul: &Self, other_add: &Self) -> Self {
+    pub fn mul_and_add<CS: ConstraintSystem<F>>(
+        &self,
+        cs: &mut CS,
+        other_mul: &Self,
+        other_add: &Self,
+    ) -> Self {
         Self {
-            x: self.x.two_mul_and_sub_and_add(cs, 
-                &other_mul.x, 
-                &other_mul.y, 
-                &self.y, 
-                &other_add.x
+            x: self.x.two_mul_and_sub_and_add(
+                cs,
+                &other_mul.x,
+                &other_mul.y,
+                &self.y,
+                &other_add.x,
             ),
-            y: self.x.two_mul_and_two_add(cs, 
-                &other_mul.y, 
-                &other_mul.x, 
-                &self.y, 
-                &other_add.y
-            ),
+            y: self
+                .x
+                .two_mul_and_two_add(cs, &other_mul.y, &other_mul.x, &self.y, &other_add.y),
         }
     }
 
@@ -192,7 +202,7 @@ impl<F: SmallField> MersenneComplex<F> {
         let one = Self::one(cs);
         let mut result = Self::conditionally_select(cs, *power_bits.last().unwrap(), &self, &one);
 
-        for bit in power_bits.iter().rev().skip(1){
+        for bit in power_bits.iter().rev().skip(1) {
             result = result.square(cs);
 
             let res_mul = result.mul(cs, &self);
@@ -219,7 +229,10 @@ impl<F: SmallField> MersenneComplex<F> {
         let tmp3 = Num::allocate_without_value(cs);
         let reduce1 = Num::allocate_without_value(cs);
         let reduce2 = Num::allocate_without_value(cs);
-        boojum::gadgets::u8::range_check_u8_pair(cs, &[reduce1.get_variable(), reduce2.get_variable()]); // 6th constraint
+        boojum::gadgets::u8::range_check_u8_pair(
+            cs,
+            &[reduce1.get_variable(), reduce2.get_variable()],
+        ); // 6th constraint
         let result_x = MersenneField::allocate_checked_without_value(cs, false); // 7th constraint
         let result_y = MersenneField::allocate_checked_without_value(cs, false); // 8th constraint
 
@@ -227,7 +240,7 @@ impl<F: SmallField> MersenneComplex<F> {
             let value_fn = move |inputs: [F; 2]| {
                 let x = inputs[0].as_u64();
                 let y = inputs[1].as_u64();
-                
+
                 let tmp = 2 * x + M31_MODULUS;
                 let tmp2 = tmp - y;
                 let reduce1 = tmp2 / M31_MODULUS;
@@ -249,9 +262,13 @@ impl<F: SmallField> MersenneComplex<F> {
 
             let dependencies = Place::from_variables([self.x.variable, self.y.variable]);
             let outputs = Place::from_variables([
-                tmp.get_variable(), tmp2.get_variable(), tmp3.get_variable(),
-                reduce1.variable, reduce2.variable,
-                result_x.variable, result_y.variable,
+                tmp.get_variable(),
+                tmp2.get_variable(),
+                tmp3.get_variable(),
+                reduce1.variable,
+                reduce2.variable,
+                result_x.variable,
+                result_y.variable,
             ]);
 
             cs.set_values_with_dependencies(&dependencies, &outputs, value_fn);
@@ -381,14 +398,17 @@ impl<F: SmallField> MersenneComplex<F> {
         }
     }
 
-    pub fn mask_negated<CS: ConstraintSystem<F>>(&self, cs: &mut CS, masking_bit: Boolean<F>) -> Self {
+    pub fn mask_negated<CS: ConstraintSystem<F>>(
+        &self,
+        cs: &mut CS,
+        masking_bit: Boolean<F>,
+    ) -> Self {
         Self {
             x: self.x.mask_negated(cs, masking_bit),
             y: self.y.mask_negated(cs, masking_bit),
         }
     }
 }
-
 
 impl<F: SmallField> CSAllocatable<F> for MersenneComplex<F> {
     type Witness = Mersenne31Complex;
@@ -421,7 +441,7 @@ impl<F: SmallField> FnOnce<([F; 2],)> for Mersenne2ndExtConvertor {
         let value_c1 = args.0[1].as_u64();
         assert!(value_c0 < M31_MODULUS);
         assert!(value_c1 < M31_MODULUS);
-        Mersenne31Complex{
+        Mersenne31Complex {
             c0: Mersenne31Field::new(value_c0 as u32),
             c1: Mersenne31Field::new(value_c1 as u32),
         }
@@ -436,7 +456,7 @@ impl<F: SmallField> CSWitnessable<F, 2> for MersenneComplex<F> {
         let value_c1 = values[1].as_u64();
         assert!(value_c0 < M31_MODULUS);
         assert!(value_c1 < M31_MODULUS);
-        Mersenne31Complex{
+        Mersenne31Complex {
             c0: Mersenne31Field::new(value_c0 as u32),
             c1: Mersenne31Field::new(value_c1 as u32),
         }
@@ -509,19 +529,18 @@ mod tests {
     use std::alloc::Global;
 
     use super::*;
-    use crate::cs::*;
+    use boojum::cs::*;
 
-    use mersenne_field::FieldExtension;
-    use crate::cs::gates::*;
-    use crate::cs::traits::gate::GatePlacementStrategy;
-    use crate::dag::CircuitResolverOpts;
-    use crate::field::goldilocks::GoldilocksField;
-    use crate::gadgets::tables::range_check_16_bits::{
-        create_range_check_16_bits_table, RangeCheck16BitsTable,
-        create_range_check_15_bits_table, RangeCheck15BitsTable,
+    use boojum::cs::gates::*;
+    use boojum::cs::traits::gate::GatePlacementStrategy;
+    use boojum::dag::CircuitResolverOpts;
+    use boojum::field::goldilocks::GoldilocksField;
+    use boojum::gadgets::tables::range_check_16_bits::{
+        create_range_check_15_bits_table, create_range_check_16_bits_table, RangeCheck15BitsTable,
+        RangeCheck16BitsTable,
     };
-    use crate::gadgets::traits::witnessable::WitnessHookable;
-    use crate::worker::Worker;
+    use boojum::gadgets::traits::witnessable::WitnessHookable;
+    use boojum::worker::Worker;
 
     type F = GoldilocksField;
 
@@ -534,16 +553,15 @@ mod tests {
             max_allowed_constraint_degree: 4,
         };
 
-        use crate::config::DevCSConfig;
-        type RCfg = <DevCSConfig as CSConfig>::ResolverConfig;
-        use crate::cs::cs_builder_reference::*;
+        use boojum::config::DevCSConfig;
+        use boojum::cs::cs_builder_reference::*;
         let builder_impl =
             CsReferenceImplementationBuilder::<F, F, DevCSConfig>::new(geometry, 1 << 18);
-        use crate::cs::cs_builder::new_builder;
+        use boojum::cs::cs_builder::new_builder;
         let builder = new_builder::<_, F>(builder_impl);
 
         let builder = builder.allow_lookup(
-            crate::cs::LookupParameters::UseSpecializedColumnsWithTableIdAsConstant {
+            boojum::cs::LookupParameters::UseSpecializedColumnsWithTableIdAsConstant {
                 width: 1,
                 num_repetitions: 10,
                 share_table_id: true,
@@ -593,16 +611,15 @@ mod tests {
 
         let cs = &mut owned_cs;
 
-        let rand_base_witness = [0; 2].map(|_| Mersenne31Field::new(rand::random::<u32>() % M31_MODULUS as u32));
-        let rand_base_vars = rand_base_witness.map(|w| MersenneField::<F>::allocate_checked(cs, w, false));
+        // let rand_base_witness = [0; 2].map(|_| Mersenne31Field::new(rand::random::<u32>() % M31_MODULUS as u32));
+        // let rand_base_vars = rand_base_witness.map(|w| MersenneField::<F>::allocate_checked(cs, w, false));
 
-        let rand_witness = [0; 2].map(|_| 
-            Mersenne31Complex {
-                c0: Mersenne31Field::new(rand::random::<u32>() % M31_MODULUS as u32),
-                c1: Mersenne31Field::new(rand::random::<u32>() % M31_MODULUS as u32),
-            }
-        );
-        let mut rand_vars = rand_witness.map(|w| MersenneComplex::<F>::allocate_checked(cs, w, false));
+        let rand_witness = [0; 2].map(|_| Mersenne31Complex {
+            c0: Mersenne31Field::new(rand::random::<u32>() % M31_MODULUS as u32),
+            c1: Mersenne31Field::new(rand::random::<u32>() % M31_MODULUS as u32),
+        });
+        let mut rand_vars =
+            rand_witness.map(|w| MersenneComplex::<F>::allocate_checked(cs, w, false));
 
         // enforce reduced
         for var in rand_vars.iter_mut() {
@@ -663,10 +680,9 @@ mod tests {
         let res_var = rand_vars[0].inverse_or_zero(cs);
         assert_eq!(res_witness, res_var.witness_hook(&*cs)().unwrap());
 
-
         let worker = Worker::new_with_num_threads(8);
 
-        drop(cs);
+        let _ = cs;
         owned_cs.pad_and_shrink();
         let mut owned_cs = owned_cs.into_assembly::<Global>();
         assert!(owned_cs.check_if_satisfied(&worker));
