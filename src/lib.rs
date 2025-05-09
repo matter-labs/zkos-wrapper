@@ -1,20 +1,19 @@
 #![feature(allocator_api)]
 #![feature(array_chunks)]
+#![allow(incomplete_features)]
 #![feature(generic_const_exprs)]
 
-mod circuits;
-mod transcript;
+pub mod circuits;
+pub mod transcript;
 mod wrapper_inner_verifier;
-mod wrapper_utils;
-
-pub mod zkos_utils;
+pub mod wrapper_utils;
 
 #[cfg(test)]
 mod tests;
 
 use boojum::algebraic_props::round_function::AbsorptionModeOverwrite;
 use boojum::algebraic_props::sponge::GoldilocksPoseidon2Sponge;
-use boojum::config::{ProvingCSConfig, SetupCSConfig};
+use boojum::config::{DevCSConfig, ProvingCSConfig, SetupCSConfig};
 use boojum::cs::cs_builder::new_builder;
 use boojum::cs::cs_builder_reference::CsReferenceImplementationBuilder;
 use boojum::cs::implementations::hints::DenseVariablesCopyHint;
@@ -161,7 +160,7 @@ pub fn prove_risc_wrapper(
     let geometry = RiscWrapper::geometry();
     let (max_trace_len, num_vars) = circuit.size_hint();
 
-    let builder_impl = CsReferenceImplementationBuilder::<GL, GL, ProvingCSConfig>::new(
+    let builder_impl = CsReferenceImplementationBuilder::<GL, GL, DevCSConfig>::new(
         geometry,
         max_trace_len.unwrap(),
     );

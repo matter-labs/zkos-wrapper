@@ -1,4 +1,10 @@
-#[allow(unused_braces, unused_mut, unused_variables, unsafe_op_in_unsafe_fn)]
+#[allow(
+    unused_braces,
+    unused_mut,
+    unused_variables,
+    unsafe_op_in_unsafe_fn,
+    unused_assignments
+)]
 unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>(
     cs: &mut CS,
     random_point: MersenneQuartic<F>,
@@ -31,7 +37,7 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
     let every_row_except_last_contribution = {
         let mut accumulated_contribution = {
             let individual_term = {
-                let value = unsafe { *(witness.get_unchecked(30usize)) };
+                let value = unsafe { *(witness.get_unchecked(17usize)) };
                 let one = MersenneField::one(cs);
                 let mut t = value;
                 t = t.sub_base(cs, &one);
@@ -40,6 +46,201 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
             };
             individual_term
         };
+        {
+            let contribution = {
+                let individual_term = {
+                    let value = unsafe { *(witness.get_unchecked(18usize)) };
+                    let one = MersenneField::one(cs);
+                    let mut t = value;
+                    t = t.sub_base(cs, &one);
+                    t = t.mul(cs, &value);
+                    t
+                };
+                individual_term
+            };
+            accumulated_contribution =
+                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
+        }
+        {
+            let contribution = {
+                let individual_term = {
+                    let value = unsafe { *(witness.get_unchecked(19usize)) };
+                    let one = MersenneField::one(cs);
+                    let mut t = value;
+                    t = t.sub_base(cs, &one);
+                    t = t.mul(cs, &value);
+                    t
+                };
+                individual_term
+            };
+            accumulated_contribution =
+                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
+        }
+        {
+            let contribution = {
+                let individual_term = {
+                    let value = unsafe { *(witness.get_unchecked(20usize)) };
+                    let one = MersenneField::one(cs);
+                    let mut t = value;
+                    t = t.sub_base(cs, &one);
+                    t = t.mul(cs, &value);
+                    t
+                };
+                individual_term
+            };
+            accumulated_contribution =
+                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
+        }
+        {
+            let contribution = {
+                let individual_term = {
+                    let value = unsafe { *(witness.get_unchecked(21usize)) };
+                    let one = MersenneField::one(cs);
+                    let mut t = value;
+                    t = t.sub_base(cs, &one);
+                    t = t.mul(cs, &value);
+                    t
+                };
+                individual_term
+            };
+            accumulated_contribution =
+                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
+        }
+        {
+            let contribution = {
+                let individual_term = {
+                    let value = unsafe { *(witness.get_unchecked(22usize)) };
+                    let one = MersenneField::one(cs);
+                    let mut t = value;
+                    t = t.sub_base(cs, &one);
+                    t = t.mul(cs, &value);
+                    t
+                };
+                individual_term
+            };
+            accumulated_contribution =
+                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
+        }
+        {
+            let contribution = {
+                let individual_term = {
+                    let value = unsafe { *(witness.get_unchecked(23usize)) };
+                    let one = MersenneField::one(cs);
+                    let mut t = value;
+                    t = t.sub_base(cs, &one);
+                    t = t.mul(cs, &value);
+                    t
+                };
+                individual_term
+            };
+            accumulated_contribution =
+                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
+        }
+        {
+            let contribution = {
+                let individual_term = {
+                    let value = unsafe { *(witness.get_unchecked(24usize)) };
+                    let one = MersenneField::one(cs);
+                    let mut t = value;
+                    t = t.sub_base(cs, &one);
+                    t = t.mul(cs, &value);
+                    t
+                };
+                individual_term
+            };
+            accumulated_contribution =
+                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
+        }
+        {
+            let contribution = {
+                let individual_term = {
+                    let value = unsafe { *(witness.get_unchecked(25usize)) };
+                    let one = MersenneField::one(cs);
+                    let mut t = value;
+                    t = t.sub_base(cs, &one);
+                    t = t.mul(cs, &value);
+                    t
+                };
+                individual_term
+            };
+            accumulated_contribution =
+                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
+        }
+        {
+            let contribution = {
+                let individual_term = {
+                    let value = unsafe { *(witness.get_unchecked(26usize)) };
+                    let one = MersenneField::one(cs);
+                    let mut t = value;
+                    t = t.sub_base(cs, &one);
+                    t = t.mul(cs, &value);
+                    t
+                };
+                individual_term
+            };
+            accumulated_contribution =
+                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
+        }
+        {
+            let contribution = {
+                let individual_term = {
+                    let value = unsafe { *(witness.get_unchecked(27usize)) };
+                    let one = MersenneField::one(cs);
+                    let mut t = value;
+                    t = t.sub_base(cs, &one);
+                    t = t.mul(cs, &value);
+                    t
+                };
+                individual_term
+            };
+            accumulated_contribution =
+                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
+        }
+        {
+            let contribution = {
+                let individual_term = {
+                    let value = unsafe { *(witness.get_unchecked(28usize)) };
+                    let one = MersenneField::one(cs);
+                    let mut t = value;
+                    t = t.sub_base(cs, &one);
+                    t = t.mul(cs, &value);
+                    t
+                };
+                individual_term
+            };
+            accumulated_contribution =
+                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
+        }
+        {
+            let contribution = {
+                let individual_term = {
+                    let value = unsafe { *(witness.get_unchecked(29usize)) };
+                    let one = MersenneField::one(cs);
+                    let mut t = value;
+                    t = t.sub_base(cs, &one);
+                    t = t.mul(cs, &value);
+                    t
+                };
+                individual_term
+            };
+            accumulated_contribution =
+                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
+        }
+        {
+            let contribution = {
+                let individual_term = {
+                    let value = unsafe { *(witness.get_unchecked(30usize)) };
+                    let one = MersenneField::one(cs);
+                    let mut t = value;
+                    t = t.sub_base(cs, &one);
+                    t = t.mul(cs, &value);
+                    t
+                };
+                individual_term
+            };
+            accumulated_contribution =
+                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
+        }
         {
             let contribution = {
                 let individual_term = {
@@ -343,12 +544,167 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
         {
             let contribution = {
                 let individual_term = {
-                    let value = unsafe { *(witness.get_unchecked(51usize)) };
-                    let one = MersenneField::one(cs);
-                    let mut t = value;
-                    t = t.sub_base(cs, &one);
-                    t = t.mul(cs, &value);
-                    t
+                    let mut individual_term = {
+                        let mut a = unsafe { *(witness.get_unchecked(17usize)) };
+                        let b = unsafe { *(witness.get_unchecked(17usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(65536u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        a
+                    };
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(17usize)) };
+                        let b = unsafe { *(witness.get_unchecked(54usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(2147483643u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(17usize)) };
+                        let b = unsafe { *(witness.get_unchecked(56usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(1024u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(17usize)) };
+                        let b = unsafe { *(witness.get_unchecked(59usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(4u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(17usize)) };
+                        let b = unsafe { *(witness.get_unchecked(60usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(16384u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(54usize)) };
+                        let b = unsafe { *(witness.get_unchecked(54usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(131072u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(54usize)) };
+                        let b = unsafe { *(witness.get_unchecked(56usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(2080374783u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(54usize)) };
+                        let b = unsafe { *(witness.get_unchecked(59usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(2147221503u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(54usize)) };
+                        let b = unsafe { *(witness.get_unchecked(60usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(1073741823u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(56usize)) };
+                        let b = unsafe { *(witness.get_unchecked(56usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(4u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(56usize)) };
+                        let b = unsafe { *(witness.get_unchecked(59usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(67108864u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(56usize)) };
+                        let b = unsafe { *(witness.get_unchecked(60usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(128u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(59usize)) };
+                        let b = unsafe { *(witness.get_unchecked(59usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(131072u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(59usize)) };
+                        let b = unsafe { *(witness.get_unchecked(60usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(1073741824u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(60usize)) };
+                        let b = unsafe { *(witness.get_unchecked(60usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(1024u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(17usize)) };
+                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(256u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(54usize)) };
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(2130706431u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(56usize)) };
+                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(2u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(59usize)) };
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(16777216u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(60usize)) };
+                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(32u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    individual_term
                 };
                 individual_term
             };
@@ -358,12 +714,168 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
         {
             let contribution = {
                 let individual_term = {
-                    let value = unsafe { *(witness.get_unchecked(52usize)) };
-                    let one = MersenneField::one(cs);
-                    let mut t = value;
-                    t = t.sub_base(cs, &one);
-                    t = t.mul(cs, &value);
-                    t
+                    let mut individual_term = {
+                        let mut a = unsafe { *(witness.get_unchecked(18usize)) };
+                        let b = unsafe { *(witness.get_unchecked(18usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(4194304u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        a
+                    };
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(18usize)) };
+                        let b = unsafe { *(witness.get_unchecked(55usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(2147483391u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(18usize)) };
+                        let b = unsafe { *(witness.get_unchecked(57usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(256u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(18usize)) };
+                        let b = unsafe { *(witness.get_unchecked(58usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(8192u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(18usize)) };
+                        let b = unsafe { *(witness.get_unchecked(61usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(131072u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(55usize)) };
+                        let b = unsafe { *(witness.get_unchecked(55usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(8388608u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(55usize)) };
+                        let b = unsafe { *(witness.get_unchecked(57usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(2130706431u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(55usize)) };
+                        let b = unsafe { *(witness.get_unchecked(58usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(1610612735u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(55usize)) };
+                        let b = unsafe { *(witness.get_unchecked(61usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(2147483643u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(57usize)) };
+                        let b = unsafe { *(witness.get_unchecked(57usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(8388608u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(57usize)) };
+                        let b = unsafe { *(witness.get_unchecked(58usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(536870912u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(57usize)) };
+                        let b = unsafe { *(witness.get_unchecked(61usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(4u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(58usize)) };
+                        let b = unsafe { *(witness.get_unchecked(58usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(4u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(58usize)) };
+                        let b = unsafe { *(witness.get_unchecked(61usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(128u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(61usize)) };
+                        let b = unsafe { *(witness.get_unchecked(61usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(1024u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(18usize)) };
+                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(2048u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(55usize)) };
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(2013265919u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(57usize)) };
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(134217728u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(58usize)) };
+                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(2u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(61usize)) };
+                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(32u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    individual_term
                 };
                 individual_term
             };
@@ -373,12 +885,233 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
         {
             let contribution = {
                 let individual_term = {
-                    let value = unsafe { *(witness.get_unchecked(53usize)) };
-                    let one = MersenneField::one(cs);
-                    let mut t = value;
-                    t = t.sub_base(cs, &one);
-                    t = t.mul(cs, &value);
-                    t
+                    let mut individual_term = {
+                        let mut a = unsafe { *(witness.get_unchecked(17usize)) };
+                        let b = unsafe { *(witness.get_unchecked(22usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(2147483391u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        a
+                    };
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(17usize)) };
+                        let b = unsafe { *(witness.get_unchecked(23usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(2146959359u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(17usize)) };
+                        let b = unsafe { *(witness.get_unchecked(24usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(32768u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(17usize)) };
+                        let b = unsafe { *(witness.get_unchecked(25usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(32768u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(18usize)) };
+                        let b = unsafe { *(witness.get_unchecked(21usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(61440u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(18usize)) };
+                        let b = unsafe { *(witness.get_unchecked(22usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(63488u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(18usize)) };
+                        let b = unsafe { *(witness.get_unchecked(23usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(61440u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(18usize)) };
+                        let b = unsafe { *(witness.get_unchecked(25usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(2143289343u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(21usize)) };
+                        let b = unsafe { *(witness.get_unchecked(55usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(134217728u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(21usize)) };
+                        let b = unsafe { *(witness.get_unchecked(57usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(2013265919u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(21usize)) };
+                        let b = unsafe { *(witness.get_unchecked(61usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(2147483615u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(22usize)) };
+                        let b = unsafe { *(witness.get_unchecked(54usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(16777216u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(22usize)) };
+                        let b = unsafe { *(witness.get_unchecked(59usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(2130706431u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(22usize)) };
+                        let b = unsafe { *(witness.get_unchecked(60usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(2147483615u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(23usize)) };
+                        let b = unsafe { *(witness.get_unchecked(54usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(16u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(23usize)) };
+                        let b = unsafe { *(witness.get_unchecked(56usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(2147479553u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(23usize)) };
+                        let b = unsafe { *(witness.get_unchecked(59usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(2147483631u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(23usize)) };
+                        let b = unsafe { *(witness.get_unchecked(60usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(2147418111u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(24usize)) };
+                        let b = unsafe { *(witness.get_unchecked(60usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(4096u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(24usize)) };
+                        let b = unsafe { *(witness.get_unchecked(61usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(2147483615u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(25usize)) };
+                        let b = unsafe { *(witness.get_unchecked(55usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(128u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(25usize)) };
+                        let b = unsafe { *(witness.get_unchecked(57usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(2147483519u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(25usize)) };
+                        let b = unsafe { *(witness.get_unchecked(58usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(2147479553u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(25usize)) };
+                        let b = unsafe { *(witness.get_unchecked(60usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(4096u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(25usize)) };
+                        let b = unsafe { *(witness.get_unchecked(61usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(2147418111u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(61usize)) };
+                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(32u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let a = unsafe { *(witness.get_unchecked(87usize)) };
+                        individual_term = individual_term.sub(cs, &a);
+                    }
+                    individual_term
                 };
                 individual_term
             };
@@ -388,12 +1121,47 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
         {
             let contribution = {
                 let individual_term = {
-                    let value = unsafe { *(witness.get_unchecked(54usize)) };
-                    let one = MersenneField::one(cs);
-                    let mut t = value;
-                    t = t.sub_base(cs, &one);
-                    t = t.mul(cs, &value);
-                    t
+                    let mut individual_term = {
+                        let mut a = unsafe { *(witness.get_unchecked(18usize)) };
+                        let b = unsafe { *(witness.get_unchecked(24usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(2147418112u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        a
+                    };
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(18usize)) };
+                        let b = unsafe { *(witness.get_unchecked(25usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(2147483632u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(24usize)) };
+                        let b = unsafe { *(witness.get_unchecked(55usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(25usize)) };
+                        let b = unsafe { *(witness.get_unchecked(57usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(18usize)) };
+                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(65535u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let a = unsafe { *(witness.get_unchecked(88usize)) };
+                        individual_term = individual_term.sub(cs, &a);
+                    }
+                    individual_term
                 };
                 individual_term
             };
@@ -403,12 +1171,42 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
         {
             let contribution = {
                 let individual_term = {
-                    let value = unsafe { *(witness.get_unchecked(55usize)) };
-                    let one = MersenneField::one(cs);
-                    let mut t = value;
-                    t = t.sub_base(cs, &one);
-                    t = t.mul(cs, &value);
-                    t
+                    let mut individual_term = {
+                        let mut a = unsafe { *(witness.get_unchecked(20usize)) };
+                        let b = unsafe { *(witness.get_unchecked(89usize)) };
+                        a = a.mul(cs, &b);
+                        a
+                    };
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(21usize)) };
+                        let b = unsafe { *(witness.get_unchecked(87usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(22usize)) };
+                        let b = unsafe { *(witness.get_unchecked(89usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(23usize)) };
+                        let b = unsafe { *(witness.get_unchecked(89usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let a = unsafe { *(witness.get_unchecked(5usize)) };
+                        individual_term = individual_term.sub(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(6usize)) };
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(2147483391u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    individual_term
                 };
                 individual_term
             };
@@ -418,12 +1216,35 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
         {
             let contribution = {
                 let individual_term = {
-                    let value = unsafe { *(witness.get_unchecked(56usize)) };
-                    let one = MersenneField::one(cs);
-                    let mut t = value;
-                    t = t.sub_base(cs, &one);
-                    t = t.mul(cs, &value);
-                    t
+                    let mut individual_term = {
+                        let mut a = unsafe { *(witness.get_unchecked(20usize)) };
+                        let b = unsafe { *(witness.get_unchecked(90usize)) };
+                        a = a.mul(cs, &b);
+                        a
+                    };
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(21usize)) };
+                        let b = unsafe { *(witness.get_unchecked(88usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(22usize)) };
+                        let b = unsafe { *(witness.get_unchecked(90usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(23usize)) };
+                        let b = unsafe { *(witness.get_unchecked(90usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let a = unsafe { *(witness.get_unchecked(64usize)) };
+                        individual_term = individual_term.sub(cs, &a);
+                    }
+                    individual_term
                 };
                 individual_term
             };
@@ -433,12 +1254,47 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
         {
             let contribution = {
                 let individual_term = {
-                    let value = unsafe { *(witness.get_unchecked(57usize)) };
-                    let one = MersenneField::one(cs);
-                    let mut t = value;
-                    t = t.sub_base(cs, &one);
-                    t = t.mul(cs, &value);
-                    t
+                    let mut individual_term = {
+                        let mut a = unsafe { *(witness.get_unchecked(7usize)) };
+                        let b = unsafe { *(witness.get_unchecked(7usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(1073741824u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        a
+                    };
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(7usize)) };
+                        let b = unsafe { *(witness.get_unchecked(8usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.sub(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(8usize)) };
+                        let b = unsafe { *(witness.get_unchecked(8usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(1073741824u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(7usize)) };
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(2147450883u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(8usize)) };
+                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(32764u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    let constant_term =
+                        MersenneField::allocate_constant(cs, Mersenne31Field(2147352583u32));
+                    individual_term = individual_term.add_base(cs, &constant_term);
+                    individual_term
                 };
                 individual_term
             };
@@ -448,12 +1304,39 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
         {
             let contribution = {
                 let individual_term = {
-                    let value = unsafe { *(witness.get_unchecked(58usize)) };
-                    let one = MersenneField::one(cs);
-                    let mut t = value;
-                    t = t.sub_base(cs, &one);
-                    t = t.mul(cs, &value);
-                    t
+                    let mut individual_term = {
+                        let mut a = unsafe { *(witness.get_unchecked(7usize)) };
+                        let b = unsafe { *(witness.get_unchecked(91usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(32768u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        a
+                    };
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(8usize)) };
+                        let b = unsafe { *(witness.get_unchecked(91usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(2147450879u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(51usize)) };
+                        let b = unsafe { *(witness.get_unchecked(91usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(91usize)) };
+                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(65536u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    let constant_term =
+                        MersenneField::allocate_constant(cs, Mersenne31Field(2147483646u32));
+                    individual_term = individual_term.add_base(cs, &constant_term);
+                    individual_term
                 };
                 individual_term
             };
@@ -463,12 +1346,22 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
         {
             let contribution = {
                 let individual_term = {
-                    let value = unsafe { *(witness.get_unchecked(59usize)) };
-                    let one = MersenneField::one(cs);
-                    let mut t = value;
-                    t = t.sub_base(cs, &one);
-                    t = t.mul(cs, &value);
-                    t
+                    let mut individual_term = {
+                        let mut a = unsafe { *(witness.get_unchecked(92usize)) };
+                        let b = unsafe { *(witness.get_unchecked(116usize)) };
+                        a = a.mul(cs, &b);
+                        a = a.negated(cs);
+                        a
+                    };
+                    {
+                        let a = unsafe { *(witness.get_unchecked(92usize)) };
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let a = unsafe { *(witness.get_unchecked(95usize)) };
+                        individual_term = individual_term.sub(cs, &a);
+                    }
+                    individual_term
                 };
                 individual_term
             };
@@ -478,12 +1371,13 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
         {
             let contribution = {
                 let individual_term = {
-                    let value = unsafe { *(witness.get_unchecked(60usize)) };
-                    let one = MersenneField::one(cs);
-                    let mut t = value;
-                    t = t.sub_base(cs, &one);
-                    t = t.mul(cs, &value);
-                    t
+                    let mut individual_term = {
+                        let mut a = unsafe { *(witness.get_unchecked(29usize)) };
+                        let b = unsafe { *(witness.get_unchecked(95usize)) };
+                        a = a.mul(cs, &b);
+                        a
+                    };
+                    individual_term
                 };
                 individual_term
             };
@@ -493,12 +1387,27 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
         {
             let contribution = {
                 let individual_term = {
-                    let value = unsafe { *(witness.get_unchecked(61usize)) };
-                    let one = MersenneField::one(cs);
-                    let mut t = value;
-                    t = t.sub_base(cs, &one);
-                    t = t.mul(cs, &value);
-                    t
+                    let mut individual_term = {
+                        let mut a = unsafe { *(witness.get_unchecked(8usize)) };
+                        let b = unsafe { *(witness.get_unchecked(116usize)) };
+                        a = a.mul(cs, &b);
+                        a
+                    };
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(11usize)) };
+                        let b = unsafe { *(witness.get_unchecked(116usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.sub(cs, &a);
+                    }
+                    {
+                        let a = unsafe { *(witness.get_unchecked(11usize)) };
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let a = unsafe { *(witness.get_unchecked(96usize)) };
+                        individual_term = individual_term.sub(cs, &a);
+                    }
+                    individual_term
                 };
                 individual_term
             };
@@ -508,12 +1417,51 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
         {
             let contribution = {
                 let individual_term = {
-                    let value = unsafe { *(witness.get_unchecked(62usize)) };
-                    let one = MersenneField::one(cs);
-                    let mut t = value;
-                    t = t.sub_base(cs, &one);
-                    t = t.mul(cs, &value);
-                    t
+                    let mut individual_term = {
+                        let mut a = unsafe { *(witness.get_unchecked(7usize)) };
+                        let b = unsafe { *(witness.get_unchecked(116usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(32768u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        a
+                    };
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(8usize)) };
+                        let b = unsafe { *(witness.get_unchecked(116usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(2147450879u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(12usize)) };
+                        let b = unsafe { *(witness.get_unchecked(116usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.sub(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(51usize)) };
+                        let b = unsafe { *(witness.get_unchecked(116usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let a = unsafe { *(witness.get_unchecked(12usize)) };
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let a = unsafe { *(witness.get_unchecked(97usize)) };
+                        individual_term = individual_term.sub(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(116usize)) };
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(131072u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    individual_term
                 };
                 individual_term
             };
@@ -523,12 +1471,27 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
         {
             let contribution = {
                 let individual_term = {
-                    let value = unsafe { *(witness.get_unchecked(63usize)) };
-                    let one = MersenneField::one(cs);
-                    let mut t = value;
-                    t = t.sub_base(cs, &one);
-                    t = t.mul(cs, &value);
-                    t
+                    let mut individual_term = {
+                        let mut a = unsafe { *(witness.get_unchecked(7usize)) };
+                        let b = unsafe { *(witness.get_unchecked(37usize)) };
+                        a = a.mul(cs, &b);
+                        a
+                    };
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(37usize)) };
+                        let b = unsafe { *(memory.get_unchecked(8usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.sub(cs, &a);
+                    }
+                    {
+                        let a = unsafe { *(witness.get_unchecked(103usize)) };
+                        individual_term = individual_term.sub(cs, &a);
+                    }
+                    {
+                        let a = unsafe { *(memory.get_unchecked(8usize)) };
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    individual_term
                 };
                 individual_term
             };
@@ -538,222 +1501,27 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
         {
             let contribution = {
                 let individual_term = {
-                    let value = unsafe { *(witness.get_unchecked(64usize)) };
-                    let one = MersenneField::one(cs);
-                    let mut t = value;
-                    t = t.sub_base(cs, &one);
-                    t = t.mul(cs, &value);
-                    t
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let value = unsafe { *(witness.get_unchecked(65usize)) };
-                    let one = MersenneField::one(cs);
-                    let mut t = value;
-                    t = t.sub_base(cs, &one);
-                    t = t.mul(cs, &value);
-                    t
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let value = unsafe { *(witness.get_unchecked(66usize)) };
-                    let one = MersenneField::one(cs);
-                    let mut t = value;
-                    t = t.sub_base(cs, &one);
-                    t = t.mul(cs, &value);
-                    t
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let value = unsafe { *(witness.get_unchecked(67usize)) };
-                    let one = MersenneField::one(cs);
-                    let mut t = value;
-                    t = t.sub_base(cs, &one);
-                    t = t.mul(cs, &value);
-                    t
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let value = unsafe { *(witness.get_unchecked(68usize)) };
-                    let one = MersenneField::one(cs);
-                    let mut t = value;
-                    t = t.sub_base(cs, &one);
-                    t = t.mul(cs, &value);
-                    t
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let value = unsafe { *(witness.get_unchecked(69usize)) };
-                    let one = MersenneField::one(cs);
-                    let mut t = value;
-                    t = t.sub_base(cs, &one);
-                    t = t.mul(cs, &value);
-                    t
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let value = unsafe { *(witness.get_unchecked(70usize)) };
-                    let one = MersenneField::one(cs);
-                    let mut t = value;
-                    t = t.sub_base(cs, &one);
-                    t = t.mul(cs, &value);
-                    t
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let value = unsafe { *(witness.get_unchecked(71usize)) };
-                    let one = MersenneField::one(cs);
-                    let mut t = value;
-                    t = t.sub_base(cs, &one);
-                    t = t.mul(cs, &value);
-                    t
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let value = unsafe { *(witness.get_unchecked(72usize)) };
-                    let one = MersenneField::one(cs);
-                    let mut t = value;
-                    t = t.sub_base(cs, &one);
-                    t = t.mul(cs, &value);
-                    t
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let value = unsafe { *(witness.get_unchecked(73usize)) };
-                    let one = MersenneField::one(cs);
-                    let mut t = value;
-                    t = t.sub_base(cs, &one);
-                    t = t.mul(cs, &value);
-                    t
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let value = unsafe { *(witness.get_unchecked(74usize)) };
-                    let one = MersenneField::one(cs);
-                    let mut t = value;
-                    t = t.sub_base(cs, &one);
-                    t = t.mul(cs, &value);
-                    t
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let value = unsafe { *(witness.get_unchecked(75usize)) };
-                    let one = MersenneField::one(cs);
-                    let mut t = value;
-                    t = t.sub_base(cs, &one);
-                    t = t.mul(cs, &value);
-                    t
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let value = unsafe { *(witness.get_unchecked(76usize)) };
-                    let one = MersenneField::one(cs);
-                    let mut t = value;
-                    t = t.sub_base(cs, &one);
-                    t = t.mul(cs, &value);
-                    t
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let value = unsafe { *(witness.get_unchecked(77usize)) };
-                    let one = MersenneField::one(cs);
-                    let mut t = value;
-                    t = t.sub_base(cs, &one);
-                    t = t.mul(cs, &value);
-                    t
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let value = unsafe { *(witness.get_unchecked(78usize)) };
-                    let one = MersenneField::one(cs);
-                    let mut t = value;
-                    t = t.sub_base(cs, &one);
-                    t = t.mul(cs, &value);
-                    t
+                    let mut individual_term = {
+                        let mut a = unsafe { *(witness.get_unchecked(37usize)) };
+                        let b = unsafe { *(witness.get_unchecked(51usize)) };
+                        a = a.mul(cs, &b);
+                        a
+                    };
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(37usize)) };
+                        let b = unsafe { *(memory.get_unchecked(9usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.sub(cs, &a);
+                    }
+                    {
+                        let a = unsafe { *(witness.get_unchecked(104usize)) };
+                        individual_term = individual_term.sub(cs, &a);
+                    }
+                    {
+                        let a = unsafe { *(memory.get_unchecked(9usize)) };
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    individual_term
                 };
                 individual_term
             };
@@ -765,133 +1533,567 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
                 let individual_term = {
                     let mut individual_term = {
                         let mut a = unsafe { *(witness.get_unchecked(31usize)) };
-                        let b = unsafe { *(witness.get_unchecked(38usize)) };
+                        let b = unsafe { *(witness.get_unchecked(92usize)) };
+                        a = a.mul(cs, &b);
+                        a
+                    };
+                    individual_term
+                };
+                individual_term
+            };
+            accumulated_contribution =
+                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
+        }
+        {
+            let contribution = {
+                let individual_term = {
+                    let mut individual_term = {
+                        let mut a = unsafe { *(witness.get_unchecked(5usize)) };
+                        let b = unsafe { *(memory.get_unchecked(8usize)) };
                         a = a.mul(cs, &b);
                         a
                     };
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(31usize)) };
-                        let b = unsafe { *(witness.get_unchecked(39usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(5usize)) };
+                        let b = unsafe { *(memory.get_unchecked(9usize)) };
                         a = a.mul(cs, &b);
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(2048u32));
+                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(65536u32));
                         a = a.mul_by_base(cs, &coeff);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(32usize)) };
-                        let b = unsafe { *(witness.get_unchecked(40usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(6usize)) };
+                        let b = unsafe { *(memory.get_unchecked(8usize)) };
                         a = a.mul(cs, &b);
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(32768u32));
+                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(256u32));
                         a = a.mul_by_base(cs, &coeff);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(32usize)) };
-                        let b = unsafe { *(witness.get_unchecked(41usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(6usize)) };
+                        let b = unsafe { *(memory.get_unchecked(9usize)) };
                         a = a.mul(cs, &b);
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(32768u32));
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(16777216u32));
                         a = a.mul_by_base(cs, &coeff);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(33usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(64usize)) };
+                        let b = unsafe { *(memory.get_unchecked(8usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(65536u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(64usize)) };
+                        let b = unsafe { *(memory.get_unchecked(9usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(2u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let a = unsafe { *(witness.get_unchecked(105usize)) };
+                        individual_term = individual_term.sub(cs, &a);
+                    }
+                    individual_term
+                };
+                individual_term
+            };
+            accumulated_contribution =
+                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
+        }
+        {
+            let contribution = {
+                let individual_term = {
+                    let mut individual_term = {
+                        let mut a = unsafe { *(witness.get_unchecked(5usize)) };
                         let b = unsafe { *(witness.get_unchecked(37usize)) };
                         a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
+                        a
+                    };
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(33usize)) };
-                        let b = unsafe { *(witness.get_unchecked(41usize)) };
-                        a = a.mul(cs, &b);
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(2048u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(34usize)) };
-                        let b = unsafe { *(witness.get_unchecked(37usize)) };
-                        a = a.mul(cs, &b);
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(63488u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(34usize)) };
-                        let b = unsafe { *(witness.get_unchecked(38usize)) };
-                        a = a.mul(cs, &b);
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(63488u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(34usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(5usize)) };
                         let b = unsafe { *(witness.get_unchecked(39usize)) };
                         a = a.mul(cs, &b);
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(61440u32));
+                        individual_term = individual_term.sub(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(6usize)) };
+                        let b = unsafe { *(witness.get_unchecked(37usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(256u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(6usize)) };
+                        let b = unsafe { *(witness.get_unchecked(39usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(2147483391u32));
                         a = a.mul_by_base(cs, &coeff);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
                         let mut a = unsafe { *(witness.get_unchecked(37usize)) };
-                        let b = unsafe { *(witness.get_unchecked(87usize)) };
+                        let b = unsafe { *(witness.get_unchecked(64usize)) };
                         a = a.mul(cs, &b);
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(2u32));
+                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(65536u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(37usize)) };
+                        let b = unsafe { *(memory.get_unchecked(8usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(37usize)) };
+                        let b = unsafe { *(memory.get_unchecked(9usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(65536u32));
                         a = a.mul_by_base(cs, &coeff);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
                         let mut a = unsafe { *(witness.get_unchecked(38usize)) };
-                        let b = unsafe { *(witness.get_unchecked(85usize)) };
+                        let b = unsafe { *(witness.get_unchecked(105usize)) };
                         a = a.mul(cs, &b);
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(2u32));
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(39usize)) };
+                        let b = unsafe { *(witness.get_unchecked(64usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(2147418111u32));
                         a = a.mul_by_base(cs, &coeff);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
                         let mut a = unsafe { *(witness.get_unchecked(39usize)) };
-                        let b = unsafe { *(witness.get_unchecked(85usize)) };
+                        let b = unsafe { *(memory.get_unchecked(8usize)) };
                         a = a.mul(cs, &b);
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(2u32));
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(39usize)) };
+                        let b = unsafe { *(memory.get_unchecked(9usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(65536u32));
                         a = a.mul_by_base(cs, &coeff);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(40usize)) };
-                        let b = unsafe { *(witness.get_unchecked(89usize)) };
-                        a = a.mul(cs, &b);
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(4096u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
+                        let a = unsafe { *(witness.get_unchecked(106usize)) };
+                        individual_term = individual_term.sub(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(40usize)) };
-                        let b = unsafe { *(witness.get_unchecked(90usize)) };
-                        a = a.mul(cs, &b);
+                        let mut a = unsafe { *(witness.get_unchecked(107usize)) };
                         let coeff =
-                            MersenneField::allocate_constant(cs, Mersenne31Field(2147483615u32));
+                            MersenneField::allocate_constant(cs, Mersenne31Field(2147418111u32));
                         a = a.mul_by_base(cs, &coeff);
                         individual_term = individual_term.add(cs, &a);
                     }
+                    individual_term
+                };
+                individual_term
+            };
+            accumulated_contribution =
+                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
+        }
+        {
+            let contribution = {
+                let individual_term = {
+                    let mut individual_term = {
+                        let mut a = unsafe { *(witness.get_unchecked(9usize)) };
+                        let b = unsafe { *(witness.get_unchecked(34usize)) };
+                        a = a.mul(cs, &b);
+                        a = a.negated(cs);
+                        a
+                    };
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(41usize)) };
-                        let b = unsafe { *(witness.get_unchecked(87usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(34usize)) };
+                        let b = unsafe { *(witness.get_unchecked(106usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    individual_term
+                };
+                individual_term
+            };
+            accumulated_contribution =
+                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
+        }
+        {
+            let contribution = {
+                let individual_term = {
+                    let mut individual_term = {
+                        let mut a = unsafe { *(witness.get_unchecked(10usize)) };
+                        let b = unsafe { *(witness.get_unchecked(34usize)) };
+                        a = a.mul(cs, &b);
+                        a = a.negated(cs);
+                        a
+                    };
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(34usize)) };
+                        let b = unsafe { *(witness.get_unchecked(107usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    individual_term
+                };
+                individual_term
+            };
+            accumulated_contribution =
+                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
+        }
+        {
+            let contribution = {
+                let individual_term = {
+                    let mut individual_term = {
+                        let mut a = unsafe { *(witness.get_unchecked(34usize)) };
+                        let b = unsafe { *(witness.get_unchecked(40usize)) };
+                        a = a.mul(cs, &b);
+                        a = a.negated(cs);
+                        a
+                    };
+                    {
+                        let a = unsafe { *(witness.get_unchecked(34usize)) };
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    individual_term
+                };
+                individual_term
+            };
+            accumulated_contribution =
+                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
+        }
+        {
+            let contribution = {
+                let individual_term = {
+                    let mut individual_term = {
+                        let mut a = unsafe { *(witness.get_unchecked(33usize)) };
+                        let b = unsafe { *(witness.get_unchecked(37usize)) };
+                        a = a.mul(cs, &b);
+                        a
+                    };
+                    {
+                        let a = unsafe { *(witness.get_unchecked(108usize)) };
+                        individual_term = individual_term.sub(cs, &a);
+                    }
+                    individual_term
+                };
+                individual_term
+            };
+            accumulated_contribution =
+                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
+        }
+        {
+            let contribution = {
+                let individual_term = {
+                    let mut individual_term = {
+                        let mut a = unsafe { *(witness.get_unchecked(92usize)) };
+                        let b = unsafe { *(witness.get_unchecked(93usize)) };
+                        a = a.mul(cs, &b);
+                        a = a.negated(cs);
+                        a
+                    };
+                    {
+                        let a = unsafe { *(witness.get_unchecked(92usize)) };
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let a = unsafe { *(witness.get_unchecked(93usize)) };
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let a = unsafe { *(witness.get_unchecked(109usize)) };
+                        individual_term = individual_term.sub(cs, &a);
+                    }
+                    individual_term
+                };
+                individual_term
+            };
+            accumulated_contribution =
+                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
+        }
+        {
+            let contribution = {
+                let individual_term = {
+                    let mut individual_term = {
+                        let mut a = unsafe { *(witness.get_unchecked(33usize)) };
+                        let b = unsafe { *(witness.get_unchecked(109usize)) };
+                        a = a.mul(cs, &b);
+                        a
+                    };
+                    individual_term
+                };
+                individual_term
+            };
+            accumulated_contribution =
+                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
+        }
+        {
+            let contribution = {
+                let individual_term = {
+                    let mut individual_term = {
+                        let mut a = unsafe { *(witness.get_unchecked(110usize)) };
+                        let b = unsafe { *(witness.get_unchecked(116usize)) };
+                        a = a.mul(cs, &b);
+                        a = a.negated(cs);
+                        a
+                    };
+                    {
+                        let a = unsafe { *(witness.get_unchecked(110usize)) };
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let a = unsafe { *(witness.get_unchecked(112usize)) };
+                        individual_term = individual_term.sub(cs, &a);
+                    }
+                    individual_term
+                };
+                individual_term
+            };
+            accumulated_contribution =
+                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
+        }
+        {
+            let contribution = {
+                let individual_term = {
+                    let mut individual_term = {
+                        let mut a = unsafe { *(witness.get_unchecked(111usize)) };
+                        let b = unsafe { *(witness.get_unchecked(116usize)) };
+                        a = a.mul(cs, &b);
+                        a = a.negated(cs);
+                        a
+                    };
+                    {
+                        let a = unsafe { *(witness.get_unchecked(111usize)) };
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let a = unsafe { *(witness.get_unchecked(113usize)) };
+                        individual_term = individual_term.sub(cs, &a);
+                    }
+                    individual_term
+                };
+                individual_term
+            };
+            accumulated_contribution =
+                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
+        }
+        {
+            let contribution = {
+                let individual_term = {
+                    let mut individual_term = {
+                        let mut a = unsafe { *(witness.get_unchecked(9usize)) };
+                        let b = unsafe { *(witness.get_unchecked(116usize)) };
+                        a = a.mul(cs, &b);
+                        a = a.negated(cs);
+                        a
+                    };
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(92usize)) };
+                        let b = unsafe { *(witness.get_unchecked(116usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(93usize)) };
+                        let b = unsafe { *(witness.get_unchecked(116usize)) };
                         a = a.mul(cs, &b);
                         let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(2u32));
                         a = a.mul_by_base(cs, &coeff);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(41usize)) };
-                        let b = unsafe { *(witness.get_unchecked(89usize)) };
-                        a = a.mul(cs, &b);
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(4096u32));
+                        let a = unsafe { *(witness.get_unchecked(9usize)) };
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let a = unsafe { *(witness.get_unchecked(92usize)) };
+                        individual_term = individual_term.sub(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(93usize)) };
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(2147483645u32));
                         a = a.mul_by_base(cs, &coeff);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(90usize)) };
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(32u32));
+                        let a = unsafe { *(witness.get_unchecked(114usize)) };
+                        individual_term = individual_term.sub(cs, &a);
+                    }
+                    individual_term
+                };
+                individual_term
+            };
+            accumulated_contribution =
+                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
+        }
+        {
+            let contribution = {
+                let individual_term = {
+                    let mut individual_term = {
+                        let mut a = unsafe { *(witness.get_unchecked(10usize)) };
+                        let b = unsafe { *(witness.get_unchecked(116usize)) };
+                        a = a.mul(cs, &b);
+                        a = a.negated(cs);
+                        a
+                    };
+                    {
+                        let a = unsafe { *(witness.get_unchecked(10usize)) };
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let a = unsafe { *(witness.get_unchecked(115usize)) };
+                        individual_term = individual_term.sub(cs, &a);
+                    }
+                    individual_term
+                };
+                individual_term
+            };
+            accumulated_contribution =
+                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
+        }
+        {
+            let contribution = {
+                let individual_term = {
+                    let mut individual_term = {
+                        let mut a = unsafe { *(witness.get_unchecked(98usize)) };
+                        let b = unsafe { *(witness.get_unchecked(116usize)) };
+                        a = a.mul(cs, &b);
+                        a
+                    };
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(112usize)) };
+                        let b = unsafe { *(witness.get_unchecked(116usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.sub(cs, &a);
+                    }
+                    {
+                        let a = unsafe { *(witness.get_unchecked(112usize)) };
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let a = unsafe { *(witness.get_unchecked(117usize)) };
+                        individual_term = individual_term.sub(cs, &a);
+                    }
+                    individual_term
+                };
+                individual_term
+            };
+            accumulated_contribution =
+                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
+        }
+        {
+            let contribution = {
+                let individual_term = {
+                    let mut individual_term = {
+                        let mut a = unsafe { *(witness.get_unchecked(99usize)) };
+                        let b = unsafe { *(witness.get_unchecked(116usize)) };
+                        a = a.mul(cs, &b);
+                        a
+                    };
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(113usize)) };
+                        let b = unsafe { *(witness.get_unchecked(116usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.sub(cs, &a);
+                    }
+                    {
+                        let a = unsafe { *(witness.get_unchecked(113usize)) };
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let a = unsafe { *(witness.get_unchecked(118usize)) };
+                        individual_term = individual_term.sub(cs, &a);
+                    }
+                    individual_term
+                };
+                individual_term
+            };
+            accumulated_contribution =
+                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
+        }
+        {
+            let contribution = {
+                let individual_term = {
+                    let mut individual_term = {
+                        let mut a = unsafe { *(witness.get_unchecked(108usize)) };
+                        let b = unsafe { *(witness.get_unchecked(116usize)) };
+                        a = a.mul(cs, &b);
+                        a
+                    };
+                    individual_term
+                };
+                individual_term
+            };
+            accumulated_contribution =
+                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
+        }
+        {
+            let contribution = {
+                let individual_term = {
+                    let mut individual_term = {
+                        let mut a = unsafe { *(witness.get_unchecked(5usize)) };
+                        let b = unsafe { *(witness.get_unchecked(108usize)) };
+                        a = a.mul(cs, &b);
+                        a
+                    };
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(6usize)) };
+                        let b = unsafe { *(witness.get_unchecked(108usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(256u32));
                         a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(108usize)) };
+                        let b = unsafe { *(witness.get_unchecked(112usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.sub(cs, &a);
+                    }
+                    {
+                        let a = unsafe { *(witness.get_unchecked(112usize)) };
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let a = unsafe { *(witness.get_unchecked(119usize)) };
+                        individual_term = individual_term.sub(cs, &a);
+                    }
+                    individual_term
+                };
+                individual_term
+            };
+            accumulated_contribution =
+                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
+        }
+        {
+            let contribution = {
+                let individual_term = {
+                    let mut individual_term = {
+                        let mut a = unsafe { *(witness.get_unchecked(64usize)) };
+                        let b = unsafe { *(witness.get_unchecked(108usize)) };
+                        a = a.mul(cs, &b);
+                        a
+                    };
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(108usize)) };
+                        let b = unsafe { *(witness.get_unchecked(113usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.sub(cs, &a);
+                    }
+                    {
+                        let a = unsafe { *(witness.get_unchecked(113usize)) };
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
@@ -909,835 +2111,14 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
             let contribution = {
                 let individual_term = {
                     let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(34usize)) };
-                        let b = unsafe { *(witness.get_unchecked(40usize)) };
-                        a = a.mul(cs, &b);
-                        let coeff =
-                            MersenneField::allocate_constant(cs, Mersenne31Field(2147418112u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        a
-                    };
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(34usize)) };
-                        let b = unsafe { *(witness.get_unchecked(41usize)) };
-                        a = a.mul(cs, &b);
-                        let coeff =
-                            MersenneField::allocate_constant(cs, Mersenne31Field(2147483632u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(40usize)) };
-                        let b = unsafe { *(witness.get_unchecked(84usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(41usize)) };
-                        let b = unsafe { *(witness.get_unchecked(86usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(34usize)) };
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(65535u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(121usize)) };
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(36usize)) };
-                        let b = unsafe { *(memory.get_unchecked(8usize)) };
-                        a = a.mul(cs, &b);
-                        a
-                    };
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(37usize)) };
-                        let b = unsafe { *(memory.get_unchecked(8usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(38usize)) };
-                        let b = unsafe { *(memory.get_unchecked(8usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(39usize)) };
-                        let b = unsafe { *(memory.get_unchecked(8usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(2usize)) };
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(3usize)) };
-                        let coeff =
-                            MersenneField::allocate_constant(cs, Mersenne31Field(2147483391u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(36usize)) };
-                        let b = unsafe { *(memory.get_unchecked(9usize)) };
-                        a = a.mul(cs, &b);
-                        a
-                    };
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(37usize)) };
-                        let b = unsafe { *(memory.get_unchecked(9usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(38usize)) };
-                        let b = unsafe { *(memory.get_unchecked(9usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(39usize)) };
-                        let b = unsafe { *(memory.get_unchecked(9usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(94usize)) };
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(36usize)) };
-                        let b = unsafe { *(witness.get_unchecked(122usize)) };
-                        a = a.mul(cs, &b);
-                        a
-                    };
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(37usize)) };
-                        let b = unsafe { *(witness.get_unchecked(120usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(38usize)) };
-                        let b = unsafe { *(witness.get_unchecked(122usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(39usize)) };
-                        let b = unsafe { *(witness.get_unchecked(122usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(4usize)) };
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(5usize)) };
-                        let coeff =
-                            MersenneField::allocate_constant(cs, Mersenne31Field(2147483391u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(36usize)) };
-                        let b = unsafe { *(witness.get_unchecked(123usize)) };
-                        a = a.mul(cs, &b);
-                        a
-                    };
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(37usize)) };
-                        let b = unsafe { *(witness.get_unchecked(121usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(38usize)) };
-                        let b = unsafe { *(witness.get_unchecked(123usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(39usize)) };
-                        let b = unsafe { *(witness.get_unchecked(123usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(97usize)) };
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(20usize)) };
-                        let b = unsafe { *(witness.get_unchecked(55usize)) };
-                        a = a.mul(cs, &b);
-                        a
-                    };
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(22usize)) };
-                        let b = unsafe { *(witness.get_unchecked(55usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(22usize)) };
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(127usize)) };
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(21usize)) };
-                        let b = unsafe { *(witness.get_unchecked(55usize)) };
-                        a = a.mul(cs, &b);
-                        a
-                    };
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(23usize)) };
-                        let b = unsafe { *(witness.get_unchecked(55usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(23usize)) };
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(128usize)) };
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(58usize)) };
-                        let b = unsafe { *(witness.get_unchecked(59usize)) };
-                        a = a.mul(cs, &b);
-                        a
-                    };
-                    {
-                        let a = unsafe { *(witness.get_unchecked(58usize)) };
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(59usize)) };
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(129usize)) };
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    let constant_term = MersenneField::allocate_constant(cs, Mersenne31Field(1u32));
-                    individual_term = individual_term.add_base(cs, &constant_term);
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(47usize)) };
-                        let b = unsafe { *(witness.get_unchecked(129usize)) };
-                        a = a.mul(cs, &b);
-                        a
-                    };
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(20usize)) };
-                        let b = unsafe { *(witness.get_unchecked(59usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(30usize)) };
+                        let b = unsafe { *(witness.get_unchecked(92usize)) };
                         a = a.mul(cs, &b);
                         a = a.negated(cs);
                         a
                     };
                     {
-                        let a = unsafe { *(witness.get_unchecked(20usize)) };
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(59usize)) };
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(65535u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(130usize)) };
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(21usize)) };
-                        let b = unsafe { *(witness.get_unchecked(59usize)) };
-                        a = a.mul(cs, &b);
-                        a = a.negated(cs);
-                        a
-                    };
-                    {
-                        let a = unsafe { *(witness.get_unchecked(21usize)) };
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(59usize)) };
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(65535u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(131usize)) };
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(22usize)) };
-                        let b = unsafe { *(witness.get_unchecked(55usize)) };
-                        a = a.mul(cs, &b);
-                        a = a.negated(cs);
-                        a
-                    };
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(55usize)) };
-                        let b = unsafe { *(witness.get_unchecked(130usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(22usize)) };
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(132usize)) };
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(23usize)) };
-                        let b = unsafe { *(witness.get_unchecked(55usize)) };
-                        a = a.mul(cs, &b);
-                        a = a.negated(cs);
-                        a
-                    };
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(55usize)) };
-                        let b = unsafe { *(witness.get_unchecked(131usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(23usize)) };
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(133usize)) };
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(124usize)) };
-                        let b = unsafe { *(witness.get_unchecked(155usize)) };
-                        a = a.mul(cs, &b);
-                        a = a.negated(cs);
-                        a
-                    };
-                    {
-                        let a = unsafe { *(witness.get_unchecked(124usize)) };
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(134usize)) };
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(45usize)) };
-                        let b = unsafe { *(witness.get_unchecked(134usize)) };
-                        a = a.mul(cs, &b);
-                        a
-                    };
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(18usize)) };
-                        let b = unsafe { *(witness.get_unchecked(155usize)) };
-                        a = a.mul(cs, &b);
-                        a
-                    };
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(22usize)) };
-                        let b = unsafe { *(witness.get_unchecked(155usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(22usize)) };
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(135usize)) };
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(19usize)) };
-                        let b = unsafe { *(witness.get_unchecked(155usize)) };
-                        a = a.mul(cs, &b);
-                        a
-                    };
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(23usize)) };
-                        let b = unsafe { *(witness.get_unchecked(155usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(23usize)) };
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(136usize)) };
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(2usize)) };
-                        let b = unsafe { *(witness.get_unchecked(55usize)) };
-                        a = a.mul(cs, &b);
-                        a = a.negated(cs);
-                        a
-                    };
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(3usize)) };
-                        let b = unsafe { *(witness.get_unchecked(55usize)) };
-                        a = a.mul(cs, &b);
-                        let coeff =
-                            MersenneField::allocate_constant(cs, Mersenne31Field(2147483391u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(55usize)) };
-                        let b = unsafe { *(witness.get_unchecked(82usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(2usize)) };
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(3usize)) };
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(256u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(142usize)) };
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(55usize)) };
-                        let b = unsafe { *(witness.get_unchecked(79usize)) };
-                        a = a.mul(cs, &b);
-                        a
-                    };
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(55usize)) };
-                        let b = unsafe { *(witness.get_unchecked(94usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(94usize)) };
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(143usize)) };
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(48usize)) };
-                        let b = unsafe { *(witness.get_unchecked(124usize)) };
-                        a = a.mul(cs, &b);
-                        a
-                    };
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(2usize)) };
-                        let b = unsafe { *(witness.get_unchecked(4usize)) };
-                        a = a.mul(cs, &b);
-                        a
-                    };
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(2usize)) };
-                        let b = unsafe { *(witness.get_unchecked(5usize)) };
-                        a = a.mul(cs, &b);
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(256u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(2usize)) };
-                        let b = unsafe { *(witness.get_unchecked(97usize)) };
-                        a = a.mul(cs, &b);
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(65536u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(3usize)) };
-                        let b = unsafe { *(witness.get_unchecked(4usize)) };
-                        a = a.mul(cs, &b);
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(256u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(3usize)) };
-                        let b = unsafe { *(witness.get_unchecked(5usize)) };
-                        a = a.mul(cs, &b);
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(65536u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(3usize)) };
-                        let b = unsafe { *(witness.get_unchecked(97usize)) };
-                        a = a.mul(cs, &b);
-                        let coeff =
-                            MersenneField::allocate_constant(cs, Mersenne31Field(16777216u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(4usize)) };
-                        let b = unsafe { *(witness.get_unchecked(94usize)) };
-                        a = a.mul(cs, &b);
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(65536u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(5usize)) };
-                        let b = unsafe { *(witness.get_unchecked(94usize)) };
-                        a = a.mul(cs, &b);
-                        let coeff =
-                            MersenneField::allocate_constant(cs, Mersenne31Field(16777216u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(94usize)) };
-                        let b = unsafe { *(witness.get_unchecked(97usize)) };
-                        a = a.mul(cs, &b);
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(2u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(144usize)) };
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(2usize)) };
-                        let b = unsafe { *(witness.get_unchecked(55usize)) };
-                        a = a.mul(cs, &b);
-                        a
-                    };
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(2usize)) };
-                        let b = unsafe { *(witness.get_unchecked(57usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(3usize)) };
-                        let b = unsafe { *(witness.get_unchecked(55usize)) };
-                        a = a.mul(cs, &b);
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(256u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(3usize)) };
-                        let b = unsafe { *(witness.get_unchecked(57usize)) };
-                        a = a.mul(cs, &b);
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(256u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(4usize)) };
-                        let b = unsafe { *(witness.get_unchecked(55usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(4usize)) };
-                        let b = unsafe { *(witness.get_unchecked(57usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(5usize)) };
-                        let b = unsafe { *(witness.get_unchecked(55usize)) };
-                        a = a.mul(cs, &b);
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(256u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(5usize)) };
-                        let b = unsafe { *(witness.get_unchecked(57usize)) };
-                        a = a.mul(cs, &b);
-                        let coeff =
-                            MersenneField::allocate_constant(cs, Mersenne31Field(2147483391u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(55usize)) };
-                        let b = unsafe { *(witness.get_unchecked(94usize)) };
-                        a = a.mul(cs, &b);
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(65536u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(55usize)) };
-                        let b = unsafe { *(witness.get_unchecked(97usize)) };
-                        a = a.mul(cs, &b);
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(65536u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(56usize)) };
-                        let b = unsafe { *(witness.get_unchecked(144usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(57usize)) };
-                        let b = unsafe { *(witness.get_unchecked(94usize)) };
-                        a = a.mul(cs, &b);
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(65536u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(57usize)) };
-                        let b = unsafe { *(witness.get_unchecked(97usize)) };
-                        a = a.mul(cs, &b);
-                        let coeff =
-                            MersenneField::allocate_constant(cs, Mersenne31Field(2147418111u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(145usize)) };
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(146usize)) };
-                        let coeff =
-                            MersenneField::allocate_constant(cs, Mersenne31Field(2147418111u32));
-                        a = a.mul_by_base(cs, &coeff);
+                        let a = unsafe { *(witness.get_unchecked(30usize)) };
                         individual_term = individual_term.add(cs, &a);
                     }
                     individual_term
@@ -1751,430 +2132,8 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
             let contribution = {
                 let individual_term = {
                     let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(20usize)) };
-                        let b = unsafe { *(witness.get_unchecked(51usize)) };
-                        a = a.mul(cs, &b);
-                        a = a.negated(cs);
-                        a
-                    };
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(51usize)) };
-                        let b = unsafe { *(witness.get_unchecked(145usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(21usize)) };
-                        let b = unsafe { *(witness.get_unchecked(51usize)) };
-                        a = a.mul(cs, &b);
-                        a = a.negated(cs);
-                        a
-                    };
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(51usize)) };
-                        let b = unsafe { *(witness.get_unchecked(146usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(51usize)) };
-                        let b = unsafe { *(witness.get_unchecked(58usize)) };
-                        a = a.mul(cs, &b);
-                        a = a.negated(cs);
-                        a
-                    };
-                    {
-                        let a = unsafe { *(witness.get_unchecked(51usize)) };
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(50usize)) };
-                        let b = unsafe { *(witness.get_unchecked(55usize)) };
-                        a = a.mul(cs, &b);
-                        a
-                    };
-                    {
-                        let a = unsafe { *(witness.get_unchecked(147usize)) };
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(124usize)) };
-                        let b = unsafe { *(witness.get_unchecked(125usize)) };
-                        a = a.mul(cs, &b);
-                        a = a.negated(cs);
-                        a
-                    };
-                    {
-                        let a = unsafe { *(witness.get_unchecked(124usize)) };
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(125usize)) };
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(148usize)) };
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(50usize)) };
-                        let b = unsafe { *(witness.get_unchecked(148usize)) };
-                        a = a.mul(cs, &b);
-                        a
-                    };
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(149usize)) };
-                        let b = unsafe { *(witness.get_unchecked(155usize)) };
-                        a = a.mul(cs, &b);
-                        a = a.negated(cs);
-                        a
-                    };
-                    {
-                        let a = unsafe { *(witness.get_unchecked(149usize)) };
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(151usize)) };
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(150usize)) };
-                        let b = unsafe { *(witness.get_unchecked(155usize)) };
-                        a = a.mul(cs, &b);
-                        a = a.negated(cs);
-                        a
-                    };
-                    {
-                        let a = unsafe { *(witness.get_unchecked(150usize)) };
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(152usize)) };
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(20usize)) };
-                        let b = unsafe { *(witness.get_unchecked(155usize)) };
-                        a = a.mul(cs, &b);
-                        a = a.negated(cs);
-                        a
-                    };
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(124usize)) };
-                        let b = unsafe { *(witness.get_unchecked(155usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(125usize)) };
-                        let b = unsafe { *(witness.get_unchecked(155usize)) };
-                        a = a.mul(cs, &b);
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(2u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(20usize)) };
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(124usize)) };
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(125usize)) };
-                        let coeff =
-                            MersenneField::allocate_constant(cs, Mersenne31Field(2147483645u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(153usize)) };
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(21usize)) };
-                        let b = unsafe { *(witness.get_unchecked(155usize)) };
-                        a = a.mul(cs, &b);
-                        a = a.negated(cs);
-                        a
-                    };
-                    {
-                        let a = unsafe { *(witness.get_unchecked(21usize)) };
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(154usize)) };
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(137usize)) };
-                        let b = unsafe { *(witness.get_unchecked(155usize)) };
-                        a = a.mul(cs, &b);
-                        a
-                    };
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(151usize)) };
-                        let b = unsafe { *(witness.get_unchecked(155usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(151usize)) };
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(156usize)) };
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(138usize)) };
-                        let b = unsafe { *(witness.get_unchecked(155usize)) };
-                        a = a.mul(cs, &b);
-                        a
-                    };
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(152usize)) };
-                        let b = unsafe { *(witness.get_unchecked(155usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(152usize)) };
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(157usize)) };
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(147usize)) };
-                        let b = unsafe { *(witness.get_unchecked(155usize)) };
-                        a = a.mul(cs, &b);
-                        a
-                    };
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(4usize)) };
-                        let b = unsafe { *(witness.get_unchecked(147usize)) };
-                        a = a.mul(cs, &b);
-                        a
-                    };
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(5usize)) };
-                        let b = unsafe { *(witness.get_unchecked(147usize)) };
-                        a = a.mul(cs, &b);
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(256u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(147usize)) };
-                        let b = unsafe { *(witness.get_unchecked(151usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(151usize)) };
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(158usize)) };
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(97usize)) };
-                        let b = unsafe { *(witness.get_unchecked(147usize)) };
-                        a = a.mul(cs, &b);
-                        a
-                    };
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(147usize)) };
-                        let b = unsafe { *(witness.get_unchecked(152usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(152usize)) };
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(159usize)) };
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(46usize)) };
-                        let b = unsafe { *(witness.get_unchecked(124usize)) };
-                        a = a.mul(cs, &b);
-                        a = a.negated(cs);
-                        a
-                    };
-                    {
-                        let a = unsafe { *(witness.get_unchecked(46usize)) };
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(46usize)) };
-                        let b = unsafe { *(witness.get_unchecked(125usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(30usize)) };
+                        let b = unsafe { *(witness.get_unchecked(93usize)) };
                         a = a.mul(cs, &b);
                         a
                     };
@@ -2193,7 +2152,7 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
             let contribution = {
                 let individual_term = {
                     let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(94usize)) };
+                        let mut a = unsafe { *(memory.get_unchecked(9usize)) };
                         let b = unsafe { *(memory.get_unchecked(27usize)) };
                         a = a.mul(cs, &b);
                         a
@@ -2213,24 +2172,20 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
             let contribution = {
                 let individual_term = {
                     let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(33usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(55usize)) };
                         let b = unsafe { *(memory.get_unchecked(27usize)) };
                         a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(134217728u32));
+                        a = a.mul_by_base(cs, &coeff);
                         a
                     };
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(87usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(57usize)) };
                         let b = unsafe { *(memory.get_unchecked(27usize)) };
                         a = a.mul(cs, &b);
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(2u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(91usize)) };
-                        let b = unsafe { *(memory.get_unchecked(27usize)) };
-                        a = a.mul(cs, &b);
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(32u32));
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(2013265919u32));
                         a = a.mul_by_base(cs, &coeff);
                         individual_term = individual_term.add(cs, &a);
                     }
@@ -2249,736 +2204,453 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
             let contribution = {
                 let individual_term = {
                     let mut individual_term = {
+                        let mut a = unsafe { *(witness.get_unchecked(13usize)) };
+                        let b = unsafe { *(witness.get_unchecked(93usize)) };
+                        a = a.mul(cs, &b);
+                        a = a.negated(cs);
+                        a
+                    };
+                    {
+                        let a = unsafe { *(witness.get_unchecked(13usize)) };
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let a = unsafe { *(witness.get_unchecked(121usize)) };
+                        individual_term = individual_term.sub(cs, &a);
+                    }
+                    individual_term
+                };
+                individual_term
+            };
+            accumulated_contribution =
+                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
+        }
+        {
+            let contribution = {
+                let individual_term = {
+                    let mut individual_term = {
+                        let mut a = unsafe { *(witness.get_unchecked(14usize)) };
+                        let b = unsafe { *(witness.get_unchecked(93usize)) };
+                        a = a.mul(cs, &b);
+                        a = a.negated(cs);
+                        a
+                    };
+                    {
+                        let a = unsafe { *(witness.get_unchecked(14usize)) };
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let a = unsafe { *(witness.get_unchecked(122usize)) };
+                        individual_term = individual_term.sub(cs, &a);
+                    }
+                    individual_term
+                };
+                individual_term
+            };
+            accumulated_contribution =
+                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
+        }
+        {
+            let contribution = {
+                let individual_term = {
+                    let mut individual_term = {
+                        let mut a = unsafe { *(witness.get_unchecked(5usize)) };
+                        let b = unsafe { *(witness.get_unchecked(26usize)) };
+                        a = a.mul(cs, &b);
+                        a
+                    };
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(5usize)) };
+                        let b = unsafe { *(witness.get_unchecked(29usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(5usize)) };
+                        let b = unsafe { *(witness.get_unchecked(36usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(6usize)) };
+                        let b = unsafe { *(witness.get_unchecked(26usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(256u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(6usize)) };
+                        let b = unsafe { *(witness.get_unchecked(29usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(256u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(6usize)) };
+                        let b = unsafe { *(witness.get_unchecked(36usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(256u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(7usize)) };
+                        let b = unsafe { *(witness.get_unchecked(27usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(9usize)) };
+                        let b = unsafe { *(witness.get_unchecked(26usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.sub(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(9usize)) };
+                        let b = unsafe { *(witness.get_unchecked(27usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.sub(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(9usize)) };
+                        let b = unsafe { *(witness.get_unchecked(29usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(9usize)) };
+                        let b = unsafe { *(witness.get_unchecked(31usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.sub(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(9usize)) };
+                        let b = unsafe { *(witness.get_unchecked(33usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.sub(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(9usize)) };
+                        let b = unsafe { *(witness.get_unchecked(34usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.sub(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(9usize)) };
+                        let b = unsafe { *(witness.get_unchecked(36usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(11usize)) };
+                        let b = unsafe { *(witness.get_unchecked(34usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
                         let mut a = unsafe { *(witness.get_unchecked(26usize)) };
-                        let b = unsafe { *(witness.get_unchecked(125usize)) };
+                        let b = unsafe { *(memory.get_unchecked(8usize)) };
                         a = a.mul(cs, &b);
-                        a = a.negated(cs);
-                        a
-                    };
-                    {
-                        let a = unsafe { *(witness.get_unchecked(26usize)) };
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let a = unsafe { *(witness.get_unchecked(160usize)) };
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
                         let mut a = unsafe { *(witness.get_unchecked(27usize)) };
-                        let b = unsafe { *(witness.get_unchecked(125usize)) };
+                        let b = unsafe { *(witness.get_unchecked(87usize)) };
                         a = a.mul(cs, &b);
-                        a = a.negated(cs);
-                        a
-                    };
-                    {
-                        let a = unsafe { *(witness.get_unchecked(27usize)) };
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let a = unsafe { *(witness.get_unchecked(161usize)) };
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(2usize)) };
-                        let b = unsafe { *(witness.get_unchecked(42usize)) };
-                        a = a.mul(cs, &b);
-                        a
-                    };
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(2usize)) };
-                        let b = unsafe { *(witness.get_unchecked(45usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(29usize)) };
+                        let b = unsafe { *(memory.get_unchecked(8usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.sub(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(2usize)) };
-                        let b = unsafe { *(witness.get_unchecked(50usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(31usize)) };
+                        let b = unsafe { *(witness.get_unchecked(87usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(2usize)) };
-                        let b = unsafe { *(witness.get_unchecked(54usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(3usize)) };
-                        let b = unsafe { *(witness.get_unchecked(42usize)) };
-                        a = a.mul(cs, &b);
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(256u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(3usize)) };
-                        let b = unsafe { *(witness.get_unchecked(45usize)) };
-                        a = a.mul(cs, &b);
-                        let coeff =
-                            MersenneField::allocate_constant(cs, Mersenne31Field(2147483391u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(3usize)) };
-                        let b = unsafe { *(witness.get_unchecked(50usize)) };
-                        a = a.mul(cs, &b);
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(256u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(3usize)) };
-                        let b = unsafe { *(witness.get_unchecked(54usize)) };
-                        a = a.mul(cs, &b);
-                        let coeff =
-                            MersenneField::allocate_constant(cs, Mersenne31Field(2147483391u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(4usize)) };
-                        let b = unsafe { *(witness.get_unchecked(42usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(4usize)) };
-                        let b = unsafe { *(witness.get_unchecked(45usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(4usize)) };
-                        let b = unsafe { *(witness.get_unchecked(47usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(4usize)) };
-                        let b = unsafe { *(witness.get_unchecked(54usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(5usize)) };
-                        let b = unsafe { *(witness.get_unchecked(42usize)) };
-                        a = a.mul(cs, &b);
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(256u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(5usize)) };
-                        let b = unsafe { *(witness.get_unchecked(45usize)) };
-                        a = a.mul(cs, &b);
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(256u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(5usize)) };
-                        let b = unsafe { *(witness.get_unchecked(47usize)) };
-                        a = a.mul(cs, &b);
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(256u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(5usize)) };
-                        let b = unsafe { *(witness.get_unchecked(54usize)) };
-                        a = a.mul(cs, &b);
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(256u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(20usize)) };
-                        let b = unsafe { *(witness.get_unchecked(42usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(20usize)) };
-                        let b = unsafe { *(witness.get_unchecked(43usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(20usize)) };
-                        let b = unsafe { *(witness.get_unchecked(45usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(20usize)) };
-                        let b = unsafe { *(witness.get_unchecked(48usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(20usize)) };
-                        let b = unsafe { *(witness.get_unchecked(50usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(20usize)) };
-                        let b = unsafe { *(witness.get_unchecked(51usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(20usize)) };
-                        let b = unsafe { *(witness.get_unchecked(54usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(22usize)) };
-                        let b = unsafe { *(witness.get_unchecked(47usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(22usize)) };
-                        let b = unsafe { *(witness.get_unchecked(51usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(24usize)) };
-                        let b = unsafe { *(witness.get_unchecked(47usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(43usize)) };
-                        let b = unsafe { *(witness.get_unchecked(82usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(43usize)) };
-                        let b = unsafe { *(witness.get_unchecked(120usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(48usize)) };
-                        let b = unsafe { *(witness.get_unchecked(120usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(48usize)) };
-                        let b = unsafe { *(witness.get_unchecked(142usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(50usize)) };
-                        let b = unsafe { *(witness.get_unchecked(120usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(51usize)) };
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(65535u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(61usize)) };
-                        let coeff =
-                            MersenneField::allocate_constant(cs, Mersenne31Field(2147418111u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(21usize)) };
-                        let b = unsafe { *(witness.get_unchecked(42usize)) };
-                        a = a.mul(cs, &b);
-                        a = a.negated(cs);
-                        a
-                    };
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(21usize)) };
-                        let b = unsafe { *(witness.get_unchecked(43usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(21usize)) };
-                        let b = unsafe { *(witness.get_unchecked(45usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(21usize)) };
-                        let b = unsafe { *(witness.get_unchecked(48usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(21usize)) };
-                        let b = unsafe { *(witness.get_unchecked(50usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(21usize)) };
-                        let b = unsafe { *(witness.get_unchecked(51usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(21usize)) };
-                        let b = unsafe { *(witness.get_unchecked(54usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(23usize)) };
-                        let b = unsafe { *(witness.get_unchecked(47usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(23usize)) };
-                        let b = unsafe { *(witness.get_unchecked(51usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(25usize)) };
-                        let b = unsafe { *(witness.get_unchecked(47usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(42usize)) };
-                        let b = unsafe { *(witness.get_unchecked(94usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(42usize)) };
-                        let b = unsafe { *(witness.get_unchecked(97usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(43usize)) };
-                        let b = unsafe { *(witness.get_unchecked(79usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(43usize)) };
-                        let b = unsafe { *(witness.get_unchecked(121usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(45usize)) };
-                        let b = unsafe { *(witness.get_unchecked(94usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(45usize)) };
-                        let b = unsafe { *(witness.get_unchecked(97usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(47usize)) };
-                        let b = unsafe { *(witness.get_unchecked(97usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(48usize)) };
-                        let b = unsafe { *(witness.get_unchecked(121usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(48usize)) };
-                        let b = unsafe { *(witness.get_unchecked(143usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(50usize)) };
-                        let b = unsafe { *(witness.get_unchecked(94usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(50usize)) };
-                        let b = unsafe { *(witness.get_unchecked(121usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(54usize)) };
-                        let b = unsafe { *(witness.get_unchecked(94usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(54usize)) };
-                        let b = unsafe { *(witness.get_unchecked(97usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(51usize)) };
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(32767u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(58usize)) };
-                        let coeff =
-                            MersenneField::allocate_constant(cs, Mersenne31Field(2147418111u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(61usize)) };
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(22usize)) };
-                        let b = unsafe { *(witness.get_unchecked(45usize)) };
-                        a = a.mul(cs, &b);
-                        a = a.negated(cs);
-                        a
-                    };
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(45usize)) };
-                        let b = unsafe { *(witness.get_unchecked(82usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(45usize)) };
-                        let b = unsafe { *(witness.get_unchecked(120usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(62usize)) };
-                        let coeff =
-                            MersenneField::allocate_constant(cs, Mersenne31Field(2147418111u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(23usize)) };
-                        let b = unsafe { *(witness.get_unchecked(45usize)) };
-                        a = a.mul(cs, &b);
-                        a = a.negated(cs);
-                        a
-                    };
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(45usize)) };
-                        let b = unsafe { *(witness.get_unchecked(79usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(45usize)) };
-                        let b = unsafe { *(witness.get_unchecked(121usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(60usize)) };
-                        let coeff =
-                            MersenneField::allocate_constant(cs, Mersenne31Field(2147418111u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(62usize)) };
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(4usize)) };
-                        let b = unsafe { *(witness.get_unchecked(47usize)) };
-                        a = a.mul(cs, &b);
-                        a
-                    };
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(5usize)) };
-                        let b = unsafe { *(witness.get_unchecked(47usize)) };
-                        a = a.mul(cs, &b);
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(256u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(20usize)) };
-                        let b = unsafe { *(witness.get_unchecked(45usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(162usize)) };
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(21usize)) };
-                        let b = unsafe { *(witness.get_unchecked(45usize)) };
-                        a = a.mul(cs, &b);
-                        a
-                    };
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(47usize)) };
-                        let b = unsafe { *(witness.get_unchecked(97usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(163usize)) };
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(63usize)) };
-                        let b = unsafe { *(witness.get_unchecked(162usize)) };
-                        a = a.mul(cs, &b);
-                        a
-                    };
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(162usize)) };
-                        let b = unsafe { *(witness.get_unchecked(164usize)) };
-                        a = a.mul(cs, &b);
-                        a
-                    };
-                    {
-                        let a = unsafe { *(witness.get_unchecked(63usize)) };
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    let constant_term =
-                        MersenneField::allocate_constant(cs, Mersenne31Field(2147483646u32));
-                    individual_term = individual_term.add_base(cs, &constant_term);
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(64usize)) };
-                        let b = unsafe { *(witness.get_unchecked(163usize)) };
-                        a = a.mul(cs, &b);
-                        a
-                    };
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(163usize)) };
-                        let b = unsafe { *(witness.get_unchecked(165usize)) };
-                        a = a.mul(cs, &b);
-                        a
-                    };
-                    {
-                        let a = unsafe { *(witness.get_unchecked(64usize)) };
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    let constant_term =
-                        MersenneField::allocate_constant(cs, Mersenne31Field(2147483646u32));
-                    individual_term = individual_term.add_base(cs, &constant_term);
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(63usize)) };
-                        let b = unsafe { *(witness.get_unchecked(64usize)) };
-                        a = a.mul(cs, &b);
-                        a
-                    };
-                    {
-                        let a = unsafe { *(witness.get_unchecked(59usize)) };
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(2usize)) };
-                        let b = unsafe { *(witness.get_unchecked(44usize)) };
-                        a = a.mul(cs, &b);
-                        a
-                    };
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(4usize)) };
-                        let b = unsafe { *(witness.get_unchecked(53usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(20usize)) };
-                        let b = unsafe { *(witness.get_unchecked(48usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(20usize)) };
-                        let b = unsafe { *(witness.get_unchecked(50usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(22usize)) };
-                        let b = unsafe { *(witness.get_unchecked(45usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(31usize)) };
+                        let b = unsafe { *(witness.get_unchecked(103usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
                         let mut a = unsafe { *(witness.get_unchecked(33usize)) };
-                        let b = unsafe { *(witness.get_unchecked(46usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(46usize)) };
                         let b = unsafe { *(witness.get_unchecked(87usize)) };
                         a = a.mul(cs, &b);
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(2u32));
-                        a = a.mul_by_base(cs, &coeff);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(46usize)) };
-                        let b = unsafe { *(witness.get_unchecked(91usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(33usize)) };
+                        let b = unsafe { *(memory.get_unchecked(8usize)) };
                         a = a.mul(cs, &b);
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(32u32));
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(36usize)) };
+                        let b = unsafe { *(memory.get_unchecked(8usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.sub(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(34usize)) };
+                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(65535u32));
                         a = a.mul_by_base(cs, &coeff);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let a = unsafe { *(witness.get_unchecked(100usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(43usize)) };
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(2147418111u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    individual_term
+                };
+                individual_term
+            };
+            accumulated_contribution =
+                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
+        }
+        {
+            let contribution = {
+                let individual_term = {
+                    let mut individual_term = {
+                        let mut a = unsafe { *(witness.get_unchecked(10usize)) };
+                        let b = unsafe { *(witness.get_unchecked(26usize)) };
+                        a = a.mul(cs, &b);
+                        a = a.negated(cs);
+                        a
+                    };
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(10usize)) };
+                        let b = unsafe { *(witness.get_unchecked(27usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.sub(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(10usize)) };
+                        let b = unsafe { *(witness.get_unchecked(29usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(10usize)) };
+                        let b = unsafe { *(witness.get_unchecked(31usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.sub(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(10usize)) };
+                        let b = unsafe { *(witness.get_unchecked(33usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.sub(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(10usize)) };
+                        let b = unsafe { *(witness.get_unchecked(34usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.sub(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(10usize)) };
+                        let b = unsafe { *(witness.get_unchecked(36usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(12usize)) };
+                        let b = unsafe { *(witness.get_unchecked(34usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(26usize)) };
+                        let b = unsafe { *(witness.get_unchecked(64usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(26usize)) };
+                        let b = unsafe { *(memory.get_unchecked(9usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(27usize)) };
+                        let b = unsafe { *(witness.get_unchecked(51usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(27usize)) };
+                        let b = unsafe { *(witness.get_unchecked(88usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(29usize)) };
+                        let b = unsafe { *(witness.get_unchecked(64usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(29usize)) };
+                        let b = unsafe { *(memory.get_unchecked(9usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.sub(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(31usize)) };
+                        let b = unsafe { *(witness.get_unchecked(88usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(31usize)) };
+                        let b = unsafe { *(witness.get_unchecked(104usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(33usize)) };
+                        let b = unsafe { *(witness.get_unchecked(88usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(33usize)) };
+                        let b = unsafe { *(memory.get_unchecked(9usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(36usize)) };
+                        let b = unsafe { *(witness.get_unchecked(64usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(36usize)) };
+                        let b = unsafe { *(memory.get_unchecked(9usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.sub(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(34usize)) };
+                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(32767u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(40usize)) };
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(2147418111u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let a = unsafe { *(witness.get_unchecked(43usize)) };
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    individual_term
+                };
+                individual_term
+            };
+            accumulated_contribution =
+                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
+        }
+        {
+            let contribution = {
+                let individual_term = {
+                    let mut individual_term = {
+                        let mut a = unsafe { *(witness.get_unchecked(7usize)) };
+                        let b = unsafe { *(witness.get_unchecked(29usize)) };
+                        a = a.mul(cs, &b);
+                        a
+                    };
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(11usize)) };
+                        let b = unsafe { *(witness.get_unchecked(29usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.sub(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(29usize)) };
+                        let b = unsafe { *(witness.get_unchecked(87usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(44usize)) };
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(2147418111u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    individual_term
+                };
+                individual_term
+            };
+            accumulated_contribution =
+                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
+        }
+        {
+            let contribution = {
+                let individual_term = {
+                    let mut individual_term = {
+                        let mut a = unsafe { *(witness.get_unchecked(12usize)) };
+                        let b = unsafe { *(witness.get_unchecked(29usize)) };
+                        a = a.mul(cs, &b);
+                        a = a.negated(cs);
+                        a
+                    };
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(29usize)) };
+                        let b = unsafe { *(witness.get_unchecked(51usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(29usize)) };
+                        let b = unsafe { *(witness.get_unchecked(88usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(42usize)) };
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(2147418111u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let a = unsafe { *(witness.get_unchecked(44usize)) };
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    individual_term
+                };
+                individual_term
+            };
+            accumulated_contribution =
+                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
+        }
+        {
+            let contribution = {
+                let individual_term = {
+                    let mut individual_term = {
+                        let mut a = unsafe { *(witness.get_unchecked(9usize)) };
+                        let b = unsafe { *(witness.get_unchecked(29usize)) };
+                        a = a.mul(cs, &b);
+                        a
+                    };
+                    {
+                        let a = unsafe { *(witness.get_unchecked(123usize)) };
                         individual_term = individual_term.sub(cs, &a);
                     }
                     individual_term
@@ -2992,43 +2664,176 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
             let contribution = {
                 let individual_term = {
                     let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(4usize)) };
-                        let b = unsafe { *(witness.get_unchecked(44usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(10usize)) };
+                        let b = unsafe { *(witness.get_unchecked(29usize)) };
                         a = a.mul(cs, &b);
                         a
                     };
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(45usize)) };
-                        let b = unsafe { *(witness.get_unchecked(124usize)) };
+                        let a = unsafe { *(witness.get_unchecked(124usize)) };
+                        individual_term = individual_term.sub(cs, &a);
+                    }
+                    individual_term
+                };
+                individual_term
+            };
+            accumulated_contribution =
+                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
+        }
+        {
+            let contribution = {
+                let individual_term = {
+                    let mut individual_term = {
+                        let mut a = unsafe { *(witness.get_unchecked(123usize)) };
+                        let b = unsafe { *(witness.get_unchecked(125usize)) };
+                        a = a.mul(cs, &b);
+                        a
+                    };
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(124usize)) };
+                        let b = unsafe { *(witness.get_unchecked(125usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(46usize)) };
+                        let a = unsafe { *(witness.get_unchecked(41usize)) };
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    let constant_term =
+                        MersenneField::allocate_constant(cs, Mersenne31Field(2147483646u32));
+                    individual_term = individual_term.add_base(cs, &constant_term);
+                    individual_term
+                };
+                individual_term
+            };
+            accumulated_contribution =
+                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
+        }
+        {
+            let contribution = {
+                let individual_term = {
+                    let mut individual_term = {
+                        let mut a = unsafe { *(witness.get_unchecked(41usize)) };
+                        let b = unsafe { *(witness.get_unchecked(123usize)) };
+                        a = a.mul(cs, &b);
+                        a
+                    };
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(41usize)) };
                         let b = unsafe { *(witness.get_unchecked(124usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
                     }
+                    individual_term
+                };
+                individual_term
+            };
+            accumulated_contribution =
+                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
+        }
+        {
+            let contribution = {
+                let individual_term = {
+                    let mut individual_term = {
+                        let mut a = unsafe { *(witness.get_unchecked(3usize)) };
+                        let b = unsafe { *(witness.get_unchecked(28usize)) };
+                        a = a.mul(cs, &b);
+                        a
+                    };
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(48usize)) };
-                        let b = unsafe { *(witness.get_unchecked(124usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(5usize)) };
+                        let b = unsafe { *(witness.get_unchecked(35usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(50usize)) };
-                        let b = unsafe { *(witness.get_unchecked(124usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(9usize)) };
+                        let b = unsafe { *(witness.get_unchecked(31usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(53usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(9usize)) };
+                        let b = unsafe { *(witness.get_unchecked(33usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(11usize)) };
+                        let b = unsafe { *(witness.get_unchecked(29usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(30usize)) };
+                        let b = unsafe { *(witness.get_unchecked(55usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(134217728u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(30usize)) };
+                        let b = unsafe { *(witness.get_unchecked(57usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(2013265919u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let a = unsafe { *(witness.get_unchecked(67usize)) };
+                        individual_term = individual_term.sub(cs, &a);
+                    }
+                    individual_term
+                };
+                individual_term
+            };
+            accumulated_contribution =
+                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
+        }
+        {
+            let contribution = {
+                let individual_term = {
+                    let mut individual_term = {
+                        let mut a = unsafe { *(witness.get_unchecked(5usize)) };
+                        let b = unsafe { *(witness.get_unchecked(28usize)) };
+                        a = a.mul(cs, &b);
+                        a
+                    };
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(29usize)) };
+                        let b = unsafe { *(witness.get_unchecked(92usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(30usize)) };
+                        let b = unsafe { *(witness.get_unchecked(92usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(31usize)) };
+                        let b = unsafe { *(witness.get_unchecked(92usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(33usize)) };
+                        let b = unsafe { *(witness.get_unchecked(92usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(35usize)) };
                         let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(31u32));
                         a = a.mul_by_base(cs, &coeff);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let a = unsafe { *(witness.get_unchecked(101usize)) };
+                        let a = unsafe { *(witness.get_unchecked(68usize)) };
                         individual_term = individual_term.sub(cs, &a);
                     }
                     individual_term
@@ -3042,43 +2847,43 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
             let contribution = {
                 let individual_term = {
                     let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(44usize)) };
-                        let b = unsafe { *(witness.get_unchecked(124usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(28usize)) };
+                        let b = unsafe { *(witness.get_unchecked(92usize)) };
                         a = a.mul(cs, &b);
                         a
                     };
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(45usize)) };
-                        let b = unsafe { *(witness.get_unchecked(125usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(29usize)) };
+                        let b = unsafe { *(witness.get_unchecked(93usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(46usize)) };
-                        let b = unsafe { *(witness.get_unchecked(125usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(30usize)) };
+                        let b = unsafe { *(witness.get_unchecked(93usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(48usize)) };
-                        let b = unsafe { *(witness.get_unchecked(125usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(31usize)) };
+                        let b = unsafe { *(witness.get_unchecked(93usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(50usize)) };
-                        let b = unsafe { *(witness.get_unchecked(125usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(33usize)) };
+                        let b = unsafe { *(witness.get_unchecked(93usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(53usize)) };
-                        let b = unsafe { *(witness.get_unchecked(124usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(35usize)) };
+                        let b = unsafe { *(witness.get_unchecked(92usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let a = unsafe { *(witness.get_unchecked(102usize)) };
+                        let a = unsafe { *(witness.get_unchecked(69usize)) };
                         individual_term = individual_term.sub(cs, &a);
                     }
                     individual_term
@@ -3092,43 +2897,43 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
             let contribution = {
                 let individual_term = {
                     let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(44usize)) };
-                        let b = unsafe { *(witness.get_unchecked(89usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(28usize)) };
+                        let b = unsafe { *(witness.get_unchecked(60usize)) };
                         a = a.mul(cs, &b);
                         a
                     };
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(45usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(29usize)) };
                         let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(17u32));
                         a = a.mul_by_base(cs, &coeff);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(46usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(30usize)) };
                         let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(25u32));
                         a = a.mul_by_base(cs, &coeff);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(48usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(31usize)) };
                         let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(17u32));
                         a = a.mul_by_base(cs, &coeff);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(50usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(33usize)) };
                         let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(18u32));
                         a = a.mul_by_base(cs, &coeff);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(53usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(35usize)) };
                         let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(7u32));
                         a = a.mul_by_base(cs, &coeff);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let a = unsafe { *(witness.get_unchecked(103usize)) };
+                        let a = unsafe { *(witness.get_unchecked(70usize)) };
                         individual_term = individual_term.sub(cs, &a);
                     }
                     individual_term
@@ -3142,81 +2947,89 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
             let contribution = {
                 let individual_term = {
                     let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(2usize)) };
-                        let b = unsafe { *(witness.get_unchecked(53usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(3usize)) };
+                        let b = unsafe { *(witness.get_unchecked(35usize)) };
                         a = a.mul(cs, &b);
                         let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(512u32));
                         a = a.mul_by_base(cs, &coeff);
                         a
                     };
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(3usize)) };
-                        let b = unsafe { *(witness.get_unchecked(44usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(4usize)) };
+                        let b = unsafe { *(witness.get_unchecked(28usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(21usize)) };
-                        let b = unsafe { *(witness.get_unchecked(50usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(10usize)) };
+                        let b = unsafe { *(witness.get_unchecked(33usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(45usize)) };
-                        let b = unsafe { *(witness.get_unchecked(58usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(29usize)) };
+                        let b = unsafe { *(witness.get_unchecked(40usize)) };
                         a = a.mul(cs, &b);
                         let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(8u32));
                         a = a.mul_by_base(cs, &coeff);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(45usize)) };
-                        let b = unsafe { *(witness.get_unchecked(59usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(29usize)) };
+                        let b = unsafe { *(witness.get_unchecked(41usize)) };
                         a = a.mul(cs, &b);
                         let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(16u32));
                         a = a.mul_by_base(cs, &coeff);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(45usize)) };
-                        let b = unsafe { *(witness.get_unchecked(89usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(29usize)) };
+                        let b = unsafe { *(witness.get_unchecked(60usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(45usize)) };
-                        let b = unsafe { *(witness.get_unchecked(95usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(29usize)) };
+                        let b = unsafe { *(witness.get_unchecked(62usize)) };
                         a = a.mul(cs, &b);
                         let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(32u32));
                         a = a.mul_by_base(cs, &coeff);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(45usize)) };
-                        let b = unsafe { *(witness.get_unchecked(98usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(29usize)) };
+                        let b = unsafe { *(witness.get_unchecked(65usize)) };
                         a = a.mul(cs, &b);
                         let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(64u32));
                         a = a.mul_by_base(cs, &coeff);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(53usize)) };
-                        let b = unsafe { *(witness.get_unchecked(56usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(35usize)) };
+                        let b = unsafe { *(witness.get_unchecked(37usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(8u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(35usize)) };
+                        let b = unsafe { *(witness.get_unchecked(38usize)) };
                         a = a.mul(cs, &b);
                         let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(4u32));
                         a = a.mul_by_base(cs, &coeff);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(53usize)) };
-                        let b = unsafe { *(witness.get_unchecked(124usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(35usize)) };
+                        let b = unsafe { *(witness.get_unchecked(92usize)) };
                         a = a.mul(cs, &b);
                         let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(16u32));
                         a = a.mul_by_base(cs, &coeff);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let a = unsafe { *(witness.get_unchecked(104usize)) };
+                        let a = unsafe { *(witness.get_unchecked(71usize)) };
                         individual_term = individual_term.sub(cs, &a);
                     }
                     individual_term
@@ -3230,39 +3043,39 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
             let contribution = {
                 let individual_term = {
                     let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(5usize)) };
-                        let b = unsafe { *(witness.get_unchecked(44usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(6usize)) };
+                        let b = unsafe { *(witness.get_unchecked(28usize)) };
                         a = a.mul(cs, &b);
                         a
                     };
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(45usize)) };
-                        let b = unsafe { *(witness.get_unchecked(155usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(29usize)) };
+                        let b = unsafe { *(witness.get_unchecked(116usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.sub(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(50usize)) };
-                        let b = unsafe { *(witness.get_unchecked(155usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(33usize)) };
+                        let b = unsafe { *(witness.get_unchecked(116usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.sub(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(53usize)) };
-                        let b = unsafe { *(witness.get_unchecked(125usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(35usize)) };
+                        let b = unsafe { *(witness.get_unchecked(93usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let a = unsafe { *(witness.get_unchecked(45usize)) };
+                        let a = unsafe { *(witness.get_unchecked(29usize)) };
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let a = unsafe { *(witness.get_unchecked(50usize)) };
+                        let a = unsafe { *(witness.get_unchecked(33usize)) };
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let a = unsafe { *(witness.get_unchecked(105usize)) };
+                        let a = unsafe { *(witness.get_unchecked(72usize)) };
                         individual_term = individual_term.sub(cs, &a);
                     }
                     individual_term
@@ -3276,35 +3089,35 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
             let contribution = {
                 let individual_term = {
                     let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(44usize)) };
-                        let b = unsafe { *(witness.get_unchecked(125usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(28usize)) };
+                        let b = unsafe { *(witness.get_unchecked(93usize)) };
                         a = a.mul(cs, &b);
                         a
                     };
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(45usize)) };
-                        let b = unsafe { *(witness.get_unchecked(126usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(29usize)) };
+                        let b = unsafe { *(witness.get_unchecked(94usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(50usize)) };
-                        let b = unsafe { *(witness.get_unchecked(126usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(33usize)) };
+                        let b = unsafe { *(witness.get_unchecked(94usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(53usize)) };
-                        let b = unsafe { *(witness.get_unchecked(155usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(35usize)) };
+                        let b = unsafe { *(witness.get_unchecked(116usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.sub(cs, &a);
                     }
                     {
-                        let a = unsafe { *(witness.get_unchecked(53usize)) };
+                        let a = unsafe { *(witness.get_unchecked(35usize)) };
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let a = unsafe { *(witness.get_unchecked(106usize)) };
+                        let a = unsafe { *(witness.get_unchecked(73usize)) };
                         individual_term = individual_term.sub(cs, &a);
                     }
                     individual_term
@@ -3318,31 +3131,31 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
             let contribution = {
                 let individual_term = {
                     let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(44usize)) };
-                        let b = unsafe { *(witness.get_unchecked(89usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(28usize)) };
+                        let b = unsafe { *(witness.get_unchecked(60usize)) };
                         a = a.mul(cs, &b);
                         a
                     };
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(45usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(29usize)) };
                         let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(22u32));
                         a = a.mul_by_base(cs, &coeff);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(50usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(33usize)) };
                         let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(23u32));
                         a = a.mul_by_base(cs, &coeff);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(53usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(35usize)) };
                         let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(37u32));
                         a = a.mul_by_base(cs, &coeff);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let a = unsafe { *(witness.get_unchecked(107usize)) };
+                        let a = unsafe { *(witness.get_unchecked(74usize)) };
                         individual_term = individual_term.sub(cs, &a);
                     }
                     individual_term
@@ -3356,28 +3169,22 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
             let contribution = {
                 let individual_term = {
                     let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(3usize)) };
-                        let b = unsafe { *(witness.get_unchecked(53usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(4usize)) };
+                        let b = unsafe { *(witness.get_unchecked(35usize)) };
                         a = a.mul(cs, &b);
                         let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(512u32));
                         a = a.mul_by_base(cs, &coeff);
                         a
                     };
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(20usize)) };
-                        let b = unsafe { *(witness.get_unchecked(50usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(9usize)) };
+                        let b = unsafe { *(witness.get_unchecked(33usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(44usize)) };
-                        let b = unsafe { *(witness.get_unchecked(94usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(44usize)) };
-                        let b = unsafe { *(witness.get_unchecked(96usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(28usize)) };
+                        let b = unsafe { *(witness.get_unchecked(63usize)) };
                         a = a.mul(cs, &b);
                         let coeff =
                             MersenneField::allocate_constant(cs, Mersenne31Field(2147483391u32));
@@ -3385,14 +3192,20 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(50usize)) };
-                        let b = unsafe { *(witness.get_unchecked(124usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(28usize)) };
+                        let b = unsafe { *(memory.get_unchecked(9usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(33usize)) };
+                        let b = unsafe { *(witness.get_unchecked(92usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.sub(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(50usize)) };
-                        let b = unsafe { *(witness.get_unchecked(125usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(33usize)) };
+                        let b = unsafe { *(witness.get_unchecked(93usize)) };
                         a = a.mul(cs, &b);
                         let coeff =
                             MersenneField::allocate_constant(cs, Mersenne31Field(2147483645u32));
@@ -3400,35 +3213,43 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(50usize)) };
-                        let b = unsafe { *(witness.get_unchecked(126usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(33usize)) };
+                        let b = unsafe { *(witness.get_unchecked(94usize)) };
                         a = a.mul(cs, &b);
                         let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(65536u32));
                         a = a.mul_by_base(cs, &coeff);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(53usize)) };
-                        let b = unsafe { *(witness.get_unchecked(56usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(35usize)) };
+                        let b = unsafe { *(witness.get_unchecked(37usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(8u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(35usize)) };
+                        let b = unsafe { *(witness.get_unchecked(38usize)) };
                         a = a.mul(cs, &b);
                         let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(4u32));
                         a = a.mul_by_base(cs, &coeff);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(53usize)) };
-                        let b = unsafe { *(witness.get_unchecked(124usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(35usize)) };
+                        let b = unsafe { *(witness.get_unchecked(92usize)) };
                         a = a.mul(cs, &b);
                         let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(16u32));
                         a = a.mul_by_base(cs, &coeff);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let a = unsafe { *(witness.get_unchecked(53usize)) };
+                        let a = unsafe { *(witness.get_unchecked(35usize)) };
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let a = unsafe { *(witness.get_unchecked(108usize)) };
+                        let a = unsafe { *(witness.get_unchecked(75usize)) };
                         individual_term = individual_term.sub(cs, &a);
                     }
                     individual_term
@@ -3442,14 +3263,14 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
             let contribution = {
                 let individual_term = {
                     let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(44usize)) };
-                        let b = unsafe { *(witness.get_unchecked(97usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(28usize)) };
+                        let b = unsafe { *(witness.get_unchecked(64usize)) };
                         a = a.mul(cs, &b);
                         a
                     };
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(44usize)) };
-                        let b = unsafe { *(witness.get_unchecked(99usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(28usize)) };
+                        let b = unsafe { *(witness.get_unchecked(66usize)) };
                         a = a.mul(cs, &b);
                         let coeff =
                             MersenneField::allocate_constant(cs, Mersenne31Field(2147483391u32));
@@ -3457,19 +3278,19 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(50usize)) };
-                        let b = unsafe { *(witness.get_unchecked(137usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(33usize)) };
+                        let b = unsafe { *(witness.get_unchecked(98usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(53usize)) };
-                        let b = unsafe { *(witness.get_unchecked(126usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(35usize)) };
+                        let b = unsafe { *(witness.get_unchecked(94usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let a = unsafe { *(witness.get_unchecked(109usize)) };
+                        let a = unsafe { *(witness.get_unchecked(76usize)) };
                         individual_term = individual_term.sub(cs, &a);
                     }
                     individual_term
@@ -3483,30 +3304,30 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
             let contribution = {
                 let individual_term = {
                     let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(44usize)) };
-                        let b = unsafe { *(witness.get_unchecked(155usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(28usize)) };
+                        let b = unsafe { *(witness.get_unchecked(116usize)) };
                         a = a.mul(cs, &b);
                         a = a.negated(cs);
                         a
                     };
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(50usize)) };
-                        let b = unsafe { *(witness.get_unchecked(138usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(33usize)) };
+                        let b = unsafe { *(witness.get_unchecked(99usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(53usize)) };
-                        let b = unsafe { *(witness.get_unchecked(137usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(35usize)) };
+                        let b = unsafe { *(witness.get_unchecked(98usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let a = unsafe { *(witness.get_unchecked(44usize)) };
+                        let a = unsafe { *(witness.get_unchecked(28usize)) };
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let a = unsafe { *(witness.get_unchecked(110usize)) };
+                        let a = unsafe { *(witness.get_unchecked(77usize)) };
                         individual_term = individual_term.sub(cs, &a);
                     }
                     individual_term
@@ -3520,25 +3341,25 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
             let contribution = {
                 let individual_term = {
                     let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(44usize)) };
-                        let b = unsafe { *(witness.get_unchecked(89usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(28usize)) };
+                        let b = unsafe { *(witness.get_unchecked(60usize)) };
                         a = a.mul(cs, &b);
                         a
                     };
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(50usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(33usize)) };
                         let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(24u32));
                         a = a.mul_by_base(cs, &coeff);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(53usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(35usize)) };
                         let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(37u32));
                         a = a.mul_by_base(cs, &coeff);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let a = unsafe { *(witness.get_unchecked(111usize)) };
+                        let a = unsafe { *(witness.get_unchecked(78usize)) };
                         individual_term = individual_term.sub(cs, &a);
                     }
                     individual_term
@@ -3552,30 +3373,30 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
             let contribution = {
                 let individual_term = {
                     let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(44usize)) };
-                        let b = unsafe { *(witness.get_unchecked(96usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(28usize)) };
+                        let b = unsafe { *(witness.get_unchecked(63usize)) };
                         a = a.mul(cs, &b);
                         a
                     };
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(53usize)) };
-                        let b = unsafe { *(witness.get_unchecked(56usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(35usize)) };
+                        let b = unsafe { *(witness.get_unchecked(37usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(8u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(35usize)) };
+                        let b = unsafe { *(witness.get_unchecked(38usize)) };
                         a = a.mul(cs, &b);
                         let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(4u32));
                         a = a.mul_by_base(cs, &coeff);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(53usize)) };
-                        let b = unsafe { *(witness.get_unchecked(94usize)) };
-                        a = a.mul(cs, &b);
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(512u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(53usize)) };
-                        let b = unsafe { *(witness.get_unchecked(96usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(35usize)) };
+                        let b = unsafe { *(witness.get_unchecked(63usize)) };
                         a = a.mul(cs, &b);
                         let coeff =
                             MersenneField::allocate_constant(cs, Mersenne31Field(2147352575u32));
@@ -3583,21 +3404,29 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(53usize)) };
-                        let b = unsafe { *(witness.get_unchecked(124usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(35usize)) };
+                        let b = unsafe { *(witness.get_unchecked(92usize)) };
                         a = a.mul(cs, &b);
                         let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(16u32));
                         a = a.mul_by_base(cs, &coeff);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(53usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(35usize)) };
+                        let b = unsafe { *(memory.get_unchecked(9usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(512u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(35usize)) };
                         let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(2u32));
                         a = a.mul_by_base(cs, &coeff);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let a = unsafe { *(witness.get_unchecked(112usize)) };
+                        let a = unsafe { *(witness.get_unchecked(79usize)) };
                         individual_term = individual_term.sub(cs, &a);
                     }
                     individual_term
@@ -3611,19 +3440,19 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
             let contribution = {
                 let individual_term = {
                     let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(44usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(28usize)) };
+                        let b = unsafe { *(witness.get_unchecked(66usize)) };
+                        a = a.mul(cs, &b);
+                        a
+                    };
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(35usize)) };
                         let b = unsafe { *(witness.get_unchecked(99usize)) };
                         a = a.mul(cs, &b);
-                        a
-                    };
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(53usize)) };
-                        let b = unsafe { *(witness.get_unchecked(138usize)) };
-                        a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let a = unsafe { *(witness.get_unchecked(113usize)) };
+                        let a = unsafe { *(witness.get_unchecked(80usize)) };
                         individual_term = individual_term.sub(cs, &a);
                     }
                     individual_term
@@ -3637,19 +3466,19 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
             let contribution = {
                 let individual_term = {
                     let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(44usize)) };
-                        let b = unsafe { *(witness.get_unchecked(126usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(28usize)) };
+                        let b = unsafe { *(witness.get_unchecked(94usize)) };
                         a = a.mul(cs, &b);
                         a
                     };
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(53usize)) };
-                        let b = unsafe { *(witness.get_unchecked(139usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(35usize)) };
+                        let b = unsafe { *(witness.get_unchecked(100usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let a = unsafe { *(witness.get_unchecked(114usize)) };
+                        let a = unsafe { *(witness.get_unchecked(81usize)) };
                         individual_term = individual_term.sub(cs, &a);
                     }
                     individual_term
@@ -3663,19 +3492,19 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
             let contribution = {
                 let individual_term = {
                     let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(44usize)) };
-                        let b = unsafe { *(witness.get_unchecked(89usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(28usize)) };
+                        let b = unsafe { *(witness.get_unchecked(60usize)) };
                         a = a.mul(cs, &b);
                         a
                     };
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(53usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(35usize)) };
                         let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(37u32));
                         a = a.mul_by_base(cs, &coeff);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let a = unsafe { *(witness.get_unchecked(115usize)) };
+                        let a = unsafe { *(witness.get_unchecked(82usize)) };
                         individual_term = individual_term.sub(cs, &a);
                     }
                     individual_term
@@ -3689,37 +3518,45 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
             let contribution = {
                 let individual_term = {
                     let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(53usize)) };
-                        let b = unsafe { *(witness.get_unchecked(56usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(35usize)) };
+                        let b = unsafe { *(witness.get_unchecked(37usize)) };
                         a = a.mul(cs, &b);
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(4u32));
+                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(8u32));
                         a = a.mul_by_base(cs, &coeff);
                         a
                     };
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(53usize)) };
-                        let b = unsafe { *(witness.get_unchecked(96usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(35usize)) };
+                        let b = unsafe { *(witness.get_unchecked(38usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(4u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(35usize)) };
+                        let b = unsafe { *(witness.get_unchecked(63usize)) };
                         a = a.mul(cs, &b);
                         let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(512u32));
                         a = a.mul_by_base(cs, &coeff);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(53usize)) };
-                        let b = unsafe { *(witness.get_unchecked(124usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(35usize)) };
+                        let b = unsafe { *(witness.get_unchecked(92usize)) };
                         a = a.mul(cs, &b);
                         let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(16u32));
                         a = a.mul_by_base(cs, &coeff);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(53usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(35usize)) };
                         let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(3u32));
                         a = a.mul_by_base(cs, &coeff);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let a = unsafe { *(witness.get_unchecked(116usize)) };
+                        let a = unsafe { *(witness.get_unchecked(83usize)) };
                         individual_term = individual_term.sub(cs, &a);
                     }
                     individual_term
@@ -3733,13 +3570,13 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
             let contribution = {
                 let individual_term = {
                     let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(53usize)) };
-                        let b = unsafe { *(witness.get_unchecked(140usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(35usize)) };
+                        let b = unsafe { *(witness.get_unchecked(101usize)) };
                         a = a.mul(cs, &b);
                         a
                     };
                     {
-                        let a = unsafe { *(witness.get_unchecked(117usize)) };
+                        let a = unsafe { *(witness.get_unchecked(84usize)) };
                         individual_term = individual_term.sub(cs, &a);
                     }
                     individual_term
@@ -3753,13 +3590,13 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
             let contribution = {
                 let individual_term = {
                     let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(53usize)) };
-                        let b = unsafe { *(witness.get_unchecked(141usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(35usize)) };
+                        let b = unsafe { *(witness.get_unchecked(102usize)) };
                         a = a.mul(cs, &b);
                         a
                     };
                     {
-                        let a = unsafe { *(witness.get_unchecked(118usize)) };
+                        let a = unsafe { *(witness.get_unchecked(85usize)) };
                         individual_term = individual_term.sub(cs, &a);
                     }
                     individual_term
@@ -3773,625 +3610,14 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
             let contribution = {
                 let individual_term = {
                     let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(2usize)) };
-                        let b = unsafe { *(witness.get_unchecked(52usize)) };
-                        a = a.mul(cs, &b);
-                        a
-                    };
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(3usize)) };
-                        let b = unsafe { *(witness.get_unchecked(52usize)) };
-                        a = a.mul(cs, &b);
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(256u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(4usize)) };
-                        let b = unsafe { *(witness.get_unchecked(47usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(5usize)) };
-                        let b = unsafe { *(witness.get_unchecked(47usize)) };
-                        a = a.mul(cs, &b);
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(256u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(6usize)) };
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(7usize)) };
-                        let coeff =
-                            MersenneField::allocate_constant(cs, Mersenne31Field(2147483391u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(47usize)) };
-                        let b = unsafe { *(witness.get_unchecked(97usize)) };
-                        a = a.mul(cs, &b);
-                        a
-                    };
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(52usize)) };
-                        let b = unsafe { *(witness.get_unchecked(94usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(8usize)) };
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(9usize)) };
-                        let coeff =
-                            MersenneField::allocate_constant(cs, Mersenne31Field(2147483391u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(4usize)) };
-                        let b = unsafe { *(witness.get_unchecked(52usize)) };
-                        a = a.mul(cs, &b);
-                        a
-                    };
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(5usize)) };
-                        let b = unsafe { *(witness.get_unchecked(52usize)) };
-                        a = a.mul(cs, &b);
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(256u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(20usize)) };
-                        let b = unsafe { *(witness.get_unchecked(47usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(10usize)) };
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(11usize)) };
-                        let coeff =
-                            MersenneField::allocate_constant(cs, Mersenne31Field(2147483391u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(21usize)) };
-                        let b = unsafe { *(witness.get_unchecked(47usize)) };
-                        a = a.mul(cs, &b);
-                        a
-                    };
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(52usize)) };
-                        let b = unsafe { *(witness.get_unchecked(97usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(12usize)) };
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(13usize)) };
-                        let coeff =
-                            MersenneField::allocate_constant(cs, Mersenne31Field(2147483391u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(22usize)) };
-                        let b = unsafe { *(witness.get_unchecked(47usize)) };
-                        a = a.mul(cs, &b);
-                        a
-                    };
-                    {
-                        let a = unsafe { *(witness.get_unchecked(166usize)) };
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(23usize)) };
-                        let b = unsafe { *(witness.get_unchecked(47usize)) };
-                        a = a.mul(cs, &b);
-                        a
-                    };
-                    {
-                        let a = unsafe { *(witness.get_unchecked(167usize)) };
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(2usize)) };
-                        let b = unsafe { *(witness.get_unchecked(47usize)) };
-                        a = a.mul(cs, &b);
-                        a
-                    };
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(3usize)) };
-                        let b = unsafe { *(witness.get_unchecked(47usize)) };
-                        a = a.mul(cs, &b);
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(256u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(20usize)) };
-                        let b = unsafe { *(witness.get_unchecked(52usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(168usize)) };
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(21usize)) };
-                        let b = unsafe { *(witness.get_unchecked(52usize)) };
-                        a = a.mul(cs, &b);
-                        a
-                    };
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(47usize)) };
-                        let b = unsafe { *(witness.get_unchecked(94usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(169usize)) };
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(22usize)) };
-                        let b = unsafe { *(witness.get_unchecked(52usize)) };
-                        a = a.mul(cs, &b);
-                        a
-                    };
-                    {
-                        let a = unsafe { *(witness.get_unchecked(170usize)) };
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(23usize)) };
-                        let b = unsafe { *(witness.get_unchecked(52usize)) };
-                        a = a.mul(cs, &b);
-                        a
-                    };
-                    {
-                        let a = unsafe { *(witness.get_unchecked(171usize)) };
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(6usize)) };
-                        let b = unsafe { *(witness.get_unchecked(10usize)) };
-                        a = a.mul(cs, &b);
-                        a
-                    };
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(6usize)) };
-                        let b = unsafe { *(witness.get_unchecked(11usize)) };
-                        a = a.mul(cs, &b);
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(256u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(7usize)) };
-                        let b = unsafe { *(witness.get_unchecked(10usize)) };
-                        a = a.mul(cs, &b);
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(256u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(14usize)) };
-                        let coeff =
-                            MersenneField::allocate_constant(cs, Mersenne31Field(2147418111u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(65usize)) };
-                        let coeff =
-                            MersenneField::allocate_constant(cs, Mersenne31Field(2130706431u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(166usize)) };
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(168usize)) };
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(6usize)) };
-                        let b = unsafe { *(witness.get_unchecked(12usize)) };
-                        a = a.mul(cs, &b);
-                        a
-                    };
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(6usize)) };
-                        let b = unsafe { *(witness.get_unchecked(13usize)) };
-                        a = a.mul(cs, &b);
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(256u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(7usize)) };
-                        let b = unsafe { *(witness.get_unchecked(11usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(7usize)) };
-                        let b = unsafe { *(witness.get_unchecked(12usize)) };
-                        a = a.mul(cs, &b);
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(256u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(8usize)) };
-                        let b = unsafe { *(witness.get_unchecked(10usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(8usize)) };
-                        let b = unsafe { *(witness.get_unchecked(11usize)) };
-                        a = a.mul(cs, &b);
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(256u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(9usize)) };
-                        let b = unsafe { *(witness.get_unchecked(10usize)) };
-                        a = a.mul(cs, &b);
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(256u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(14usize)) };
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(15usize)) };
-                        let coeff =
-                            MersenneField::allocate_constant(cs, Mersenne31Field(2147418111u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(65usize)) };
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(256u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(66usize)) };
-                        let coeff =
-                            MersenneField::allocate_constant(cs, Mersenne31Field(2130706431u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(67usize)) };
-                        let coeff =
-                            MersenneField::allocate_constant(cs, Mersenne31Field(2113929215u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(167usize)) };
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(169usize)) };
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(7usize)) };
-                        let b = unsafe { *(witness.get_unchecked(13usize)) };
-                        a = a.mul(cs, &b);
-                        a
-                    };
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(8usize)) };
-                        let b = unsafe { *(witness.get_unchecked(12usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(8usize)) };
-                        let b = unsafe { *(witness.get_unchecked(13usize)) };
-                        a = a.mul(cs, &b);
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(256u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(9usize)) };
-                        let b = unsafe { *(witness.get_unchecked(11usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(9usize)) };
-                        let b = unsafe { *(witness.get_unchecked(12usize)) };
-                        a = a.mul(cs, &b);
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(256u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(15usize)) };
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(16usize)) };
-                        let coeff =
-                            MersenneField::allocate_constant(cs, Mersenne31Field(2147418111u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(66usize)) };
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(256u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(67usize)) };
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(512u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(68usize)) };
-                        let coeff =
-                            MersenneField::allocate_constant(cs, Mersenne31Field(2130706431u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(69usize)) };
-                        let coeff =
-                            MersenneField::allocate_constant(cs, Mersenne31Field(2113929215u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(70usize)) };
-                        let coeff =
-                            MersenneField::allocate_constant(cs, Mersenne31Field(2080374783u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(170usize)) };
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(9usize)) };
-                        let b = unsafe { *(witness.get_unchecked(13usize)) };
-                        a = a.mul(cs, &b);
-                        a
-                    };
-                    {
-                        let a = unsafe { *(witness.get_unchecked(16usize)) };
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(17usize)) };
-                        let coeff =
-                            MersenneField::allocate_constant(cs, Mersenne31Field(2147418111u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(68usize)) };
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(256u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(69usize)) };
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(512u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(70usize)) };
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(1024u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(71usize)) };
-                        let coeff =
-                            MersenneField::allocate_constant(cs, Mersenne31Field(2130706431u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(72usize)) };
-                        let coeff =
-                            MersenneField::allocate_constant(cs, Mersenne31Field(2113929215u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(73usize)) };
-                        let coeff =
-                            MersenneField::allocate_constant(cs, Mersenne31Field(2080374783u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(171usize)) };
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(50usize)) };
-                        let b = unsafe { *(witness.get_unchecked(55usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(33usize)) };
+                        let b = unsafe { *(witness.get_unchecked(37usize)) };
                         a = a.mul(cs, &b);
                         a = a.negated(cs);
                         a
                     };
                     {
-                        let a = unsafe { *(witness.get_unchecked(50usize)) };
+                        let a = unsafe { *(witness.get_unchecked(33usize)) };
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
@@ -4412,27 +3638,49 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
             let contribution = {
                 let individual_term = {
                     let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(33usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(18usize)) };
                         let b = unsafe { *(memory.get_unchecked(15usize)) };
                         a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(2147481599u32));
+                        a = a.mul_by_base(cs, &coeff);
                         a
                     };
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(87usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(55usize)) };
                         let b = unsafe { *(memory.get_unchecked(15usize)) };
                         a = a.mul(cs, &b);
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(2u32));
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(134217728u32));
                         a = a.mul_by_base(cs, &coeff);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(153usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(57usize)) };
+                        let b = unsafe { *(memory.get_unchecked(15usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(2013265919u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(61usize)) };
+                        let b = unsafe { *(memory.get_unchecked(15usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(2147483615u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(114usize)) };
                         let b = unsafe { *(memory.get_unchecked(15usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.sub(cs, &a);
                     }
                     {
-                        let a = unsafe { *(witness.get_unchecked(153usize)) };
+                        let a = unsafe { *(witness.get_unchecked(114usize)) };
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
@@ -4450,14 +3698,14 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
             let contribution = {
                 let individual_term = {
                     let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(154usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(115usize)) };
                         let b = unsafe { *(memory.get_unchecked(15usize)) };
                         a = a.mul(cs, &b);
                         a = a.negated(cs);
                         a
                     };
                     {
-                        let a = unsafe { *(witness.get_unchecked(154usize)) };
+                        let a = unsafe { *(witness.get_unchecked(115usize)) };
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
@@ -4475,19 +3723,19 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
             let contribution = {
                 let individual_term = {
                     let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(122usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(89usize)) };
                         let b = unsafe { *(memory.get_unchecked(15usize)) };
                         a = a.mul(cs, &b);
                         a
                     };
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(151usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(112usize)) };
                         let b = unsafe { *(memory.get_unchecked(15usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.sub(cs, &a);
                     }
                     {
-                        let a = unsafe { *(witness.get_unchecked(151usize)) };
+                        let a = unsafe { *(witness.get_unchecked(112usize)) };
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
@@ -4505,19 +3753,19 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
             let contribution = {
                 let individual_term = {
                     let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(123usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(90usize)) };
                         let b = unsafe { *(memory.get_unchecked(15usize)) };
                         a = a.mul(cs, &b);
                         a
                     };
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(152usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(113usize)) };
                         let b = unsafe { *(memory.get_unchecked(15usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.sub(cs, &a);
                     }
                     {
-                        let a = unsafe { *(witness.get_unchecked(152usize)) };
+                        let a = unsafe { *(witness.get_unchecked(113usize)) };
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
@@ -4535,231 +3783,99 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
             let contribution = {
                 let individual_term = {
                     let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(18usize)) };
-                        let b = unsafe { *(witness.get_unchecked(48usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(8usize)) };
+                        let b = unsafe { *(witness.get_unchecked(31usize)) };
                         a = a.mul(cs, &b);
                         a
                     };
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(20usize)) };
-                        let b = unsafe { *(witness.get_unchecked(42usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(9usize)) };
+                        let b = unsafe { *(witness.get_unchecked(26usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(20usize)) };
-                        let b = unsafe { *(witness.get_unchecked(43usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(9usize)) };
+                        let b = unsafe { *(witness.get_unchecked(27usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(20usize)) };
-                        let b = unsafe { *(witness.get_unchecked(51usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(9usize)) };
+                        let b = unsafe { *(witness.get_unchecked(34usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(20usize)) };
-                        let b = unsafe { *(witness.get_unchecked(54usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(9usize)) };
+                        let b = unsafe { *(witness.get_unchecked(36usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(44usize)) };
-                        let b = unsafe { *(witness.get_unchecked(124usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(28usize)) };
+                        let b = unsafe { *(witness.get_unchecked(92usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(44usize)) };
-                        let b = unsafe { *(witness.get_unchecked(125usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(28usize)) };
+                        let b = unsafe { *(witness.get_unchecked(93usize)) };
                         a = a.mul(cs, &b);
                         let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(256u32));
                         a = a.mul_by_base(cs, &coeff);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(45usize)) };
-                        let b = unsafe { *(witness.get_unchecked(126usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(29usize)) };
+                        let b = unsafe { *(witness.get_unchecked(94usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(46usize)) };
-                        let b = unsafe { *(witness.get_unchecked(160usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(47usize)) };
-                        let b = unsafe { *(witness.get_unchecked(132usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(49usize)) };
-                        let b = unsafe { *(witness.get_unchecked(120usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(50usize)) };
-                        let b = unsafe { *(witness.get_unchecked(156usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(52usize)) };
-                        let b = unsafe { *(witness.get_unchecked(127usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(53usize)) };
-                        let b = unsafe { *(witness.get_unchecked(125usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(53usize)) };
-                        let b = unsafe { *(witness.get_unchecked(126usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(53usize)) };
-                        let b = unsafe { *(witness.get_unchecked(138usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(53usize)) };
-                        let b = unsafe { *(witness.get_unchecked(140usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(172usize)) };
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(19usize)) };
-                        let b = unsafe { *(witness.get_unchecked(48usize)) };
-                        a = a.mul(cs, &b);
-                        a
-                    };
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(21usize)) };
-                        let b = unsafe { *(witness.get_unchecked(42usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(21usize)) };
-                        let b = unsafe { *(witness.get_unchecked(43usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(21usize)) };
-                        let b = unsafe { *(witness.get_unchecked(51usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(21usize)) };
-                        let b = unsafe { *(witness.get_unchecked(54usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(44usize)) };
-                        let b = unsafe { *(witness.get_unchecked(126usize)) };
-                        a = a.mul(cs, &b);
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(256u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(44usize)) };
-                        let b = unsafe { *(witness.get_unchecked(155usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(46usize)) };
-                        let b = unsafe { *(witness.get_unchecked(161usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(47usize)) };
-                        let b = unsafe { *(witness.get_unchecked(133usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(49usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(30usize)) };
                         let b = unsafe { *(witness.get_unchecked(121usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(50usize)) };
-                        let b = unsafe { *(witness.get_unchecked(157usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(32usize)) };
+                        let b = unsafe { *(witness.get_unchecked(87usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(52usize)) };
-                        let b = unsafe { *(witness.get_unchecked(128usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(33usize)) };
+                        let b = unsafe { *(witness.get_unchecked(117usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(53usize)) };
-                        let b = unsafe { *(witness.get_unchecked(137usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(35usize)) };
+                        let b = unsafe { *(witness.get_unchecked(93usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(53usize)) };
-                        let b = unsafe { *(witness.get_unchecked(139usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(35usize)) };
+                        let b = unsafe { *(witness.get_unchecked(94usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(53usize)) };
-                        let b = unsafe { *(witness.get_unchecked(141usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(35usize)) };
+                        let b = unsafe { *(witness.get_unchecked(99usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(53usize)) };
-                        let b = unsafe { *(witness.get_unchecked(155usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(35usize)) };
+                        let b = unsafe { *(witness.get_unchecked(101usize)) };
                         a = a.mul(cs, &b);
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(44usize)) };
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let a = unsafe { *(witness.get_unchecked(53usize)) };
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(173usize)) };
+                        let a = unsafe { *(witness.get_unchecked(126usize)) };
                         individual_term = individual_term.sub(cs, &a);
                     }
                     individual_term
@@ -4773,8 +3889,140 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
             let contribution = {
                 let individual_term = {
                     let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(50usize)) };
-                        let b = unsafe { *(witness.get_unchecked(55usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(7usize)) };
+                        let b = unsafe { *(witness.get_unchecked(31usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(32768u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        a
+                    };
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(8usize)) };
+                        let b = unsafe { *(witness.get_unchecked(31usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(2147450879u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(10usize)) };
+                        let b = unsafe { *(witness.get_unchecked(26usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(10usize)) };
+                        let b = unsafe { *(witness.get_unchecked(27usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(10usize)) };
+                        let b = unsafe { *(witness.get_unchecked(34usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(10usize)) };
+                        let b = unsafe { *(witness.get_unchecked(36usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(28usize)) };
+                        let b = unsafe { *(witness.get_unchecked(94usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(256u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(28usize)) };
+                        let b = unsafe { *(witness.get_unchecked(116usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.sub(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(30usize)) };
+                        let b = unsafe { *(witness.get_unchecked(122usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(31usize)) };
+                        let b = unsafe { *(witness.get_unchecked(51usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(32usize)) };
+                        let b = unsafe { *(witness.get_unchecked(88usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(33usize)) };
+                        let b = unsafe { *(witness.get_unchecked(118usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(35usize)) };
+                        let b = unsafe { *(witness.get_unchecked(98usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(35usize)) };
+                        let b = unsafe { *(witness.get_unchecked(100usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(35usize)) };
+                        let b = unsafe { *(witness.get_unchecked(102usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(35usize)) };
+                        let b = unsafe { *(witness.get_unchecked(116usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.sub(cs, &a);
+                    }
+                    {
+                        let a = unsafe { *(witness.get_unchecked(28usize)) };
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(31usize)) };
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(131072u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let a = unsafe { *(witness.get_unchecked(35usize)) };
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let a = unsafe { *(witness.get_unchecked(127usize)) };
+                        individual_term = individual_term.sub(cs, &a);
+                    }
+                    individual_term
+                };
+                individual_term
+            };
+            accumulated_contribution =
+                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
+        }
+        {
+            let contribution = {
+                let individual_term = {
+                    let mut individual_term = {
+                        let mut a = unsafe { *(witness.get_unchecked(33usize)) };
+                        let b = unsafe { *(witness.get_unchecked(37usize)) };
                         a = a.mul(cs, &b);
                         a
                     };
@@ -4796,16 +4044,38 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
             let contribution = {
                 let individual_term = {
                     let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(31usize)) };
-                        let b = unsafe { *(witness.get_unchecked(74usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(17usize)) };
+                        let b = unsafe { *(witness.get_unchecked(45usize)) };
                         a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(2147483391u32));
+                        a = a.mul_by_base(cs, &coeff);
                         a
                     };
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(74usize)) };
-                        let b = unsafe { *(witness.get_unchecked(85usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(45usize)) };
+                        let b = unsafe { *(witness.get_unchecked(54usize)) };
                         a = a.mul(cs, &b);
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(2u32));
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(16777216u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(45usize)) };
+                        let b = unsafe { *(witness.get_unchecked(59usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(2130706431u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(45usize)) };
+                        let b = unsafe { *(witness.get_unchecked(60usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(2147483615u32));
                         a = a.mul_by_base(cs, &coeff);
                         individual_term = individual_term.add(cs, &a);
                     }
@@ -4820,21 +4090,43 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
             let contribution = {
                 let individual_term = {
                     let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(31usize)) };
-                        let b = unsafe { *(witness.get_unchecked(174usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(17usize)) };
+                        let b = unsafe { *(witness.get_unchecked(128usize)) };
                         a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(2147483391u32));
+                        a = a.mul_by_base(cs, &coeff);
                         a
                     };
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(85usize)) };
-                        let b = unsafe { *(witness.get_unchecked(174usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(54usize)) };
+                        let b = unsafe { *(witness.get_unchecked(128usize)) };
                         a = a.mul(cs, &b);
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(2u32));
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(16777216u32));
                         a = a.mul_by_base(cs, &coeff);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let a = unsafe { *(witness.get_unchecked(74usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(59usize)) };
+                        let b = unsafe { *(witness.get_unchecked(128usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(2130706431u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(60usize)) };
+                        let b = unsafe { *(witness.get_unchecked(128usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(2147483615u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let a = unsafe { *(witness.get_unchecked(45usize)) };
                         individual_term = individual_term.add(cs, &a);
                     }
                     let constant_term =
@@ -4851,74 +4143,48 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
             let contribution = {
                 let individual_term = {
                     let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(36usize)) };
-                        let b = unsafe { *(witness.get_unchecked(74usize)) };
-                        a = a.mul(cs, &b);
-                        a
-                    };
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(37usize)) };
-                        let b = unsafe { *(witness.get_unchecked(74usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(40usize)) };
-                        let b = unsafe { *(witness.get_unchecked(74usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(41usize)) };
-                        let b = unsafe { *(witness.get_unchecked(74usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(36usize)) };
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(37usize)) };
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(40usize)) };
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(41usize)) };
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(175usize)) };
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    let constant_term = MersenneField::allocate_constant(cs, Mersenne31Field(1u32));
-                    individual_term = individual_term.add_base(cs, &constant_term);
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(172usize)) };
-                        let b = unsafe { *(witness.get_unchecked(175usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(20usize)) };
+                        let b = unsafe { *(witness.get_unchecked(45usize)) };
                         a = a.mul(cs, &b);
                         a = a.negated(cs);
                         a
                     };
                     {
-                        let a = unsafe { *(witness.get_unchecked(172usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(21usize)) };
+                        let b = unsafe { *(witness.get_unchecked(45usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.sub(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(24usize)) };
+                        let b = unsafe { *(witness.get_unchecked(45usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.sub(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(25usize)) };
+                        let b = unsafe { *(witness.get_unchecked(45usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.sub(cs, &a);
+                    }
+                    {
+                        let a = unsafe { *(witness.get_unchecked(20usize)) };
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let a = unsafe { *(witness.get_unchecked(176usize)) };
+                        let a = unsafe { *(witness.get_unchecked(21usize)) };
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let a = unsafe { *(witness.get_unchecked(24usize)) };
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let a = unsafe { *(witness.get_unchecked(25usize)) };
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let a = unsafe { *(witness.get_unchecked(129usize)) };
                         individual_term = individual_term.sub(cs, &a);
                     }
                     individual_term
@@ -4932,18 +4198,13 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
             let contribution = {
                 let individual_term = {
                     let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(173usize)) };
-                        let b = unsafe { *(witness.get_unchecked(175usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(126usize)) };
+                        let b = unsafe { *(witness.get_unchecked(129usize)) };
                         a = a.mul(cs, &b);
-                        a = a.negated(cs);
                         a
                     };
                     {
-                        let a = unsafe { *(witness.get_unchecked(173usize)) };
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(177usize)) };
+                        let a = unsafe { *(witness.get_unchecked(130usize)) };
                         individual_term = individual_term.sub(cs, &a);
                     }
                     individual_term
@@ -4957,69 +4218,177 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
             let contribution = {
                 let individual_term = {
                     let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(31usize)) };
-                        let b = unsafe { *(witness.get_unchecked(36usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(127usize)) };
+                        let b = unsafe { *(witness.get_unchecked(129usize)) };
                         a = a.mul(cs, &b);
                         a
                     };
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(31usize)) };
-                        let b = unsafe { *(witness.get_unchecked(37usize)) };
-                        a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
+                        let a = unsafe { *(witness.get_unchecked(131usize)) };
+                        individual_term = individual_term.sub(cs, &a);
                     }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(31usize)) };
-                        let b = unsafe { *(witness.get_unchecked(40usize)) };
+                    individual_term
+                };
+                individual_term
+            };
+            accumulated_contribution =
+                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
+        }
+        {
+            let contribution = {
+                let individual_term = {
+                    let mut individual_term = {
+                        let mut a = unsafe { *(witness.get_unchecked(17usize)) };
+                        let b = unsafe { *(witness.get_unchecked(20usize)) };
                         a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(2147483391u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        a
+                    };
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(31usize)) };
-                        let b = unsafe { *(witness.get_unchecked(41usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(17usize)) };
+                        let b = unsafe { *(witness.get_unchecked(21usize)) };
                         a = a.mul(cs, &b);
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(36usize)) };
-                        let b = unsafe { *(witness.get_unchecked(85usize)) };
-                        a = a.mul(cs, &b);
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(2u32));
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(2147483391u32));
                         a = a.mul_by_base(cs, &coeff);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(37usize)) };
-                        let b = unsafe { *(witness.get_unchecked(85usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(17usize)) };
+                        let b = unsafe { *(witness.get_unchecked(24usize)) };
                         a = a.mul(cs, &b);
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(2u32));
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(2147483391u32));
                         a = a.mul_by_base(cs, &coeff);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(40usize)) };
-                        let b = unsafe { *(witness.get_unchecked(85usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(17usize)) };
+                        let b = unsafe { *(witness.get_unchecked(25usize)) };
                         a = a.mul(cs, &b);
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(2u32));
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(2147483391u32));
                         a = a.mul_by_base(cs, &coeff);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(41usize)) };
-                        let b = unsafe { *(witness.get_unchecked(85usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(20usize)) };
+                        let b = unsafe { *(witness.get_unchecked(54usize)) };
                         a = a.mul(cs, &b);
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(2u32));
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(16777216u32));
                         a = a.mul_by_base(cs, &coeff);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(153usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(20usize)) };
+                        let b = unsafe { *(witness.get_unchecked(59usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(2130706431u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(20usize)) };
+                        let b = unsafe { *(witness.get_unchecked(60usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(2147483615u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(21usize)) };
+                        let b = unsafe { *(witness.get_unchecked(54usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(16777216u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(21usize)) };
+                        let b = unsafe { *(witness.get_unchecked(59usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(2130706431u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(21usize)) };
+                        let b = unsafe { *(witness.get_unchecked(60usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(2147483615u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(24usize)) };
+                        let b = unsafe { *(witness.get_unchecked(54usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(16777216u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(24usize)) };
+                        let b = unsafe { *(witness.get_unchecked(59usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(2130706431u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(24usize)) };
+                        let b = unsafe { *(witness.get_unchecked(60usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(2147483615u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(25usize)) };
+                        let b = unsafe { *(witness.get_unchecked(54usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(16777216u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(25usize)) };
+                        let b = unsafe { *(witness.get_unchecked(59usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(2130706431u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(25usize)) };
+                        let b = unsafe { *(witness.get_unchecked(60usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(2147483615u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(114usize)) };
                         let b = unsafe { *(memory.get_unchecked(22usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.sub(cs, &a);
                     }
                     {
-                        let a = unsafe { *(witness.get_unchecked(153usize)) };
+                        let a = unsafe { *(witness.get_unchecked(114usize)) };
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
@@ -5037,14 +4406,14 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
             let contribution = {
                 let individual_term = {
                     let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(154usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(115usize)) };
                         let b = unsafe { *(memory.get_unchecked(22usize)) };
                         a = a.mul(cs, &b);
                         a = a.negated(cs);
                         a
                     };
                     {
-                        let a = unsafe { *(witness.get_unchecked(154usize)) };
+                        let a = unsafe { *(witness.get_unchecked(115usize)) };
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
@@ -5062,20 +4431,20 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
             let contribution = {
                 let individual_term = {
                     let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(151usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(112usize)) };
                         let b = unsafe { *(memory.get_unchecked(22usize)) };
                         a = a.mul(cs, &b);
                         a = a.negated(cs);
                         a
                     };
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(178usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(132usize)) };
                         let b = unsafe { *(memory.get_unchecked(22usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let a = unsafe { *(witness.get_unchecked(151usize)) };
+                        let a = unsafe { *(witness.get_unchecked(112usize)) };
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
@@ -5093,20 +4462,20 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
             let contribution = {
                 let individual_term = {
                     let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(152usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(113usize)) };
                         let b = unsafe { *(memory.get_unchecked(22usize)) };
                         a = a.mul(cs, &b);
                         a = a.negated(cs);
                         a
                     };
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(179usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(133usize)) };
                         let b = unsafe { *(memory.get_unchecked(22usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let a = unsafe { *(witness.get_unchecked(152usize)) };
+                        let a = unsafe { *(witness.get_unchecked(113usize)) };
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
@@ -5124,20 +4493,20 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
             let contribution = {
                 let individual_term = {
                     let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(158usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(119usize)) };
                         let b = unsafe { *(memory.get_unchecked(22usize)) };
                         a = a.mul(cs, &b);
                         a = a.negated(cs);
                         a
                     };
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(176usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(130usize)) };
                         let b = unsafe { *(memory.get_unchecked(22usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let a = unsafe { *(witness.get_unchecked(158usize)) };
+                        let a = unsafe { *(witness.get_unchecked(119usize)) };
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
@@ -5155,20 +4524,20 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
             let contribution = {
                 let individual_term = {
                     let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(159usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(120usize)) };
                         let b = unsafe { *(memory.get_unchecked(22usize)) };
                         a = a.mul(cs, &b);
                         a = a.negated(cs);
                         a
                     };
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(177usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(131usize)) };
                         let b = unsafe { *(memory.get_unchecked(22usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let a = unsafe { *(witness.get_unchecked(159usize)) };
+                        let a = unsafe { *(witness.get_unchecked(120usize)) };
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
@@ -5186,144 +4555,370 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
             let contribution = {
                 let individual_term = {
                     let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(18usize)) };
-                        a = a.negated(cs);
+                        let mut a = unsafe { *(witness.get_unchecked(8usize)) };
+                        let b = unsafe { *(witness.get_unchecked(26usize)) };
+                        a = a.mul(cs, &b);
                         a
                     };
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(8usize)) };
+                        let b = unsafe { *(witness.get_unchecked(27usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(8usize)) };
+                        let b = unsafe { *(witness.get_unchecked(28usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(8usize)) };
+                        let b = unsafe { *(witness.get_unchecked(30usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(8usize)) };
+                        let b = unsafe { *(witness.get_unchecked(32usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(8usize)) };
+                        let b = unsafe { *(witness.get_unchecked(33usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(8usize)) };
+                        let b = unsafe { *(witness.get_unchecked(34usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(8usize)) };
+                        let b = unsafe { *(witness.get_unchecked(35usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(8usize)) };
+                        let b = unsafe { *(witness.get_unchecked(36usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(29usize)) };
+                        let b = unsafe { *(witness.get_unchecked(96usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(31usize)) };
+                        let b = unsafe { *(witness.get_unchecked(93usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let a = unsafe { *(witness.get_unchecked(134usize)) };
+                        individual_term = individual_term.sub(cs, &a);
+                    }
+                    individual_term
+                };
+                individual_term
+            };
+            accumulated_contribution =
+                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
+        }
+        {
+            let contribution = {
+                let individual_term = {
+                    let mut individual_term = {
+                        let mut a = unsafe { *(witness.get_unchecked(7usize)) };
+                        let b = unsafe { *(witness.get_unchecked(26usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(32768u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        a
+                    };
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(7usize)) };
+                        let b = unsafe { *(witness.get_unchecked(27usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(32768u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(7usize)) };
+                        let b = unsafe { *(witness.get_unchecked(28usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(32768u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(7usize)) };
+                        let b = unsafe { *(witness.get_unchecked(30usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(32768u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(7usize)) };
+                        let b = unsafe { *(witness.get_unchecked(32usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(32768u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(7usize)) };
+                        let b = unsafe { *(witness.get_unchecked(33usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(32768u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(7usize)) };
+                        let b = unsafe { *(witness.get_unchecked(34usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(32768u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(7usize)) };
+                        let b = unsafe { *(witness.get_unchecked(35usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(32768u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(7usize)) };
+                        let b = unsafe { *(witness.get_unchecked(36usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(32768u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(8usize)) };
+                        let b = unsafe { *(witness.get_unchecked(26usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(2147450879u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(8usize)) };
+                        let b = unsafe { *(witness.get_unchecked(27usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(2147450879u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(8usize)) };
+                        let b = unsafe { *(witness.get_unchecked(28usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(2147450879u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(8usize)) };
+                        let b = unsafe { *(witness.get_unchecked(30usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(2147450879u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(8usize)) };
+                        let b = unsafe { *(witness.get_unchecked(32usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(2147450879u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(8usize)) };
+                        let b = unsafe { *(witness.get_unchecked(33usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(2147450879u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(8usize)) };
+                        let b = unsafe { *(witness.get_unchecked(34usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(2147450879u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(8usize)) };
+                        let b = unsafe { *(witness.get_unchecked(35usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(2147450879u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(8usize)) };
+                        let b = unsafe { *(witness.get_unchecked(36usize)) };
+                        a = a.mul(cs, &b);
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(2147450879u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(10usize)) };
+                        let b = unsafe { *(witness.get_unchecked(31usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(26usize)) };
+                        let b = unsafe { *(witness.get_unchecked(51usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(27usize)) };
+                        let b = unsafe { *(witness.get_unchecked(51usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(28usize)) };
+                        let b = unsafe { *(witness.get_unchecked(51usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(29usize)) };
+                        let b = unsafe { *(witness.get_unchecked(97usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(30usize)) };
+                        let b = unsafe { *(witness.get_unchecked(51usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(32usize)) };
+                        let b = unsafe { *(witness.get_unchecked(51usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(33usize)) };
+                        let b = unsafe { *(witness.get_unchecked(51usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(34usize)) };
+                        let b = unsafe { *(witness.get_unchecked(51usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(35usize)) };
+                        let b = unsafe { *(witness.get_unchecked(51usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(36usize)) };
+                        let b = unsafe { *(witness.get_unchecked(51usize)) };
+                        a = a.mul(cs, &b);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(26usize)) };
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(131072u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(27usize)) };
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(131072u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(28usize)) };
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(131072u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
                     {
                         let mut a = unsafe { *(witness.get_unchecked(30usize)) };
                         let coeff =
-                            MersenneField::allocate_constant(cs, Mersenne31Field(2147418111u32));
-                        individual_term = a.mul_by_base_and_add(cs, &coeff, &individual_term);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(82usize)) };
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    let constant_term = MersenneField::allocate_constant(cs, Mersenne31Field(4u32));
-                    individual_term = individual_term.add_base(cs, &constant_term);
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(19usize)) };
-                        a = a.negated(cs);
-                        a
-                    };
-                    {
-                        let a = unsafe { *(witness.get_unchecked(30usize)) };
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(79usize)) };
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let a = unsafe { *(witness.get_unchecked(80usize)) };
-                        a
-                    };
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(31usize)) };
-                        let coeff =
-                            MersenneField::allocate_constant(cs, Mersenne31Field(2147483519u32));
+                            MersenneField::allocate_constant(cs, Mersenne31Field(131072u32));
                         a = a.mul_by_base(cs, &coeff);
-                        a
-                    };
+                        individual_term = individual_term.add(cs, &a);
+                    }
                     {
                         let mut a = unsafe { *(witness.get_unchecked(32usize)) };
                         let coeff =
-                            MersenneField::allocate_constant(cs, Mersenne31Field(2147450879u32));
-                        individual_term = a.mul_by_base_and_add(cs, &coeff, &individual_term);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(83usize)) };
+                            MersenneField::allocate_constant(cs, Mersenne31Field(131072u32));
+                        a = a.mul_by_base(cs, &coeff);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(85usize)) };
-                        let coeff =
-                            MersenneField::allocate_constant(cs, Mersenne31Field(2147483391u32));
-                        individual_term = a.mul_by_base_and_add(cs, &coeff, &individual_term);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(88usize)) };
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(89usize)) };
-                        let coeff =
-                            MersenneField::allocate_constant(cs, Mersenne31Field(2147479551u32));
-                        individual_term = a.mul_by_base_and_add(cs, &coeff, &individual_term);
-                    }
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
                         let mut a = unsafe { *(witness.get_unchecked(33usize)) };
                         let coeff =
-                            MersenneField::allocate_constant(cs, Mersenne31Field(2147483631u32));
+                            MersenneField::allocate_constant(cs, Mersenne31Field(131072u32));
                         a = a.mul_by_base(cs, &coeff);
-                        a
-                    };
+                        individual_term = individual_term.add(cs, &a);
+                    }
                     {
                         let mut a = unsafe { *(witness.get_unchecked(34usize)) };
                         let coeff =
-                            MersenneField::allocate_constant(cs, Mersenne31Field(2147450879u32));
-                        individual_term = a.mul_by_base_and_add(cs, &coeff, &individual_term);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(84usize)) };
+                            MersenneField::allocate_constant(cs, Mersenne31Field(131072u32));
+                        a = a.mul_by_base(cs, &coeff);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let a = unsafe { *(witness.get_unchecked(86usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(35usize)) };
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(131072u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let mut a = unsafe { *(witness.get_unchecked(36usize)) };
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(131072u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let a = unsafe { *(witness.get_unchecked(135usize)) };
                         individual_term = individual_term.sub(cs, &a);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(87usize)) };
-                        let coeff =
-                            MersenneField::allocate_constant(cs, Mersenne31Field(2147483615u32));
-                        individual_term = a.mul_by_base_and_add(cs, &coeff, &individual_term);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(90usize)) };
-                        let coeff =
-                            MersenneField::allocate_constant(cs, Mersenne31Field(2147483135u32));
-                        individual_term = a.mul_by_base_and_add(cs, &coeff, &individual_term);
                     }
                     individual_term
                 };
@@ -5336,11 +4931,25 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
             let contribution = {
                 let individual_term = {
                     let mut individual_term = {
-                        let a = unsafe { *(witness.get_unchecked(32usize)) };
+                        let a = unsafe { *(witness.get_unchecked(52usize)) };
+                        a
+                    };
+                    individual_term
+                };
+                individual_term
+            };
+            accumulated_contribution =
+                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
+        }
+        {
+            let contribution = {
+                let individual_term = {
+                    let mut individual_term = {
+                        let a = unsafe { *(witness.get_unchecked(17usize)) };
                         a
                     };
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(86usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(57usize)) };
                         let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(2u32));
                         individual_term = a.mul_by_base_and_add(cs, &coeff, &individual_term);
                     }
@@ -5359,19 +4968,9 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
             let contribution = {
                 let individual_term = {
                     let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(34usize)) };
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(64u32));
-                        a = a.mul_by_base(cs, &coeff);
+                        let a = unsafe { *(witness.get_unchecked(19usize)) };
                         a
                     };
-                    {
-                        let a = unsafe { *(witness.get_unchecked(90usize)) };
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(91usize)) };
-                        individual_term = individual_term.sub(cs, &a);
-                    }
                     individual_term
                 };
                 individual_term
@@ -5383,127 +4982,16 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
             let contribution = {
                 let individual_term = {
                     let mut individual_term = {
-                        let a = unsafe { *(witness.get_unchecked(35usize)) };
+                        let a = unsafe { *(witness.get_unchecked(3usize)) };
                         a
                     };
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(36usize)) };
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(2u32));
-                        individual_term = a.mul_by_base_and_add(cs, &coeff, &individual_term);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(37usize)) };
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(4u32));
-                        individual_term = a.mul_by_base_and_add(cs, &coeff, &individual_term);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(38usize)) };
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(8u32));
-                        individual_term = a.mul_by_base_and_add(cs, &coeff, &individual_term);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(39usize)) };
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(16u32));
-                        individual_term = a.mul_by_base_and_add(cs, &coeff, &individual_term);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(40usize)) };
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(32u32));
-                        individual_term = a.mul_by_base_and_add(cs, &coeff, &individual_term);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(41usize)) };
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(64u32));
-                        individual_term = a.mul_by_base_and_add(cs, &coeff, &individual_term);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(42usize)) };
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(128u32));
-                        individual_term = a.mul_by_base_and_add(cs, &coeff, &individual_term);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(43usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(4usize)) };
                         let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(256u32));
                         individual_term = a.mul_by_base_and_add(cs, &coeff, &individual_term);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(44usize)) };
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(512u32));
-                        individual_term = a.mul_by_base_and_add(cs, &coeff, &individual_term);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(45usize)) };
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(1024u32));
-                        individual_term = a.mul_by_base_and_add(cs, &coeff, &individual_term);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(46usize)) };
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(2048u32));
-                        individual_term = a.mul_by_base_and_add(cs, &coeff, &individual_term);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(47usize)) };
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(4096u32));
-                        individual_term = a.mul_by_base_and_add(cs, &coeff, &individual_term);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(48usize)) };
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(8192u32));
-                        individual_term = a.mul_by_base_and_add(cs, &coeff, &individual_term);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(49usize)) };
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(16384u32));
-                        individual_term = a.mul_by_base_and_add(cs, &coeff, &individual_term);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(50usize)) };
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(32768u32));
-                        individual_term = a.mul_by_base_and_add(cs, &coeff, &individual_term);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(51usize)) };
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(65536u32));
-                        individual_term = a.mul_by_base_and_add(cs, &coeff, &individual_term);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(52usize)) };
-                        let coeff =
-                            MersenneField::allocate_constant(cs, Mersenne31Field(131072u32));
-                        individual_term = a.mul_by_base_and_add(cs, &coeff, &individual_term);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(53usize)) };
-                        let coeff =
-                            MersenneField::allocate_constant(cs, Mersenne31Field(262144u32));
-                        individual_term = a.mul_by_base_and_add(cs, &coeff, &individual_term);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(54usize)) };
-                        let coeff =
-                            MersenneField::allocate_constant(cs, Mersenne31Field(524288u32));
-                        individual_term = a.mul_by_base_and_add(cs, &coeff, &individual_term);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(55usize)) };
-                        let coeff =
-                            MersenneField::allocate_constant(cs, Mersenne31Field(1048576u32));
-                        individual_term = a.mul_by_base_and_add(cs, &coeff, &individual_term);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(56usize)) };
-                        let coeff =
-                            MersenneField::allocate_constant(cs, Mersenne31Field(2097152u32));
-                        individual_term = a.mul_by_base_and_add(cs, &coeff, &individual_term);
-                    }
-                    {
-                        let mut a = unsafe { *(witness.get_unchecked(57usize)) };
-                        let coeff =
-                            MersenneField::allocate_constant(cs, Mersenne31Field(4194304u32));
-                        individual_term = a.mul_by_base_and_add(cs, &coeff, &individual_term);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(92usize)) };
+                        let a = unsafe { *(memory.get_unchecked(8usize)) };
                         individual_term = individual_term.sub(cs, &a);
                     }
                     individual_term
@@ -5517,27 +5005,13 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
             let contribution = {
                 let individual_term = {
                     let mut individual_term = {
-                        let a = unsafe { *(witness.get_unchecked(35usize)) };
-                        a
-                    };
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(53usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(35usize)) };
                         let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(37u32));
                         a = a.mul_by_base(cs, &coeff);
                         a
                     };
                     {
-                        let a = unsafe { *(witness.get_unchecked(119usize)) };
+                        let a = unsafe { *(witness.get_unchecked(86usize)) };
                         individual_term = individual_term.sub(cs, &a);
                     }
                     individual_term
@@ -5549,14 +5023,60 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
         }
         {
             let a = {
-                let value = unsafe { *(witness.get_unchecked(18usize)) };
+                let value = unsafe { *(witness.get_unchecked(7usize)) };
                 value
             };
             let b = {
-                let value = unsafe { *(witness.get_unchecked(19usize)) };
+                let value = unsafe { *(witness.get_unchecked(8usize)) };
                 value
             };
             let c = unsafe { *(stage_2.get_unchecked(0usize)) };
+            {
+                let contribution = {
+                    let individual_term = {
+                        let mut individual_term = a;
+                        individual_term = individual_term.mul(cs, &b);
+                        individual_term = individual_term.sub(cs, &c);
+                        individual_term
+                    };
+                    individual_term
+                };
+                accumulated_contribution =
+                    accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
+            }
+            {
+                let contribution = {
+                    let individual_term = {
+                        let acc_value = unsafe { *(stage_2.get_unchecked(9usize)) };
+                        let mut denom = lookup_argument_gamma;
+                        denom = denom.add(cs, &a);
+                        denom = denom.add(cs, &b);
+                        denom = denom.mul(cs, &lookup_argument_gamma);
+                        denom = denom.add(cs, &c);
+                        denom = denom.mul(cs, &acc_value);
+                        let mut numerator = lookup_argument_two_gamma;
+                        numerator = numerator.add(cs, &a);
+                        numerator = numerator.add(cs, &b);
+                        let mut individual_term = denom;
+                        individual_term = individual_term.sub(cs, &numerator);
+                        individual_term
+                    };
+                    individual_term
+                };
+                accumulated_contribution =
+                    accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
+            }
+        }
+        {
+            let a = {
+                let value = unsafe { *(witness.get_unchecked(9usize)) };
+                value
+            };
+            let b = {
+                let value = unsafe { *(witness.get_unchecked(10usize)) };
+                value
+            };
+            let c = unsafe { *(stage_2.get_unchecked(1usize)) };
             {
                 let contribution = {
                     let individual_term = {
@@ -5595,14 +5115,14 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
         }
         {
             let a = {
-                let value = unsafe { *(witness.get_unchecked(20usize)) };
+                let value = unsafe { *(witness.get_unchecked(11usize)) };
                 value
             };
             let b = {
-                let value = unsafe { *(witness.get_unchecked(21usize)) };
+                let value = unsafe { *(witness.get_unchecked(12usize)) };
                 value
             };
-            let c = unsafe { *(stage_2.get_unchecked(1usize)) };
+            let c = unsafe { *(stage_2.get_unchecked(2usize)) };
             {
                 let contribution = {
                     let individual_term = {
@@ -5641,14 +5161,14 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
         }
         {
             let a = {
-                let value = unsafe { *(witness.get_unchecked(22usize)) };
+                let value = unsafe { *(witness.get_unchecked(13usize)) };
                 value
             };
             let b = {
-                let value = unsafe { *(witness.get_unchecked(23usize)) };
+                let value = unsafe { *(witness.get_unchecked(14usize)) };
                 value
             };
-            let c = unsafe { *(stage_2.get_unchecked(2usize)) };
+            let c = unsafe { *(stage_2.get_unchecked(3usize)) };
             {
                 let contribution = {
                     let individual_term = {
@@ -5687,14 +5207,14 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
         }
         {
             let a = {
-                let value = unsafe { *(witness.get_unchecked(24usize)) };
+                let value = unsafe { *(witness.get_unchecked(15usize)) };
                 value
             };
             let b = {
-                let value = unsafe { *(witness.get_unchecked(25usize)) };
+                let value = unsafe { *(witness.get_unchecked(16usize)) };
                 value
             };
-            let c = unsafe { *(stage_2.get_unchecked(3usize)) };
+            let c = unsafe { *(stage_2.get_unchecked(4usize)) };
             {
                 let contribution = {
                     let individual_term = {
@@ -5732,61 +5252,91 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
             }
         }
         {
-            let a = {
-                let value = unsafe { *(witness.get_unchecked(26usize)) };
-                value
-            };
-            let b = {
-                let value = unsafe { *(witness.get_unchecked(27usize)) };
-                value
-            };
-            let c = unsafe { *(stage_2.get_unchecked(4usize)) };
-            {
-                let contribution = {
-                    let individual_term = {
-                        let mut individual_term = a;
-                        individual_term = individual_term.mul(cs, &b);
-                        individual_term = individual_term.sub(cs, &c);
-                        individual_term
-                    };
+            let contribution = {
+                let individual_term = {
+                    let a = unsafe { *(memory.get_unchecked(0usize)) };
+                    let b = unsafe { *(memory.get_unchecked(1usize)) };
+                    let c = unsafe { *(stage_2.get_unchecked(5usize)) };
+                    let mut individual_term = a;
+                    individual_term = individual_term.mul(cs, &b);
+                    individual_term = individual_term.sub(cs, &c);
                     individual_term
                 };
-                accumulated_contribution =
-                    accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-            }
-            {
-                let contribution = {
-                    let individual_term = {
-                        let acc_value = unsafe { *(stage_2.get_unchecked(14usize)) };
-                        let mut denom = lookup_argument_gamma;
-                        denom = denom.add(cs, &a);
-                        denom = denom.add(cs, &b);
-                        denom = denom.mul(cs, &lookup_argument_gamma);
-                        denom = denom.add(cs, &c);
-                        denom = denom.mul(cs, &acc_value);
-                        let mut numerator = lookup_argument_two_gamma;
-                        numerator = numerator.add(cs, &a);
-                        numerator = numerator.add(cs, &b);
-                        let mut individual_term = denom;
-                        individual_term = individual_term.sub(cs, &numerator);
-                        individual_term
-                    };
+                individual_term
+            };
+            accumulated_contribution =
+                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
+        }
+        {
+            let contribution = {
+                let individual_term = {
+                    let a = unsafe { *(memory.get_unchecked(0usize)) };
+                    let b = unsafe { *(memory.get_unchecked(1usize)) };
+                    let c = unsafe { *(stage_2.get_unchecked(5usize)) };
+                    let acc_value = unsafe { *(stage_2.get_unchecked(14usize)) };
+                    let mut denom = lookup_argument_gamma;
+                    denom = denom.add(cs, &a);
+                    denom = denom.add(cs, &b);
+                    denom = denom.mul(cs, &lookup_argument_gamma);
+                    denom = denom.add(cs, &c);
+                    denom = denom.mul(cs, &acc_value);
+                    let mut numerator = lookup_argument_two_gamma;
+                    numerator = numerator.add(cs, &a);
+                    numerator = numerator.add(cs, &b);
+                    let mut individual_term = denom;
+                    individual_term = individual_term.sub(cs, &numerator);
                     individual_term
                 };
-                accumulated_contribution =
-                    accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-            }
+                individual_term
+            };
+            accumulated_contribution =
+                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
         }
         {
             let a = {
-                let value = unsafe { *(witness.get_unchecked(28usize)) };
-                value
+                let individual_term = {
+                    let mut individual_term = {
+                        let mut a = unsafe { *(witness.get_unchecked(48usize)) };
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(524288u32));
+                        a = a.mul_by_base(cs, &coeff);
+                        a
+                    };
+                    {
+                        let a = unsafe { *(memory.get_unchecked(6usize)) };
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let a = unsafe { *(setup.get_unchecked(0usize)) };
+                        individual_term = individual_term.sub(cs, &a);
+                    }
+                    individual_term
+                };
+                individual_term
             };
-            let b = {
-                let value = unsafe { *(witness.get_unchecked(29usize)) };
-                value
+            let mut b = {
+                let individual_term = {
+                    let mut individual_term = {
+                        let a = unsafe { *(memory.get_unchecked(7usize)) };
+                        a
+                    };
+                    {
+                        let a = unsafe { *(setup.get_unchecked(1usize)) };
+                        individual_term = individual_term.sub(cs, &a);
+                    }
+                    {
+                        let a = unsafe { *(witness.get_unchecked(48usize)) };
+                        individual_term = individual_term.sub(cs, &a);
+                    }
+                    let constant_term =
+                        MersenneField::allocate_constant(cs, Mersenne31Field(524288u32));
+                    individual_term = individual_term.add_base(cs, &constant_term);
+                    individual_term
+                };
+                individual_term
             };
-            let c = unsafe { *(stage_2.get_unchecked(5usize)) };
+            b = b.sub_base(cs, &memory_timestamp_high_from_sequence_idx);
+            let c = unsafe { *(stage_2.get_unchecked(6usize)) };
             {
                 let contribution = {
                     let individual_term = {
@@ -5827,19 +5377,23 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
             let a = {
                 let individual_term = {
                     let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(76usize)) };
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(65536u32));
+                        let mut a = unsafe { *(witness.get_unchecked(49usize)) };
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(524288u32));
                         a = a.mul_by_base(cs, &coeff);
                         a
                     };
                     {
-                        let a = unsafe { *(memory.get_unchecked(6usize)) };
+                        let a = unsafe { *(memory.get_unchecked(11usize)) };
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
                         let a = unsafe { *(setup.get_unchecked(0usize)) };
                         individual_term = individual_term.sub(cs, &a);
                     }
+                    let constant_term =
+                        MersenneField::allocate_constant(cs, Mersenne31Field(2147483646u32));
+                    individual_term = individual_term.add_base(cs, &constant_term);
                     individual_term
                 };
                 individual_term
@@ -5847,7 +5401,7 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
             let mut b = {
                 let individual_term = {
                     let mut individual_term = {
-                        let a = unsafe { *(memory.get_unchecked(7usize)) };
+                        let a = unsafe { *(memory.get_unchecked(12usize)) };
                         a
                     };
                     {
@@ -5855,18 +5409,18 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
                         individual_term = individual_term.sub(cs, &a);
                     }
                     {
-                        let a = unsafe { *(witness.get_unchecked(76usize)) };
+                        let a = unsafe { *(witness.get_unchecked(49usize)) };
                         individual_term = individual_term.sub(cs, &a);
                     }
                     let constant_term =
-                        MersenneField::allocate_constant(cs, Mersenne31Field(65536u32));
+                        MersenneField::allocate_constant(cs, Mersenne31Field(524288u32));
                     individual_term = individual_term.add_base(cs, &constant_term);
                     individual_term
                 };
                 individual_term
             };
             b = b.sub_base(cs, &memory_timestamp_high_from_sequence_idx);
-            let c = unsafe { *(stage_2.get_unchecked(6usize)) };
+            let c = unsafe { *(stage_2.get_unchecked(7usize)) };
             {
                 let contribution = {
                     let individual_term = {
@@ -5907,13 +5461,14 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
             let a = {
                 let individual_term = {
                     let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(77usize)) };
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(65536u32));
+                        let mut a = unsafe { *(witness.get_unchecked(50usize)) };
+                        let coeff =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(524288u32));
                         a = a.mul_by_base(cs, &coeff);
                         a
                     };
                     {
-                        let a = unsafe { *(memory.get_unchecked(11usize)) };
+                        let a = unsafe { *(memory.get_unchecked(18usize)) };
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
@@ -5921,7 +5476,7 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
                         individual_term = individual_term.sub(cs, &a);
                     }
                     let constant_term =
-                        MersenneField::allocate_constant(cs, Mersenne31Field(2147483646u32));
+                        MersenneField::allocate_constant(cs, Mersenne31Field(2147483645u32));
                     individual_term = individual_term.add_base(cs, &constant_term);
                     individual_term
                 };
@@ -5930,7 +5485,7 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
             let mut b = {
                 let individual_term = {
                     let mut individual_term = {
-                        let a = unsafe { *(memory.get_unchecked(12usize)) };
+                        let a = unsafe { *(memory.get_unchecked(19usize)) };
                         a
                     };
                     {
@@ -5938,18 +5493,18 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
                         individual_term = individual_term.sub(cs, &a);
                     }
                     {
-                        let a = unsafe { *(witness.get_unchecked(77usize)) };
+                        let a = unsafe { *(witness.get_unchecked(50usize)) };
                         individual_term = individual_term.sub(cs, &a);
                     }
                     let constant_term =
-                        MersenneField::allocate_constant(cs, Mersenne31Field(65536u32));
+                        MersenneField::allocate_constant(cs, Mersenne31Field(524288u32));
                     individual_term = individual_term.add_base(cs, &constant_term);
                     individual_term
                 };
                 individual_term
             };
             b = b.sub_base(cs, &memory_timestamp_high_from_sequence_idx);
-            let c = unsafe { *(stage_2.get_unchecked(7usize)) };
+            let c = unsafe { *(stage_2.get_unchecked(8usize)) };
             {
                 let contribution = {
                     let individual_term = {
@@ -5987,122 +5542,36 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
             }
         }
         {
-            let a = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(78usize)) };
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(65536u32));
-                        a = a.mul_by_base(cs, &coeff);
-                        a
-                    };
-                    {
-                        let a = unsafe { *(memory.get_unchecked(18usize)) };
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(setup.get_unchecked(0usize)) };
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    let constant_term =
-                        MersenneField::allocate_constant(cs, Mersenne31Field(2147483645u32));
-                    individual_term = individual_term.add_base(cs, &constant_term);
-                    individual_term
-                };
-                individual_term
-            };
-            let mut b = {
-                let individual_term = {
-                    let mut individual_term = {
-                        let a = unsafe { *(memory.get_unchecked(19usize)) };
-                        a
-                    };
-                    {
-                        let a = unsafe { *(setup.get_unchecked(1usize)) };
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    {
-                        let a = unsafe { *(witness.get_unchecked(78usize)) };
-                        individual_term = individual_term.sub(cs, &a);
-                    }
-                    let constant_term =
-                        MersenneField::allocate_constant(cs, Mersenne31Field(65536u32));
-                    individual_term = individual_term.add_base(cs, &constant_term);
-                    individual_term
-                };
-                individual_term
-            };
-            b = b.sub_base(cs, &memory_timestamp_high_from_sequence_idx);
-            let c = unsafe { *(stage_2.get_unchecked(8usize)) };
-            {
-                let contribution = {
-                    let individual_term = {
-                        let mut individual_term = a;
-                        individual_term = individual_term.mul(cs, &b);
-                        individual_term = individual_term.sub(cs, &c);
-                        individual_term
-                    };
-                    individual_term
-                };
-                accumulated_contribution =
-                    accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-            }
-            {
-                let contribution = {
-                    let individual_term = {
-                        let acc_value = unsafe { *(stage_2.get_unchecked(18usize)) };
-                        let mut denom = lookup_argument_gamma;
-                        denom = denom.add(cs, &a);
-                        denom = denom.add(cs, &b);
-                        denom = denom.mul(cs, &lookup_argument_gamma);
-                        denom = denom.add(cs, &c);
-                        denom = denom.mul(cs, &acc_value);
-                        let mut numerator = lookup_argument_two_gamma;
-                        numerator = numerator.add(cs, &a);
-                        numerator = numerator.add(cs, &b);
-                        let mut individual_term = denom;
-                        individual_term = individual_term.sub(cs, &numerator);
-                        individual_term
-                    };
-                    individual_term
-                };
-                accumulated_contribution =
-                    accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-            }
-        }
-        {
             let contribution = {
                 let individual_term = {
-                    let a = unsafe { *(memory.get_unchecked(0usize)) };
-                    let b = unsafe { *(memory.get_unchecked(1usize)) };
-                    let c = unsafe { *(stage_2.get_unchecked(9usize)) };
-                    let mut individual_term = a;
-                    individual_term = individual_term.mul(cs, &b);
-                    individual_term = individual_term.sub(cs, &c);
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let a = unsafe { *(memory.get_unchecked(0usize)) };
-                    let b = unsafe { *(memory.get_unchecked(1usize)) };
-                    let c = unsafe { *(stage_2.get_unchecked(9usize)) };
-                    let acc_value = unsafe { *(stage_2.get_unchecked(19usize)) };
-                    let mut denom = lookup_argument_gamma;
-                    denom = denom.add(cs, &a);
-                    denom = denom.add(cs, &b);
-                    denom = denom.mul(cs, &lookup_argument_gamma);
-                    denom = denom.add(cs, &c);
-                    denom = denom.mul(cs, &acc_value);
-                    let mut numerator = lookup_argument_two_gamma;
-                    numerator = numerator.add(cs, &a);
-                    numerator = numerator.add(cs, &b);
+                    let src0 = {
+                        let value = unsafe { *(witness.get_unchecked(51usize)) };
+                        value
+                    };
+                    let src1 = {
+                        let value = unsafe { *(witness.get_unchecked(52usize)) };
+                        value
+                    };
+                    let src2 = {
+                        let value = unsafe { *(witness.get_unchecked(53usize)) };
+                        value
+                    };
+                    let mut denom = lookup_argument_linearization_challenges[2];
+                    let table_id = MersenneField::allocate_constant(cs, Mersenne31Field(23u32));
+                    denom = denom.mul_by_base(cs, &table_id);
+                    let mut t = lookup_argument_linearization_challenges[1];
+                    t = t.mul_by_base(cs, &src2);
+                    denom = denom.add(cs, &t);
+                    let mut t = lookup_argument_linearization_challenges[0];
+                    t = t.mul_by_base(cs, &src1);
+                    denom = denom.add(cs, &t);
+                    denom = denom.add(cs, &src0);
+                    denom = denom.add(cs, &lookup_argument_gamma);
+                    let one = MersenneField::one(cs);
                     let mut individual_term = denom;
-                    individual_term = individual_term.sub(cs, &numerator);
+                    individual_term =
+                        individual_term.mul(cs, &unsafe { *(stage_2.get_unchecked(18usize)) });
+                    individual_term = individual_term.sub_base(cs, &one);
                     individual_term
                 };
                 individual_term
@@ -6114,29 +5583,81 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
             let contribution = {
                 let individual_term = {
                     let src0 = {
-                        let value = unsafe { *(witness.get_unchecked(2usize)) };
-                        value
+                        let individual_term = {
+                            let mut individual_term = {
+                                let a = unsafe { *(witness.get_unchecked(7usize)) };
+                                a
+                            };
+                            {
+                                let mut a = unsafe { *(witness.get_unchecked(53usize)) };
+                                let coeff =
+                                    MersenneField::allocate_constant(cs, Mersenne31Field(65536u32));
+                                individual_term =
+                                    a.mul_by_base_and_add(cs, &coeff, &individual_term);
+                            }
+                            individual_term
+                        };
+                        individual_term
                     };
                     let src1 = {
-                        let value = unsafe { *(witness.get_unchecked(3usize)) };
+                        let value = unsafe { *(witness.get_unchecked(54usize)) };
                         value
                     };
                     let src2 = {
-                        let individual_term =
-                            MersenneField::allocate_constant(cs, Mersenne31Field(0u32));
-                        individual_term
+                        let value = unsafe { *(witness.get_unchecked(55usize)) };
+                        value
                     };
                     let mut denom = lookup_argument_linearization_challenges[2];
-                    let table_id = MersenneField::allocate_constant(cs, Mersenne31Field(8u32));
+                    let table_id = MersenneField::allocate_constant(cs, Mersenne31Field(24u32));
                     denom = denom.mul_by_base(cs, &table_id);
                     let mut t = lookup_argument_linearization_challenges[1];
-                    denom = t.mul_by_base_and_add(cs, &src2, &denom);
+                    t = t.mul_by_base(cs, &src2);
+                    denom = denom.add(cs, &t);
                     let mut t = lookup_argument_linearization_challenges[0];
-                    denom = t.mul_by_base_and_add(cs, &src1, &denom);
-                    denom = denom.add_base(cs, &src0);
+                    t = t.mul_by_base(cs, &src1);
+                    denom = denom.add(cs, &t);
+                    denom = denom.add(cs, &src0);
                     denom = denom.add(cs, &lookup_argument_gamma);
-                    let mut individual_term = denom;
                     let one = MersenneField::one(cs);
+                    let mut individual_term = denom;
+                    individual_term =
+                        individual_term.mul(cs, &unsafe { *(stage_2.get_unchecked(19usize)) });
+                    individual_term = individual_term.sub_base(cs, &one);
+                    individual_term
+                };
+                individual_term
+            };
+            accumulated_contribution =
+                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
+        }
+        {
+            let contribution = {
+                let individual_term = {
+                    let src0 = {
+                        let value = unsafe { *(witness.get_unchecked(56usize)) };
+                        value
+                    };
+                    let src1 = {
+                        let value = unsafe { *(witness.get_unchecked(57usize)) };
+                        value
+                    };
+                    let src2 = {
+                        let value = unsafe { *(witness.get_unchecked(58usize)) };
+                        value
+                    };
+                    let mut denom = lookup_argument_linearization_challenges[2];
+                    let table_id = MersenneField::allocate_constant(cs, Mersenne31Field(11u32));
+                    denom = denom.mul_by_base(cs, &table_id);
+                    let mut t = lookup_argument_linearization_challenges[1];
+                    t = t.mul_by_base(cs, &src2);
+                    denom = denom.add(cs, &t);
+                    let mut t = lookup_argument_linearization_challenges[0];
+                    t = t.mul_by_base(cs, &src1);
+                    denom = denom.add(cs, &t);
+                    denom = denom.add(cs, &src0);
+                    denom = denom.add(cs, &lookup_argument_gamma);
+                    let one = MersenneField::one(cs);
+                    let mut individual_term = denom;
                     individual_term =
                         individual_term.mul(cs, &unsafe { *(stage_2.get_unchecked(20usize)) });
                     individual_term = individual_term.sub_base(cs, &one);
@@ -6151,29 +5672,30 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
             let contribution = {
                 let individual_term = {
                     let src0 = {
-                        let value = unsafe { *(witness.get_unchecked(4usize)) };
+                        let value = unsafe { *(witness.get_unchecked(59usize)) };
                         value
                     };
                     let src1 = {
-                        let value = unsafe { *(witness.get_unchecked(5usize)) };
+                        let value = unsafe { *(witness.get_unchecked(60usize)) };
                         value
                     };
                     let src2 = {
-                        let individual_term =
-                            MersenneField::allocate_constant(cs, Mersenne31Field(0u32));
-                        individual_term
+                        let value = unsafe { *(witness.get_unchecked(61usize)) };
+                        value
                     };
                     let mut denom = lookup_argument_linearization_challenges[2];
-                    let table_id = MersenneField::allocate_constant(cs, Mersenne31Field(8u32));
+                    let table_id = MersenneField::allocate_constant(cs, Mersenne31Field(12u32));
                     denom = denom.mul_by_base(cs, &table_id);
                     let mut t = lookup_argument_linearization_challenges[1];
-                    denom = t.mul_by_base_and_add(cs, &src2, &denom);
+                    t = t.mul_by_base(cs, &src2);
+                    denom = denom.add(cs, &t);
                     let mut t = lookup_argument_linearization_challenges[0];
-                    denom = t.mul_by_base_and_add(cs, &src1, &denom);
-                    denom = denom.add_base(cs, &src0);
+                    t = t.mul_by_base(cs, &src1);
+                    denom = denom.add(cs, &t);
+                    denom = denom.add(cs, &src0);
                     denom = denom.add(cs, &lookup_argument_gamma);
-                    let mut individual_term = denom;
                     let one = MersenneField::one(cs);
+                    let mut individual_term = denom;
                     individual_term =
                         individual_term.mul(cs, &unsafe { *(stage_2.get_unchecked(21usize)) });
                     individual_term = individual_term.sub_base(cs, &one);
@@ -6188,12 +5710,193 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
             let contribution = {
                 let individual_term = {
                     let src0 = {
-                        let value = unsafe { *(witness.get_unchecked(6usize)) };
-                        value
+                        let individual_term = {
+                            let mut individual_term = {
+                                let a = unsafe { *(witness.get_unchecked(59usize)) };
+                                a
+                            };
+                            {
+                                let mut a = unsafe { *(witness.get_unchecked(60usize)) };
+                                let coeff =
+                                    MersenneField::allocate_constant(cs, Mersenne31Field(128u32));
+                                individual_term =
+                                    a.mul_by_base_and_add(cs, &coeff, &individual_term);
+                            }
+                            {
+                                let mut a = unsafe { *(witness.get_unchecked(61usize)) };
+                                let coeff =
+                                    MersenneField::allocate_constant(cs, Mersenne31Field(1024u32));
+                                individual_term =
+                                    a.mul_by_base_and_add(cs, &coeff, &individual_term);
+                            }
+                            {
+                                let mut a = unsafe { *(witness.get_unchecked(18usize)) };
+                                let coeff =
+                                    MersenneField::allocate_constant(cs, Mersenne31Field(65536u32));
+                                individual_term =
+                                    a.mul_by_base_and_add(cs, &coeff, &individual_term);
+                            }
+                            individual_term
+                        };
+                        individual_term
                     };
                     let src1 = {
-                        let value = unsafe { *(witness.get_unchecked(7usize)) };
-                        value
+                        let individual_term = {
+                            let mut individual_term = {
+                                let a = unsafe { *(witness.get_unchecked(19usize)) };
+                                a
+                            };
+                            {
+                                let mut a = unsafe { *(witness.get_unchecked(20usize)) };
+                                let coeff =
+                                    MersenneField::allocate_constant(cs, Mersenne31Field(2u32));
+                                individual_term =
+                                    a.mul_by_base_and_add(cs, &coeff, &individual_term);
+                            }
+                            {
+                                let mut a = unsafe { *(witness.get_unchecked(21usize)) };
+                                let coeff =
+                                    MersenneField::allocate_constant(cs, Mersenne31Field(4u32));
+                                individual_term =
+                                    a.mul_by_base_and_add(cs, &coeff, &individual_term);
+                            }
+                            {
+                                let mut a = unsafe { *(witness.get_unchecked(22usize)) };
+                                let coeff =
+                                    MersenneField::allocate_constant(cs, Mersenne31Field(8u32));
+                                individual_term =
+                                    a.mul_by_base_and_add(cs, &coeff, &individual_term);
+                            }
+                            {
+                                let mut a = unsafe { *(witness.get_unchecked(23usize)) };
+                                let coeff =
+                                    MersenneField::allocate_constant(cs, Mersenne31Field(16u32));
+                                individual_term =
+                                    a.mul_by_base_and_add(cs, &coeff, &individual_term);
+                            }
+                            {
+                                let mut a = unsafe { *(witness.get_unchecked(24usize)) };
+                                let coeff =
+                                    MersenneField::allocate_constant(cs, Mersenne31Field(32u32));
+                                individual_term =
+                                    a.mul_by_base_and_add(cs, &coeff, &individual_term);
+                            }
+                            {
+                                let mut a = unsafe { *(witness.get_unchecked(25usize)) };
+                                let coeff =
+                                    MersenneField::allocate_constant(cs, Mersenne31Field(64u32));
+                                individual_term =
+                                    a.mul_by_base_and_add(cs, &coeff, &individual_term);
+                            }
+                            {
+                                let mut a = unsafe { *(witness.get_unchecked(26usize)) };
+                                let coeff =
+                                    MersenneField::allocate_constant(cs, Mersenne31Field(128u32));
+                                individual_term =
+                                    a.mul_by_base_and_add(cs, &coeff, &individual_term);
+                            }
+                            {
+                                let mut a = unsafe { *(witness.get_unchecked(27usize)) };
+                                let coeff =
+                                    MersenneField::allocate_constant(cs, Mersenne31Field(256u32));
+                                individual_term =
+                                    a.mul_by_base_and_add(cs, &coeff, &individual_term);
+                            }
+                            {
+                                let mut a = unsafe { *(witness.get_unchecked(28usize)) };
+                                let coeff =
+                                    MersenneField::allocate_constant(cs, Mersenne31Field(512u32));
+                                individual_term =
+                                    a.mul_by_base_and_add(cs, &coeff, &individual_term);
+                            }
+                            {
+                                let mut a = unsafe { *(witness.get_unchecked(29usize)) };
+                                let coeff =
+                                    MersenneField::allocate_constant(cs, Mersenne31Field(1024u32));
+                                individual_term =
+                                    a.mul_by_base_and_add(cs, &coeff, &individual_term);
+                            }
+                            {
+                                let mut a = unsafe { *(witness.get_unchecked(30usize)) };
+                                let coeff =
+                                    MersenneField::allocate_constant(cs, Mersenne31Field(2048u32));
+                                individual_term =
+                                    a.mul_by_base_and_add(cs, &coeff, &individual_term);
+                            }
+                            {
+                                let mut a = unsafe { *(witness.get_unchecked(31usize)) };
+                                let coeff =
+                                    MersenneField::allocate_constant(cs, Mersenne31Field(4096u32));
+                                individual_term =
+                                    a.mul_by_base_and_add(cs, &coeff, &individual_term);
+                            }
+                            {
+                                let mut a = unsafe { *(witness.get_unchecked(32usize)) };
+                                let coeff =
+                                    MersenneField::allocate_constant(cs, Mersenne31Field(8192u32));
+                                individual_term =
+                                    a.mul_by_base_and_add(cs, &coeff, &individual_term);
+                            }
+                            {
+                                let mut a = unsafe { *(witness.get_unchecked(33usize)) };
+                                let coeff =
+                                    MersenneField::allocate_constant(cs, Mersenne31Field(16384u32));
+                                individual_term =
+                                    a.mul_by_base_and_add(cs, &coeff, &individual_term);
+                            }
+                            {
+                                let mut a = unsafe { *(witness.get_unchecked(34usize)) };
+                                let coeff =
+                                    MersenneField::allocate_constant(cs, Mersenne31Field(32768u32));
+                                individual_term =
+                                    a.mul_by_base_and_add(cs, &coeff, &individual_term);
+                            }
+                            {
+                                let mut a = unsafe { *(witness.get_unchecked(35usize)) };
+                                let coeff =
+                                    MersenneField::allocate_constant(cs, Mersenne31Field(65536u32));
+                                individual_term =
+                                    a.mul_by_base_and_add(cs, &coeff, &individual_term);
+                            }
+                            {
+                                let mut a = unsafe { *(witness.get_unchecked(36usize)) };
+                                let coeff = MersenneField::allocate_constant(
+                                    cs,
+                                    Mersenne31Field(131072u32),
+                                );
+                                individual_term =
+                                    a.mul_by_base_and_add(cs, &coeff, &individual_term);
+                            }
+                            {
+                                let mut a = unsafe { *(witness.get_unchecked(37usize)) };
+                                let coeff = MersenneField::allocate_constant(
+                                    cs,
+                                    Mersenne31Field(262144u32),
+                                );
+                                individual_term =
+                                    a.mul_by_base_and_add(cs, &coeff, &individual_term);
+                            }
+                            {
+                                let mut a = unsafe { *(witness.get_unchecked(38usize)) };
+                                let coeff = MersenneField::allocate_constant(
+                                    cs,
+                                    Mersenne31Field(524288u32),
+                                );
+                                individual_term =
+                                    a.mul_by_base_and_add(cs, &coeff, &individual_term);
+                            }
+                            {
+                                let mut a = unsafe { *(witness.get_unchecked(39usize)) };
+                                let coeff = MersenneField::allocate_constant(
+                                    cs,
+                                    Mersenne31Field(1048576u32),
+                                );
+                                individual_term =
+                                    a.mul_by_base_and_add(cs, &coeff, &individual_term);
+                            }
+                            individual_term
+                        };
+                        individual_term
                     };
                     let src2 = {
                         let individual_term =
@@ -6201,16 +5904,18 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
                         individual_term
                     };
                     let mut denom = lookup_argument_linearization_challenges[2];
-                    let table_id = MersenneField::allocate_constant(cs, Mersenne31Field(8u32));
+                    let table_id = MersenneField::allocate_constant(cs, Mersenne31Field(1u32));
                     denom = denom.mul_by_base(cs, &table_id);
                     let mut t = lookup_argument_linearization_challenges[1];
-                    denom = t.mul_by_base_and_add(cs, &src2, &denom);
+                    t = t.mul_by_base(cs, &src2);
+                    denom = denom.add(cs, &t);
                     let mut t = lookup_argument_linearization_challenges[0];
-                    denom = t.mul_by_base_and_add(cs, &src1, &denom);
-                    denom = denom.add_base(cs, &src0);
+                    t = t.mul_by_base(cs, &src1);
+                    denom = denom.add(cs, &t);
+                    denom = denom.add(cs, &src0);
                     denom = denom.add(cs, &lookup_argument_gamma);
-                    let mut individual_term = denom;
                     let one = MersenneField::one(cs);
+                    let mut individual_term = denom;
                     individual_term =
                         individual_term.mul(cs, &unsafe { *(stage_2.get_unchecked(22usize)) });
                     individual_term = individual_term.sub_base(cs, &one);
@@ -6225,29 +5930,30 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
             let contribution = {
                 let individual_term = {
                     let src0 = {
-                        let value = unsafe { *(witness.get_unchecked(8usize)) };
+                        let value = unsafe { *(memory.get_unchecked(9usize)) };
                         value
                     };
                     let src1 = {
-                        let value = unsafe { *(witness.get_unchecked(9usize)) };
+                        let value = unsafe { *(witness.get_unchecked(62usize)) };
                         value
                     };
                     let src2 = {
-                        let individual_term =
-                            MersenneField::allocate_constant(cs, Mersenne31Field(0u32));
-                        individual_term
+                        let value = unsafe { *(witness.get_unchecked(63usize)) };
+                        value
                     };
                     let mut denom = lookup_argument_linearization_challenges[2];
-                    let table_id = MersenneField::allocate_constant(cs, Mersenne31Field(8u32));
+                    let table_id = MersenneField::allocate_constant(cs, Mersenne31Field(16u32));
                     denom = denom.mul_by_base(cs, &table_id);
                     let mut t = lookup_argument_linearization_challenges[1];
-                    denom = t.mul_by_base_and_add(cs, &src2, &denom);
+                    t = t.mul_by_base(cs, &src2);
+                    denom = denom.add(cs, &t);
                     let mut t = lookup_argument_linearization_challenges[0];
-                    denom = t.mul_by_base_and_add(cs, &src1, &denom);
-                    denom = denom.add_base(cs, &src0);
+                    t = t.mul_by_base(cs, &src1);
+                    denom = denom.add(cs, &t);
+                    denom = denom.add(cs, &src0);
                     denom = denom.add(cs, &lookup_argument_gamma);
-                    let mut individual_term = denom;
                     let one = MersenneField::one(cs);
+                    let mut individual_term = denom;
                     individual_term =
                         individual_term.mul(cs, &unsafe { *(stage_2.get_unchecked(23usize)) });
                     individual_term = individual_term.sub_base(cs, &one);
@@ -6262,29 +5968,30 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
             let contribution = {
                 let individual_term = {
                     let src0 = {
-                        let value = unsafe { *(witness.get_unchecked(10usize)) };
+                        let value = unsafe { *(witness.get_unchecked(64usize)) };
                         value
                     };
                     let src1 = {
-                        let value = unsafe { *(witness.get_unchecked(11usize)) };
+                        let value = unsafe { *(witness.get_unchecked(65usize)) };
                         value
                     };
                     let src2 = {
-                        let individual_term =
-                            MersenneField::allocate_constant(cs, Mersenne31Field(0u32));
-                        individual_term
+                        let value = unsafe { *(witness.get_unchecked(66usize)) };
+                        value
                     };
                     let mut denom = lookup_argument_linearization_challenges[2];
-                    let table_id = MersenneField::allocate_constant(cs, Mersenne31Field(8u32));
+                    let table_id = MersenneField::allocate_constant(cs, Mersenne31Field(16u32));
                     denom = denom.mul_by_base(cs, &table_id);
                     let mut t = lookup_argument_linearization_challenges[1];
-                    denom = t.mul_by_base_and_add(cs, &src2, &denom);
+                    t = t.mul_by_base(cs, &src2);
+                    denom = denom.add(cs, &t);
                     let mut t = lookup_argument_linearization_challenges[0];
-                    denom = t.mul_by_base_and_add(cs, &src1, &denom);
-                    denom = denom.add_base(cs, &src0);
+                    t = t.mul_by_base(cs, &src1);
+                    denom = denom.add(cs, &t);
+                    denom = denom.add(cs, &src0);
                     denom = denom.add(cs, &lookup_argument_gamma);
-                    let mut individual_term = denom;
                     let one = MersenneField::one(cs);
+                    let mut individual_term = denom;
                     individual_term =
                         individual_term.mul(cs, &unsafe { *(stage_2.get_unchecked(24usize)) });
                     individual_term = individual_term.sub_base(cs, &one);
@@ -6299,29 +6006,30 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
             let contribution = {
                 let individual_term = {
                     let src0 = {
-                        let value = unsafe { *(witness.get_unchecked(12usize)) };
+                        let value = unsafe { *(witness.get_unchecked(67usize)) };
                         value
                     };
                     let src1 = {
-                        let value = unsafe { *(witness.get_unchecked(13usize)) };
+                        let value = unsafe { *(witness.get_unchecked(68usize)) };
                         value
                     };
                     let src2 = {
-                        let individual_term =
-                            MersenneField::allocate_constant(cs, Mersenne31Field(0u32));
-                        individual_term
+                        let value = unsafe { *(witness.get_unchecked(69usize)) };
+                        value
                     };
+                    let table_id = unsafe { *(witness.get_unchecked(70usize)) };
                     let mut denom = lookup_argument_linearization_challenges[2];
-                    let table_id = MersenneField::allocate_constant(cs, Mersenne31Field(8u32));
-                    denom = denom.mul_by_base(cs, &table_id);
+                    denom = denom.mul(cs, &table_id);
                     let mut t = lookup_argument_linearization_challenges[1];
-                    denom = t.mul_by_base_and_add(cs, &src2, &denom);
+                    t = t.mul_by_base(cs, &src2);
+                    denom = denom.add(cs, &t);
                     let mut t = lookup_argument_linearization_challenges[0];
-                    denom = t.mul_by_base_and_add(cs, &src1, &denom);
-                    denom = denom.add_base(cs, &src0);
+                    t = t.mul_by_base(cs, &src1);
+                    denom = denom.add(cs, &t);
+                    denom = denom.add(cs, &src0);
                     denom = denom.add(cs, &lookup_argument_gamma);
-                    let mut individual_term = denom;
                     let one = MersenneField::one(cs);
+                    let mut individual_term = denom;
                     individual_term =
                         individual_term.mul(cs, &unsafe { *(stage_2.get_unchecked(25usize)) });
                     individual_term = individual_term.sub_base(cs, &one);
@@ -6336,29 +6044,30 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
             let contribution = {
                 let individual_term = {
                     let src0 = {
-                        let value = unsafe { *(witness.get_unchecked(14usize)) };
+                        let value = unsafe { *(witness.get_unchecked(71usize)) };
                         value
                     };
                     let src1 = {
-                        let value = unsafe { *(witness.get_unchecked(15usize)) };
+                        let value = unsafe { *(witness.get_unchecked(72usize)) };
                         value
                     };
                     let src2 = {
-                        let individual_term =
-                            MersenneField::allocate_constant(cs, Mersenne31Field(0u32));
-                        individual_term
+                        let value = unsafe { *(witness.get_unchecked(73usize)) };
+                        value
                     };
+                    let table_id = unsafe { *(witness.get_unchecked(74usize)) };
                     let mut denom = lookup_argument_linearization_challenges[2];
-                    let table_id = MersenneField::allocate_constant(cs, Mersenne31Field(8u32));
-                    denom = denom.mul_by_base(cs, &table_id);
+                    denom = denom.mul(cs, &table_id);
                     let mut t = lookup_argument_linearization_challenges[1];
-                    denom = t.mul_by_base_and_add(cs, &src2, &denom);
+                    t = t.mul_by_base(cs, &src2);
+                    denom = denom.add(cs, &t);
                     let mut t = lookup_argument_linearization_challenges[0];
-                    denom = t.mul_by_base_and_add(cs, &src1, &denom);
-                    denom = denom.add_base(cs, &src0);
+                    t = t.mul_by_base(cs, &src1);
+                    denom = denom.add(cs, &t);
+                    denom = denom.add(cs, &src0);
                     denom = denom.add(cs, &lookup_argument_gamma);
-                    let mut individual_term = denom;
                     let one = MersenneField::one(cs);
+                    let mut individual_term = denom;
                     individual_term =
                         individual_term.mul(cs, &unsafe { *(stage_2.get_unchecked(26usize)) });
                     individual_term = individual_term.sub_base(cs, &one);
@@ -6373,29 +6082,30 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
             let contribution = {
                 let individual_term = {
                     let src0 = {
-                        let value = unsafe { *(witness.get_unchecked(16usize)) };
+                        let value = unsafe { *(witness.get_unchecked(75usize)) };
                         value
                     };
                     let src1 = {
-                        let value = unsafe { *(witness.get_unchecked(17usize)) };
+                        let value = unsafe { *(witness.get_unchecked(76usize)) };
                         value
                     };
                     let src2 = {
-                        let individual_term =
-                            MersenneField::allocate_constant(cs, Mersenne31Field(0u32));
-                        individual_term
+                        let value = unsafe { *(witness.get_unchecked(77usize)) };
+                        value
                     };
+                    let table_id = unsafe { *(witness.get_unchecked(78usize)) };
                     let mut denom = lookup_argument_linearization_challenges[2];
-                    let table_id = MersenneField::allocate_constant(cs, Mersenne31Field(8u32));
-                    denom = denom.mul_by_base(cs, &table_id);
+                    denom = denom.mul(cs, &table_id);
                     let mut t = lookup_argument_linearization_challenges[1];
-                    denom = t.mul_by_base_and_add(cs, &src2, &denom);
+                    t = t.mul_by_base(cs, &src2);
+                    denom = denom.add(cs, &t);
                     let mut t = lookup_argument_linearization_challenges[0];
-                    denom = t.mul_by_base_and_add(cs, &src1, &denom);
-                    denom = denom.add_base(cs, &src0);
+                    t = t.mul_by_base(cs, &src1);
+                    denom = denom.add(cs, &t);
+                    denom = denom.add(cs, &src0);
                     denom = denom.add(cs, &lookup_argument_gamma);
-                    let mut individual_term = denom;
                     let one = MersenneField::one(cs);
+                    let mut individual_term = denom;
                     individual_term =
                         individual_term.mul(cs, &unsafe { *(stage_2.get_unchecked(27usize)) });
                     individual_term = individual_term.sub_base(cs, &one);
@@ -6421,17 +6131,19 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
                         let value = unsafe { *(witness.get_unchecked(81usize)) };
                         value
                     };
+                    let table_id = unsafe { *(witness.get_unchecked(82usize)) };
                     let mut denom = lookup_argument_linearization_challenges[2];
-                    let table_id = MersenneField::allocate_constant(cs, Mersenne31Field(23u32));
-                    denom = denom.mul_by_base(cs, &table_id);
+                    denom = denom.mul(cs, &table_id);
                     let mut t = lookup_argument_linearization_challenges[1];
-                    denom = t.mul_by_base_and_add(cs, &src2, &denom);
+                    t = t.mul_by_base(cs, &src2);
+                    denom = denom.add(cs, &t);
                     let mut t = lookup_argument_linearization_challenges[0];
-                    denom = t.mul_by_base_and_add(cs, &src1, &denom);
-                    denom = denom.add_base(cs, &src0);
+                    t = t.mul_by_base(cs, &src1);
+                    denom = denom.add(cs, &t);
+                    denom = denom.add(cs, &src0);
                     denom = denom.add(cs, &lookup_argument_gamma);
-                    let mut individual_term = denom;
                     let one = MersenneField::one(cs);
+                    let mut individual_term = denom;
                     individual_term =
                         individual_term.mul(cs, &unsafe { *(stage_2.get_unchecked(28usize)) });
                     individual_term = individual_term.sub_base(cs, &one);
@@ -6446,41 +6158,30 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
             let contribution = {
                 let individual_term = {
                     let src0 = {
-                        let individual_term = {
-                            let mut individual_term = {
-                                let a = unsafe { *(witness.get_unchecked(82usize)) };
-                                a
-                            };
-                            {
-                                let mut a = unsafe { *(witness.get_unchecked(81usize)) };
-                                let coeff =
-                                    MersenneField::allocate_constant(cs, Mersenne31Field(65536u32));
-                                individual_term =
-                                    a.mul_by_base_and_add(cs, &coeff, &individual_term);
-                            }
-                            individual_term
-                        };
-                        individual_term
-                    };
-                    let src1 = {
                         let value = unsafe { *(witness.get_unchecked(83usize)) };
                         value
                     };
-                    let src2 = {
+                    let src1 = {
                         let value = unsafe { *(witness.get_unchecked(84usize)) };
                         value
                     };
+                    let src2 = {
+                        let value = unsafe { *(witness.get_unchecked(85usize)) };
+                        value
+                    };
+                    let table_id = unsafe { *(witness.get_unchecked(86usize)) };
                     let mut denom = lookup_argument_linearization_challenges[2];
-                    let table_id = MersenneField::allocate_constant(cs, Mersenne31Field(24u32));
-                    denom = denom.mul_by_base(cs, &table_id);
+                    denom = denom.mul(cs, &table_id);
                     let mut t = lookup_argument_linearization_challenges[1];
-                    denom = t.mul_by_base_and_add(cs, &src2, &denom);
+                    t = t.mul_by_base(cs, &src2);
+                    denom = denom.add(cs, &t);
                     let mut t = lookup_argument_linearization_challenges[0];
-                    denom = t.mul_by_base_and_add(cs, &src1, &denom);
-                    denom = denom.add_base(cs, &src0);
+                    t = t.mul_by_base(cs, &src1);
+                    denom = denom.add(cs, &t);
+                    denom = denom.add(cs, &src0);
                     denom = denom.add(cs, &lookup_argument_gamma);
-                    let mut individual_term = denom;
                     let one = MersenneField::one(cs);
+                    let mut individual_term = denom;
                     individual_term =
                         individual_term.mul(cs, &unsafe { *(stage_2.get_unchecked(29usize)) });
                     individual_term = individual_term.sub_base(cs, &one);
@@ -6495,28 +6196,31 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
             let contribution = {
                 let individual_term = {
                     let src0 = {
-                        let value = unsafe { *(witness.get_unchecked(85usize)) };
+                        let value = unsafe { *(witness.get_unchecked(3usize)) };
                         value
                     };
                     let src1 = {
-                        let value = unsafe { *(witness.get_unchecked(86usize)) };
+                        let value = unsafe { *(witness.get_unchecked(4usize)) };
                         value
                     };
                     let src2 = {
-                        let value = unsafe { *(witness.get_unchecked(87usize)) };
-                        value
+                        let individual_term =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(0u32));
+                        individual_term
                     };
                     let mut denom = lookup_argument_linearization_challenges[2];
-                    let table_id = MersenneField::allocate_constant(cs, Mersenne31Field(11u32));
+                    let table_id = MersenneField::allocate_constant(cs, Mersenne31Field(8u32));
                     denom = denom.mul_by_base(cs, &table_id);
                     let mut t = lookup_argument_linearization_challenges[1];
-                    denom = t.mul_by_base_and_add(cs, &src2, &denom);
+                    t = t.mul_by_base(cs, &src2);
+                    denom = denom.add(cs, &t);
                     let mut t = lookup_argument_linearization_challenges[0];
-                    denom = t.mul_by_base_and_add(cs, &src1, &denom);
-                    denom = denom.add_base(cs, &src0);
+                    t = t.mul_by_base(cs, &src1);
+                    denom = denom.add(cs, &t);
+                    denom = denom.add(cs, &src0);
                     denom = denom.add(cs, &lookup_argument_gamma);
-                    let mut individual_term = denom;
                     let one = MersenneField::one(cs);
+                    let mut individual_term = denom;
                     individual_term =
                         individual_term.mul(cs, &unsafe { *(stage_2.get_unchecked(30usize)) });
                     individual_term = individual_term.sub_base(cs, &one);
@@ -6531,338 +6235,33 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
             let contribution = {
                 let individual_term = {
                     let src0 = {
-                        let value = unsafe { *(witness.get_unchecked(88usize)) };
+                        let value = unsafe { *(witness.get_unchecked(5usize)) };
                         value
                     };
                     let src1 = {
-                        let value = unsafe { *(witness.get_unchecked(89usize)) };
+                        let value = unsafe { *(witness.get_unchecked(6usize)) };
                         value
                     };
                     let src2 = {
-                        let value = unsafe { *(witness.get_unchecked(90usize)) };
-                        value
-                    };
-                    let mut denom = lookup_argument_linearization_challenges[2];
-                    let table_id = MersenneField::allocate_constant(cs, Mersenne31Field(12u32));
-                    denom = denom.mul_by_base(cs, &table_id);
-                    let mut t = lookup_argument_linearization_challenges[1];
-                    denom = t.mul_by_base_and_add(cs, &src2, &denom);
-                    let mut t = lookup_argument_linearization_challenges[0];
-                    denom = t.mul_by_base_and_add(cs, &src1, &denom);
-                    denom = denom.add_base(cs, &src0);
-                    denom = denom.add(cs, &lookup_argument_gamma);
-                    let mut individual_term = denom;
-                    let one = MersenneField::one(cs);
-                    individual_term =
-                        individual_term.mul(cs, &unsafe { *(stage_2.get_unchecked(31usize)) });
-                    individual_term = individual_term.sub_base(cs, &one);
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let src0 = {
-                        let individual_term = {
-                            let mut individual_term = {
-                                let a = unsafe { *(witness.get_unchecked(88usize)) };
-                                a
-                            };
-                            {
-                                let mut a = unsafe { *(witness.get_unchecked(89usize)) };
-                                let coeff =
-                                    MersenneField::allocate_constant(cs, Mersenne31Field(128u32));
-                                individual_term =
-                                    a.mul_by_base_and_add(cs, &coeff, &individual_term);
-                            }
-                            {
-                                let mut a = unsafe { *(witness.get_unchecked(91usize)) };
-                                let coeff =
-                                    MersenneField::allocate_constant(cs, Mersenne31Field(1024u32));
-                                individual_term =
-                                    a.mul_by_base_and_add(cs, &coeff, &individual_term);
-                            }
-                            individual_term
-                        };
+                        let individual_term =
+                            MersenneField::allocate_constant(cs, Mersenne31Field(0u32));
                         individual_term
                     };
-                    let src1 = {
-                        let value = unsafe { *(witness.get_unchecked(92usize)) };
-                        value
-                    };
-                    let src2 = {
-                        let value = unsafe { *(witness.get_unchecked(93usize)) };
-                        value
-                    };
                     let mut denom = lookup_argument_linearization_challenges[2];
-                    let table_id = MersenneField::allocate_constant(cs, Mersenne31Field(1u32));
+                    let table_id = MersenneField::allocate_constant(cs, Mersenne31Field(8u32));
                     denom = denom.mul_by_base(cs, &table_id);
                     let mut t = lookup_argument_linearization_challenges[1];
-                    denom = t.mul_by_base_and_add(cs, &src2, &denom);
+                    t = t.mul_by_base(cs, &src2);
+                    denom = denom.add(cs, &t);
                     let mut t = lookup_argument_linearization_challenges[0];
-                    denom = t.mul_by_base_and_add(cs, &src1, &denom);
-                    denom = denom.add_base(cs, &src0);
+                    t = t.mul_by_base(cs, &src1);
+                    denom = denom.add(cs, &t);
+                    denom = denom.add(cs, &src0);
                     denom = denom.add(cs, &lookup_argument_gamma);
-                    let mut individual_term = denom;
                     let one = MersenneField::one(cs);
-                    individual_term =
-                        individual_term.mul(cs, &unsafe { *(stage_2.get_unchecked(32usize)) });
-                    individual_term = individual_term.sub_base(cs, &one);
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let src0 = {
-                        let value = unsafe { *(witness.get_unchecked(94usize)) };
-                        value
-                    };
-                    let src1 = {
-                        let value = unsafe { *(witness.get_unchecked(95usize)) };
-                        value
-                    };
-                    let src2 = {
-                        let value = unsafe { *(witness.get_unchecked(96usize)) };
-                        value
-                    };
-                    let mut denom = lookup_argument_linearization_challenges[2];
-                    let table_id = MersenneField::allocate_constant(cs, Mersenne31Field(16u32));
-                    denom = denom.mul_by_base(cs, &table_id);
-                    let mut t = lookup_argument_linearization_challenges[1];
-                    denom = t.mul_by_base_and_add(cs, &src2, &denom);
-                    let mut t = lookup_argument_linearization_challenges[0];
-                    denom = t.mul_by_base_and_add(cs, &src1, &denom);
-                    denom = denom.add_base(cs, &src0);
-                    denom = denom.add(cs, &lookup_argument_gamma);
                     let mut individual_term = denom;
-                    let one = MersenneField::one(cs);
                     individual_term =
-                        individual_term.mul(cs, &unsafe { *(stage_2.get_unchecked(33usize)) });
-                    individual_term = individual_term.sub_base(cs, &one);
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let src0 = {
-                        let value = unsafe { *(witness.get_unchecked(97usize)) };
-                        value
-                    };
-                    let src1 = {
-                        let value = unsafe { *(witness.get_unchecked(98usize)) };
-                        value
-                    };
-                    let src2 = {
-                        let value = unsafe { *(witness.get_unchecked(99usize)) };
-                        value
-                    };
-                    let mut denom = lookup_argument_linearization_challenges[2];
-                    let table_id = MersenneField::allocate_constant(cs, Mersenne31Field(16u32));
-                    denom = denom.mul_by_base(cs, &table_id);
-                    let mut t = lookup_argument_linearization_challenges[1];
-                    denom = t.mul_by_base_and_add(cs, &src2, &denom);
-                    let mut t = lookup_argument_linearization_challenges[0];
-                    denom = t.mul_by_base_and_add(cs, &src1, &denom);
-                    denom = denom.add_base(cs, &src0);
-                    denom = denom.add(cs, &lookup_argument_gamma);
-                    let mut individual_term = denom;
-                    let one = MersenneField::one(cs);
-                    individual_term =
-                        individual_term.mul(cs, &unsafe { *(stage_2.get_unchecked(34usize)) });
-                    individual_term = individual_term.sub_base(cs, &one);
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let src0 = {
-                        let value = unsafe { *(witness.get_unchecked(100usize)) };
-                        value
-                    };
-                    let src1 = {
-                        let value = unsafe { *(witness.get_unchecked(101usize)) };
-                        value
-                    };
-                    let src2 = {
-                        let value = unsafe { *(witness.get_unchecked(102usize)) };
-                        value
-                    };
-                    let table_id = unsafe { *(witness.get_unchecked(103usize)) };
-                    let mut denom = lookup_argument_linearization_challenges[2];
-                    denom = denom.mul(cs, &table_id);
-                    let mut t = lookup_argument_linearization_challenges[1];
-                    denom = t.mul_by_base_and_add(cs, &src2, &denom);
-                    let mut t = lookup_argument_linearization_challenges[0];
-                    denom = t.mul_by_base_and_add(cs, &src1, &denom);
-                    denom = denom.add_base(cs, &src0);
-                    denom = denom.add(cs, &lookup_argument_gamma);
-                    let mut individual_term = denom;
-                    let one = MersenneField::one(cs);
-                    individual_term =
-                        individual_term.mul(cs, &unsafe { *(stage_2.get_unchecked(35usize)) });
-                    individual_term = individual_term.sub_base(cs, &one);
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let src0 = {
-                        let value = unsafe { *(witness.get_unchecked(104usize)) };
-                        value
-                    };
-                    let src1 = {
-                        let value = unsafe { *(witness.get_unchecked(105usize)) };
-                        value
-                    };
-                    let src2 = {
-                        let value = unsafe { *(witness.get_unchecked(106usize)) };
-                        value
-                    };
-                    let table_id = unsafe { *(witness.get_unchecked(107usize)) };
-                    let mut denom = lookup_argument_linearization_challenges[2];
-                    denom = denom.mul(cs, &table_id);
-                    let mut t = lookup_argument_linearization_challenges[1];
-                    denom = t.mul_by_base_and_add(cs, &src2, &denom);
-                    let mut t = lookup_argument_linearization_challenges[0];
-                    denom = t.mul_by_base_and_add(cs, &src1, &denom);
-                    denom = denom.add_base(cs, &src0);
-                    denom = denom.add(cs, &lookup_argument_gamma);
-                    let mut individual_term = denom;
-                    let one = MersenneField::one(cs);
-                    individual_term =
-                        individual_term.mul(cs, &unsafe { *(stage_2.get_unchecked(36usize)) });
-                    individual_term = individual_term.sub_base(cs, &one);
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let src0 = {
-                        let value = unsafe { *(witness.get_unchecked(108usize)) };
-                        value
-                    };
-                    let src1 = {
-                        let value = unsafe { *(witness.get_unchecked(109usize)) };
-                        value
-                    };
-                    let src2 = {
-                        let value = unsafe { *(witness.get_unchecked(110usize)) };
-                        value
-                    };
-                    let table_id = unsafe { *(witness.get_unchecked(111usize)) };
-                    let mut denom = lookup_argument_linearization_challenges[2];
-                    denom = denom.mul(cs, &table_id);
-                    let mut t = lookup_argument_linearization_challenges[1];
-                    denom = t.mul_by_base_and_add(cs, &src2, &denom);
-                    let mut t = lookup_argument_linearization_challenges[0];
-                    denom = t.mul_by_base_and_add(cs, &src1, &denom);
-                    denom = denom.add_base(cs, &src0);
-                    denom = denom.add(cs, &lookup_argument_gamma);
-                    let mut individual_term = denom;
-                    let one = MersenneField::one(cs);
-                    individual_term =
-                        individual_term.mul(cs, &unsafe { *(stage_2.get_unchecked(37usize)) });
-                    individual_term = individual_term.sub_base(cs, &one);
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let src0 = {
-                        let value = unsafe { *(witness.get_unchecked(112usize)) };
-                        value
-                    };
-                    let src1 = {
-                        let value = unsafe { *(witness.get_unchecked(113usize)) };
-                        value
-                    };
-                    let src2 = {
-                        let value = unsafe { *(witness.get_unchecked(114usize)) };
-                        value
-                    };
-                    let table_id = unsafe { *(witness.get_unchecked(115usize)) };
-                    let mut denom = lookup_argument_linearization_challenges[2];
-                    denom = denom.mul(cs, &table_id);
-                    let mut t = lookup_argument_linearization_challenges[1];
-                    denom = t.mul_by_base_and_add(cs, &src2, &denom);
-                    let mut t = lookup_argument_linearization_challenges[0];
-                    denom = t.mul_by_base_and_add(cs, &src1, &denom);
-                    denom = denom.add_base(cs, &src0);
-                    denom = denom.add(cs, &lookup_argument_gamma);
-                    let mut individual_term = denom;
-                    let one = MersenneField::one(cs);
-                    individual_term =
-                        individual_term.mul(cs, &unsafe { *(stage_2.get_unchecked(38usize)) });
-                    individual_term = individual_term.sub_base(cs, &one);
-                    individual_term
-                };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let src0 = {
-                        let value = unsafe { *(witness.get_unchecked(116usize)) };
-                        value
-                    };
-                    let src1 = {
-                        let value = unsafe { *(witness.get_unchecked(117usize)) };
-                        value
-                    };
-                    let src2 = {
-                        let value = unsafe { *(witness.get_unchecked(118usize)) };
-                        value
-                    };
-                    let table_id = unsafe { *(witness.get_unchecked(119usize)) };
-                    let mut denom = lookup_argument_linearization_challenges[2];
-                    denom = denom.mul(cs, &table_id);
-                    let mut t = lookup_argument_linearization_challenges[1];
-                    denom = t.mul_by_base_and_add(cs, &src2, &denom);
-                    let mut t = lookup_argument_linearization_challenges[0];
-                    denom = t.mul_by_base_and_add(cs, &src1, &denom);
-                    denom = denom.add_base(cs, &src0);
-                    denom = denom.add(cs, &lookup_argument_gamma);
-                    let mut individual_term = denom;
-                    let one = MersenneField::one(cs);
-                    individual_term =
-                        individual_term.mul(cs, &unsafe { *(stage_2.get_unchecked(39usize)) });
+                        individual_term.mul(cs, &unsafe { *(stage_2.get_unchecked(31usize)) });
                     individual_term = individual_term.sub_base(cs, &one);
                     individual_term
                 };
@@ -6880,7 +6279,7 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
                     denom = denom.add(cs, &t);
                     let mut individual_term = denom;
                     individual_term =
-                        individual_term.mul(cs, &unsafe { *(stage_2.get_unchecked(40usize)) });
+                        individual_term.mul(cs, &unsafe { *(stage_2.get_unchecked(32usize)) });
                     individual_term = individual_term.sub(cs, &m);
                     individual_term
                 };
@@ -6893,21 +6292,39 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
             let contribution = {
                 let individual_term = {
                     let m = unsafe { *(witness.get_unchecked(1usize)) };
+                    let t = unsafe { *(setup.get_unchecked(3usize)) };
+                    let mut denom = lookup_argument_gamma;
+                    denom = denom.add(cs, &t);
+                    let mut individual_term = denom;
+                    individual_term =
+                        individual_term.mul(cs, &unsafe { *(stage_2.get_unchecked(33usize)) });
+                    individual_term = individual_term.sub(cs, &m);
+                    individual_term
+                };
+                individual_term
+            };
+            accumulated_contribution =
+                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
+        }
+        {
+            let contribution = {
+                let individual_term = {
+                    let m = unsafe { *(witness.get_unchecked(2usize)) };
                     let mut denom = lookup_argument_linearization_challenges[2];
-                    let table_id = unsafe { *(setup.get_unchecked(6usize)) };
+                    let table_id = unsafe { *(setup.get_unchecked(7usize)) };
                     denom = denom.mul(cs, &table_id);
                     let mut t = lookup_argument_linearization_challenges[1];
-                    t = t.mul(cs, &unsafe { *(setup.get_unchecked(5usize)) });
+                    t = t.mul(cs, &unsafe { *(setup.get_unchecked(6usize)) });
                     denom = denom.add(cs, &t);
                     let mut t = lookup_argument_linearization_challenges[0];
-                    t = t.mul(cs, &unsafe { *(setup.get_unchecked(4usize)) });
+                    t = t.mul(cs, &unsafe { *(setup.get_unchecked(5usize)) });
                     denom = denom.add(cs, &t);
-                    let t = unsafe { *(setup.get_unchecked(3usize)) };
+                    let t = unsafe { *(setup.get_unchecked(4usize)) };
                     denom = denom.add(cs, &t);
                     denom = denom.add(cs, &lookup_argument_gamma);
                     let mut individual_term = denom;
                     individual_term =
-                        individual_term.mul(cs, &unsafe { *(stage_2.get_unchecked(41usize)) });
+                        individual_term.mul(cs, &unsafe { *(stage_2.get_unchecked(34usize)) });
                     individual_term = individual_term.sub(cs, &m);
                     individual_term
                 };
@@ -6941,7 +6358,7 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
                     denom = denom.add(cs, &delegation_argument_gamma);
                     let mut individual_term = denom;
                     individual_term =
-                        individual_term.mul(cs, &unsafe { *(stage_2.get_unchecked(42usize)) });
+                        individual_term.mul(cs, &unsafe { *(stage_2.get_unchecked(35usize)) });
                     individual_term = individual_term.sub(cs, &m);
                     individual_term
                 };
@@ -6949,6 +6366,90 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
             };
             accumulated_contribution =
                 accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
+        }
+        {
+            let final_borrow_value = unsafe { *(witness.get_unchecked(47usize)) };
+            let one = MersenneField::one(cs);
+            let mut final_borrow_minus_one = final_borrow_value;
+            final_borrow_minus_one = final_borrow_minus_one.sub_base(cs, &one);
+            {
+                let contribution = {
+                    let individual_term = {
+                        let value_to_constraint = unsafe { *(memory.get_unchecked(0usize)) };
+                        let mut individual_term = final_borrow_minus_one;
+                        individual_term = individual_term.mul(cs, &value_to_constraint);
+                        individual_term
+                    };
+                    individual_term
+                };
+                accumulated_contribution =
+                    accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
+            }
+            {
+                let contribution = {
+                    let individual_term = {
+                        let value_to_constraint = unsafe { *(memory.get_unchecked(1usize)) };
+                        let mut individual_term = final_borrow_minus_one;
+                        individual_term = individual_term.mul(cs, &value_to_constraint);
+                        individual_term
+                    };
+                    individual_term
+                };
+                accumulated_contribution =
+                    accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
+            }
+            {
+                let contribution = {
+                    let individual_term = {
+                        let value_to_constraint = unsafe { *(memory.get_unchecked(2usize)) };
+                        let mut individual_term = final_borrow_minus_one;
+                        individual_term = individual_term.mul(cs, &value_to_constraint);
+                        individual_term
+                    };
+                    individual_term
+                };
+                accumulated_contribution =
+                    accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
+            }
+            {
+                let contribution = {
+                    let individual_term = {
+                        let value_to_constraint = unsafe { *(memory.get_unchecked(3usize)) };
+                        let mut individual_term = final_borrow_minus_one;
+                        individual_term = individual_term.mul(cs, &value_to_constraint);
+                        individual_term
+                    };
+                    individual_term
+                };
+                accumulated_contribution =
+                    accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
+            }
+            {
+                let contribution = {
+                    let individual_term = {
+                        let value_to_constraint = unsafe { *(memory.get_unchecked(4usize)) };
+                        let mut individual_term = final_borrow_minus_one;
+                        individual_term = individual_term.mul(cs, &value_to_constraint);
+                        individual_term
+                    };
+                    individual_term
+                };
+                accumulated_contribution =
+                    accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
+            }
+            {
+                let contribution = {
+                    let individual_term = {
+                        let value_to_constraint = unsafe { *(memory.get_unchecked(5usize)) };
+                        let mut individual_term = final_borrow_minus_one;
+                        individual_term = individual_term.mul(cs, &value_to_constraint);
+                        individual_term
+                    };
+                    individual_term
+                };
+                accumulated_contribution =
+                    accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
+            }
         }
         {
             let contribution = {
@@ -6979,7 +6480,7 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
                     let mut t = memory_argument_linearization_challenges[3usize];
                     t = t.mul(cs, &timestamp_high);
                     denom = denom.add(cs, &t);
-                    let accumulator = unsafe { *(stage_2.get_unchecked(43usize)) };
+                    let accumulator = unsafe { *(stage_2.get_unchecked(36usize)) };
                     let mut individual_term = accumulator;
                     individual_term = individual_term.mul(cs, &denom);
                     individual_term = individual_term.sub(cs, &numerator);
@@ -7037,8 +6538,8 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
                     write_timestamp_contibution = write_timestamp_contibution.add(cs, &t);
                     numerator = numerator.add(cs, &write_timestamp_contibution);
                     denom = denom.add(cs, &read_timestamp_contibution);
-                    let accumulator = unsafe { *(stage_2.get_unchecked(44usize)) };
-                    let previous = unsafe { *(stage_2.get_unchecked(43usize)) };
+                    let accumulator = unsafe { *(stage_2.get_unchecked(37usize)) };
+                    let previous = unsafe { *(stage_2.get_unchecked(36usize)) };
                     let mut individual_term = accumulator;
                     individual_term = individual_term.mul(cs, &denom);
                     let mut t = previous;
@@ -7102,8 +6603,8 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
                     write_timestamp_contibution = write_timestamp_contibution.add(cs, &t);
                     numerator = numerator.add(cs, &write_timestamp_contibution);
                     denom = denom.add(cs, &read_timestamp_contibution);
-                    let accumulator = unsafe { *(stage_2.get_unchecked(45usize)) };
-                    let previous = unsafe { *(stage_2.get_unchecked(44usize)) };
+                    let accumulator = unsafe { *(stage_2.get_unchecked(38usize)) };
+                    let previous = unsafe { *(stage_2.get_unchecked(37usize)) };
                     let mut individual_term = accumulator;
                     individual_term = individual_term.mul(cs, &denom);
                     let mut t = previous;
@@ -7177,8 +6678,8 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
                     write_timestamp_contibution = write_timestamp_contibution.add(cs, &t);
                     numerator = numerator.add(cs, &write_timestamp_contibution);
                     denom = denom.add(cs, &read_timestamp_contibution);
-                    let accumulator = unsafe { *(stage_2.get_unchecked(46usize)) };
-                    let previous = unsafe { *(stage_2.get_unchecked(45usize)) };
+                    let accumulator = unsafe { *(stage_2.get_unchecked(39usize)) };
+                    let previous = unsafe { *(stage_2.get_unchecked(38usize)) };
                     let mut individual_term = accumulator;
                     individual_term = individual_term.mul(cs, &denom);
                     let mut t = previous;
@@ -7194,9 +6695,9 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
         {
             let contribution = {
                 let individual_term = {
-                    let mut individual_term = unsafe { *(stage_2_next_row.get_unchecked(47usize)) };
-                    let mut t = unsafe { *(stage_2.get_unchecked(47usize)) };
-                    t = t.mul(cs, &unsafe { *(stage_2.get_unchecked(46usize)) });
+                    let mut individual_term = unsafe { *(stage_2_next_row.get_unchecked(40usize)) };
+                    let mut t = unsafe { *(stage_2.get_unchecked(40usize)) };
+                    t = t.mul(cs, &unsafe { *(stage_2.get_unchecked(39usize)) });
                     individual_term = individual_term.sub(cs, &t);
                     individual_term
                 };
@@ -7211,7 +6712,13 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
     };
     every_row_except_last_contribution
 }
-#[allow(unused_braces, unused_mut, unused_variables, unsafe_op_in_unsafe_fn)]
+#[allow(
+    unused_braces,
+    unused_mut,
+    unused_variables,
+    unsafe_op_in_unsafe_fn,
+    unused_assignments
+)]
 unsafe fn evaluate_every_row_except_two<F: SmallField, CS: ConstraintSystem<F>>(
     cs: &mut CS,
     random_point: MersenneQuartic<F>,
@@ -7244,8 +6751,8 @@ unsafe fn evaluate_every_row_except_two<F: SmallField, CS: ConstraintSystem<F>>(
     let every_row_except_two_last_contribution = {
         let mut accumulated_contribution = {
             let individual_term = {
-                let mut individual_term = unsafe { *(witness.get_unchecked(180usize)) };
-                let t = unsafe { *(witness_next_row.get_unchecked(82usize)) };
+                let mut individual_term = unsafe { *(witness.get_unchecked(134usize)) };
+                let t = unsafe { *(witness_next_row.get_unchecked(7usize)) };
                 individual_term = individual_term.sub(cs, &t);
                 individual_term
             };
@@ -7254,8 +6761,8 @@ unsafe fn evaluate_every_row_except_two<F: SmallField, CS: ConstraintSystem<F>>(
         {
             let contribution = {
                 let individual_term = {
-                    let mut individual_term = unsafe { *(witness.get_unchecked(181usize)) };
-                    let t = unsafe { *(witness_next_row.get_unchecked(79usize)) };
+                    let mut individual_term = unsafe { *(witness.get_unchecked(135usize)) };
+                    let t = unsafe { *(witness_next_row.get_unchecked(51usize)) };
                     individual_term = individual_term.sub(cs, &t);
                     individual_term
                 };
@@ -7265,43 +6772,50 @@ unsafe fn evaluate_every_row_except_two<F: SmallField, CS: ConstraintSystem<F>>(
                 accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
         }
         {
-            let contribution = {
-                let individual_term = {
-                    let borrow_value = unsafe { *(witness.get_unchecked(75usize)) };
-                    let this_low = unsafe { *(memory.get_unchecked(0usize)) };
-                    let next_low = unsafe { *(memory_next_row.get_unchecked(0usize)) };
-                    let aux_low = unsafe { *(witness.get_unchecked(28usize)) };
-                    let shift = MersenneField::allocate_constant(cs, Mersenne31Field(1 << 16));
-                    let mut individual_term = borrow_value;
-                    individual_term = individual_term.mul_by_base_and_add(cs, &shift, &this_low);
-                    individual_term = individual_term.sub(cs, &next_low);
-                    individual_term = individual_term.sub(cs, &aux_low);
+            let intermedaite_borrow_value = unsafe { *(witness.get_unchecked(46usize)) };
+            let final_borrow_value = unsafe { *(witness.get_unchecked(47usize)) };
+            let this_low = unsafe { *(memory.get_unchecked(0usize)) };
+            let this_high = unsafe { *(memory.get_unchecked(1usize)) };
+            let one = MersenneField::one(cs);
+            let mut final_borrow_minus_one = final_borrow_value;
+            final_borrow_minus_one = final_borrow_minus_one.sub_base(cs, &one);
+            {
+                let contribution = {
+                    let individual_term = {
+                        let next_low = unsafe { *(memory_next_row.get_unchecked(0usize)) };
+                        let aux_low = unsafe { *(witness.get_unchecked(15usize)) };
+                        let shift = MersenneField::allocate_constant(cs, Mersenne31Field(1 << 16));
+                        let mut individual_term = intermedaite_borrow_value;
+                        individual_term =
+                            individual_term.mul_by_base_and_add(cs, &shift, &this_low);
+                        individual_term = individual_term.sub(cs, &next_low);
+                        individual_term = individual_term.sub(cs, &aux_low);
+                        individual_term
+                    };
                     individual_term
                 };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
-        }
-        {
-            let contribution = {
-                let individual_term = {
-                    let borrow_value = unsafe { *(witness.get_unchecked(75usize)) };
-                    let this_high = unsafe { *(memory.get_unchecked(1usize)) };
-                    let next_high = unsafe { *(memory_next_row.get_unchecked(1usize)) };
-                    let aux_high = unsafe { *(witness.get_unchecked(29usize)) };
-                    let shift = MersenneField::allocate_constant(cs, Mersenne31Field(1 << 16));
-                    let mut individual_term = this_high;
-                    individual_term = individual_term.add_base(cs, &shift);
-                    individual_term = individual_term.sub(cs, &borrow_value);
-                    individual_term = individual_term.sub(cs, &next_high);
-                    individual_term = individual_term.sub(cs, &aux_high);
+                accumulated_contribution =
+                    accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
+            }
+            {
+                let contribution = {
+                    let individual_term = {
+                        let next_high = unsafe { *(memory_next_row.get_unchecked(1usize)) };
+                        let aux_high = unsafe { *(witness.get_unchecked(16usize)) };
+                        let shift = MersenneField::allocate_constant(cs, Mersenne31Field(1 << 16));
+                        let mut individual_term = final_borrow_value;
+                        individual_term = individual_term.mul_by_base(cs, &shift);
+                        individual_term = individual_term.add(cs, &this_high);
+                        individual_term = individual_term.sub(cs, &intermedaite_borrow_value);
+                        individual_term = individual_term.sub(cs, &next_high);
+                        individual_term = individual_term.sub(cs, &aux_high);
+                        individual_term
+                    };
                     individual_term
                 };
-                individual_term
-            };
-            accumulated_contribution =
-                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
+                accumulated_contribution =
+                    accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
+            }
         }
         let divisor = divisors[1usize];
         accumulated_contribution = accumulated_contribution.mul(cs, &divisor);
@@ -7309,7 +6823,13 @@ unsafe fn evaluate_every_row_except_two<F: SmallField, CS: ConstraintSystem<F>>(
     };
     every_row_except_two_last_contribution
 }
-#[allow(unused_braces, unused_mut, unused_variables, unsafe_op_in_unsafe_fn)]
+#[allow(
+    unused_braces,
+    unused_mut,
+    unused_variables,
+    unsafe_op_in_unsafe_fn,
+    unused_assignments
+)]
 unsafe fn evaluate_last_row_and_zero<F: SmallField, CS: ConstraintSystem<F>>(
     cs: &mut CS,
     random_point: MersenneQuartic<F>,
@@ -7342,7 +6862,9 @@ unsafe fn evaluate_last_row_and_zero<F: SmallField, CS: ConstraintSystem<F>>(
     let last_row_and_zero_contribution = {
         let mut accumulated_contribution = {
             let individual_term = {
-                let mut individual_term = unsafe { *(stage_2.get_unchecked(40usize)) };
+                let mut individual_term = unsafe { *(stage_2.get_unchecked(32usize)) };
+                let t = unsafe { *(stage_2.get_unchecked(9usize)) };
+                individual_term = individual_term.sub(cs, &t);
                 let t = unsafe { *(stage_2.get_unchecked(10usize)) };
                 individual_term = individual_term.sub(cs, &t);
                 let t = unsafe { *(stage_2.get_unchecked(11usize)) };
@@ -7353,16 +6875,6 @@ unsafe fn evaluate_last_row_and_zero<F: SmallField, CS: ConstraintSystem<F>>(
                 individual_term = individual_term.sub(cs, &t);
                 let t = unsafe { *(stage_2.get_unchecked(14usize)) };
                 individual_term = individual_term.sub(cs, &t);
-                let t = unsafe { *(stage_2.get_unchecked(15usize)) };
-                individual_term = individual_term.sub(cs, &t);
-                let t = unsafe { *(stage_2.get_unchecked(16usize)) };
-                individual_term = individual_term.sub(cs, &t);
-                let t = unsafe { *(stage_2.get_unchecked(17usize)) };
-                individual_term = individual_term.sub(cs, &t);
-                let t = unsafe { *(stage_2.get_unchecked(18usize)) };
-                individual_term = individual_term.sub(cs, &t);
-                let t = unsafe { *(stage_2.get_unchecked(19usize)) };
-                individual_term = individual_term.sub(cs, &t);
                 individual_term
             };
             individual_term
@@ -7370,7 +6882,28 @@ unsafe fn evaluate_last_row_and_zero<F: SmallField, CS: ConstraintSystem<F>>(
         {
             let contribution = {
                 let individual_term = {
-                    let mut individual_term = unsafe { *(stage_2.get_unchecked(41usize)) };
+                    let mut individual_term = unsafe { *(stage_2.get_unchecked(33usize)) };
+                    let t = unsafe { *(stage_2.get_unchecked(15usize)) };
+                    individual_term = individual_term.sub(cs, &t);
+                    let t = unsafe { *(stage_2.get_unchecked(16usize)) };
+                    individual_term = individual_term.sub(cs, &t);
+                    let t = unsafe { *(stage_2.get_unchecked(17usize)) };
+                    individual_term = individual_term.sub(cs, &t);
+                    individual_term
+                };
+                individual_term
+            };
+            accumulated_contribution =
+                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
+        }
+        {
+            let contribution = {
+                let individual_term = {
+                    let mut individual_term = unsafe { *(stage_2.get_unchecked(34usize)) };
+                    let t = unsafe { *(stage_2.get_unchecked(18usize)) };
+                    individual_term = individual_term.sub(cs, &t);
+                    let t = unsafe { *(stage_2.get_unchecked(19usize)) };
+                    individual_term = individual_term.sub(cs, &t);
                     let t = unsafe { *(stage_2.get_unchecked(20usize)) };
                     individual_term = individual_term.sub(cs, &t);
                     let t = unsafe { *(stage_2.get_unchecked(21usize)) };
@@ -7395,22 +6928,6 @@ unsafe fn evaluate_last_row_and_zero<F: SmallField, CS: ConstraintSystem<F>>(
                     individual_term = individual_term.sub(cs, &t);
                     let t = unsafe { *(stage_2.get_unchecked(31usize)) };
                     individual_term = individual_term.sub(cs, &t);
-                    let t = unsafe { *(stage_2.get_unchecked(32usize)) };
-                    individual_term = individual_term.sub(cs, &t);
-                    let t = unsafe { *(stage_2.get_unchecked(33usize)) };
-                    individual_term = individual_term.sub(cs, &t);
-                    let t = unsafe { *(stage_2.get_unchecked(34usize)) };
-                    individual_term = individual_term.sub(cs, &t);
-                    let t = unsafe { *(stage_2.get_unchecked(35usize)) };
-                    individual_term = individual_term.sub(cs, &t);
-                    let t = unsafe { *(stage_2.get_unchecked(36usize)) };
-                    individual_term = individual_term.sub(cs, &t);
-                    let t = unsafe { *(stage_2.get_unchecked(37usize)) };
-                    individual_term = individual_term.sub(cs, &t);
-                    let t = unsafe { *(stage_2.get_unchecked(38usize)) };
-                    individual_term = individual_term.sub(cs, &t);
-                    let t = unsafe { *(stage_2.get_unchecked(39usize)) };
-                    individual_term = individual_term.sub(cs, &t);
                     individual_term
                 };
                 individual_term
@@ -7421,7 +6938,7 @@ unsafe fn evaluate_last_row_and_zero<F: SmallField, CS: ConstraintSystem<F>>(
         {
             let contribution = {
                 let individual_term = {
-                    let mut individual_term = unsafe { *(stage_2.get_unchecked(42usize)) };
+                    let mut individual_term = unsafe { *(stage_2.get_unchecked(35usize)) };
                     let mut t = random_point;
                     t = t.mul(cs, &delegation_argument_interpolant_linear_coeff);
                     individual_term = individual_term.sub(cs, &t);
@@ -7438,7 +6955,13 @@ unsafe fn evaluate_last_row_and_zero<F: SmallField, CS: ConstraintSystem<F>>(
     };
     last_row_and_zero_contribution
 }
-#[allow(unused_braces, unused_mut, unused_variables, unsafe_op_in_unsafe_fn)]
+#[allow(
+    unused_braces,
+    unused_mut,
+    unused_variables,
+    unsafe_op_in_unsafe_fn,
+    unused_assignments
+)]
 pub unsafe fn evaluate_quotient<F: SmallField, CS: ConstraintSystem<F>>(
     cs: &mut CS,
     random_point: MersenneQuartic<F>,
@@ -7581,7 +7104,59 @@ pub unsafe fn evaluate_quotient<F: SmallField, CS: ConstraintSystem<F>>(
         {
             let contribution = {
                 let individual_term = {
-                    let mut individual_term = unsafe { *(witness.get_unchecked(82usize)) };
+                    let mut individual_term = unsafe { *(memory.get_unchecked(2usize)) };
+                    let t = aux_boundary_values.teardown_value_first_row[0];
+                    individual_term = individual_term.sub_base(cs, &t);
+                    individual_term
+                };
+                individual_term
+            };
+            accumulated_contribution =
+                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
+        }
+        {
+            let contribution = {
+                let individual_term = {
+                    let mut individual_term = unsafe { *(memory.get_unchecked(3usize)) };
+                    let t = aux_boundary_values.teardown_value_first_row[1];
+                    individual_term = individual_term.sub_base(cs, &t);
+                    individual_term
+                };
+                individual_term
+            };
+            accumulated_contribution =
+                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
+        }
+        {
+            let contribution = {
+                let individual_term = {
+                    let mut individual_term = unsafe { *(memory.get_unchecked(4usize)) };
+                    let t = aux_boundary_values.teardown_timestamp_first_row[0];
+                    individual_term = individual_term.sub_base(cs, &t);
+                    individual_term
+                };
+                individual_term
+            };
+            accumulated_contribution =
+                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
+        }
+        {
+            let contribution = {
+                let individual_term = {
+                    let mut individual_term = unsafe { *(memory.get_unchecked(5usize)) };
+                    let t = aux_boundary_values.teardown_timestamp_first_row[1];
+                    individual_term = individual_term.sub_base(cs, &t);
+                    individual_term
+                };
+                individual_term
+            };
+            accumulated_contribution =
+                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
+        }
+        {
+            let contribution = {
+                let individual_term = {
+                    let mut individual_term = unsafe { *(witness.get_unchecked(7usize)) };
                     let t = public_inputs[0usize];
                     individual_term = individual_term.sub_base(cs, &t);
                     individual_term
@@ -7594,7 +7169,7 @@ pub unsafe fn evaluate_quotient<F: SmallField, CS: ConstraintSystem<F>>(
         {
             let contribution = {
                 let individual_term = {
-                    let mut individual_term = unsafe { *(witness.get_unchecked(79usize)) };
+                    let mut individual_term = unsafe { *(witness.get_unchecked(51usize)) };
                     let t = public_inputs[1usize];
                     individual_term = individual_term.sub_base(cs, &t);
                     individual_term
@@ -7608,7 +7183,7 @@ pub unsafe fn evaluate_quotient<F: SmallField, CS: ConstraintSystem<F>>(
             let contribution = {
                 let individual_term = {
                     let one = MersenneField::one(cs);
-                    let mut individual_term = unsafe { *(stage_2.get_unchecked(47usize)) };
+                    let mut individual_term = unsafe { *(stage_2.get_unchecked(40usize)) };
                     individual_term = individual_term.sub_base(cs, &one);
                     individual_term
                 };
@@ -7647,7 +7222,59 @@ pub unsafe fn evaluate_quotient<F: SmallField, CS: ConstraintSystem<F>>(
         {
             let contribution = {
                 let individual_term = {
-                    let mut individual_term = unsafe { *(witness.get_unchecked(180usize)) };
+                    let mut individual_term = unsafe { *(memory.get_unchecked(2usize)) };
+                    let t = aux_boundary_values.teardown_value_one_before_last_row[0];
+                    individual_term = individual_term.sub_base(cs, &t);
+                    individual_term
+                };
+                individual_term
+            };
+            accumulated_contribution =
+                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
+        }
+        {
+            let contribution = {
+                let individual_term = {
+                    let mut individual_term = unsafe { *(memory.get_unchecked(3usize)) };
+                    let t = aux_boundary_values.teardown_value_one_before_last_row[1];
+                    individual_term = individual_term.sub_base(cs, &t);
+                    individual_term
+                };
+                individual_term
+            };
+            accumulated_contribution =
+                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
+        }
+        {
+            let contribution = {
+                let individual_term = {
+                    let mut individual_term = unsafe { *(memory.get_unchecked(4usize)) };
+                    let t = aux_boundary_values.teardown_timestamp_one_before_last_row[0];
+                    individual_term = individual_term.sub_base(cs, &t);
+                    individual_term
+                };
+                individual_term
+            };
+            accumulated_contribution =
+                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
+        }
+        {
+            let contribution = {
+                let individual_term = {
+                    let mut individual_term = unsafe { *(memory.get_unchecked(5usize)) };
+                    let t = aux_boundary_values.teardown_timestamp_one_before_last_row[1];
+                    individual_term = individual_term.sub_base(cs, &t);
+                    individual_term
+                };
+                individual_term
+            };
+            accumulated_contribution =
+                accumulated_contribution.mul_and_add(cs, &quotient_alpha, &contribution);
+        }
+        {
+            let contribution = {
+                let individual_term = {
+                    let mut individual_term = unsafe { *(witness.get_unchecked(134usize)) };
                     let t = public_inputs[2usize];
                     individual_term = individual_term.sub_base(cs, &t);
                     individual_term
@@ -7660,7 +7287,7 @@ pub unsafe fn evaluate_quotient<F: SmallField, CS: ConstraintSystem<F>>(
         {
             let contribution = {
                 let individual_term = {
-                    let mut individual_term = unsafe { *(witness.get_unchecked(181usize)) };
+                    let mut individual_term = unsafe { *(witness.get_unchecked(135usize)) };
                     let t = public_inputs[3usize];
                     individual_term = individual_term.sub_base(cs, &t);
                     individual_term
@@ -7677,7 +7304,7 @@ pub unsafe fn evaluate_quotient<F: SmallField, CS: ConstraintSystem<F>>(
     let last_row_contribution = {
         let mut accumulated_contribution = {
             let individual_term = {
-                let mut individual_term = unsafe { *(stage_2.get_unchecked(47usize)) };
+                let mut individual_term = unsafe { *(stage_2.get_unchecked(40usize)) };
                 let t = aux_proof_values.memory_grand_product_accumulator_final_value;
                 individual_term = individual_term.sub(cs, &t);
                 individual_term

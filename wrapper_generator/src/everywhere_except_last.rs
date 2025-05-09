@@ -8,10 +8,10 @@ use quote::quote;
 
 use prover::cs::definitions::LookupExpression;
 use prover::cs::one_row_compiler::{
-    BatchedRamAccessColumns, COMMON_TABLE_WIDTH, ColumnAddress, CompiledDegree1Constraint,
-    CompiledDegree2Constraint, LookupAndMemoryArgumentLayout, MemorySubtree,
-    OptimizedOraclesForLookupWidth1, SetupLayout, ShuffleRamInitAndTeardownLayout, TableIndex,
-    WitnessSubtree,
+    BatchedRamAccessColumns, ColumnAddress, CompiledDegree1Constraint, CompiledDegree2Constraint,
+    LookupAndMemoryArgumentLayout, MemorySubtree, OptimizedOraclesForLookupWidth1, SetupLayout,
+    ShuffleRamAuxComparisonSet, ShuffleRamInitAndTeardownLayout, TableIndex, WitnessSubtree,
+    COMMON_TABLE_WIDTH,
 };
 use prover::field::{Field, PrimeField};
 
@@ -494,7 +494,7 @@ fn transform_lookup_expression_for_eval(
     }
 }
 
-pub(crate) fn transform_range_checks_16_pair(
+pub(crate) fn transform_width_1_range_checks_pair(
     pair: &[LookupExpression<Mersenne31Field>; 2],
     pair_index: usize,
     optimized_layoyt: OptimizedOraclesForLookupWidth1,
@@ -689,129 +689,112 @@ pub(crate) fn transform_generic_lookup(
     } = idents;
 
     let mut streams = vec![];
-
-    let mut dst_iter = stage_2_layout.intermediate_polys_for_generic_lookup.iter();
-    let mut width_3_lookups_with_fixed_col_id = vec![];
-    for lookup in witness_layout.width_3_lookups.iter() {
-        if let TableIndex::Constant(table_type) = lookup.table_index {
-            let src = lookup.input_columns.clone();
-            let dst = dst_iter.next().unwrap().start;
-            let column_type =
-                Mersenne31Field::from_u64_with_reduction(table_type.to_table_id() as u64);
-            width_3_lookups_with_fixed_col_id.push((src, dst, column_type));
-        }
-    }
-    let mut width_3_lookups_with_variable_col_id = vec![];
-    for lookup in witness_layout.width_3_lookups.iter() {
-        if let TableIndex::Variable(table_type) = lookup.table_index {
-            let src = lookup.input_columns.clone();
-            let dst = dst_iter.next().unwrap().start;
-            let ColumnAddress::WitnessSubtree(table_type_idx) = table_type else {
-                panic!();
-            };
-            width_3_lookups_with_variable_col_id.push((src, table_type_idx, dst));
-        }
-    }
-
-    assert!(dst_iter.next().is_none());
-
     assert_eq!(setup_layout.generic_lookup_setup_columns.width(), 4);
 
-    // width-3 generic lookup
+    for (i, (lookup, dst)) in witness_layout
+        .width_3_lookups
+        .iter()
+        .zip(stage_2_layout.intermediate_polys_for_generic_lookup.iter())
+        .enumerate()
     {
-        let mut i = 0;
-        for (src, _dst, table_type) in width_3_lookups_with_fixed_col_id.iter() {
-            let table_type = table_type.to_reduced_u32();
-            let acc = stage_2_layout
-                .get_intermediate_polys_for_generic_lookup_absolute_poly_idx_for_verifier(i);
-            let accumulator_expr = read_stage_2_value_expr(acc, idents, false);
-            let src = src.clone();
-            let [src0, src1, src2] = src;
-            let src_0_expr = transform_lookup_expression_for_eval(src0, idents);
-            let src_1_expr = transform_lookup_expression_for_eval(src1, idents);
-            let src_2_expr = transform_lookup_expression_for_eval(src2, idents);
+        let src = lookup.input_columns.clone();
+        let dst = dst.start;
+        match lookup.table_index {
+            TableIndex::Constant(table_type) => {
+                let table_type = table_type.to_table_id();
+                let acc = stage_2_layout
+                    .get_intermediate_polys_for_generic_lookup_absolute_poly_idx_for_verifier(i);
+                let accumulator_expr = read_stage_2_value_expr(acc, idents, false);
+                let src = src.clone();
+                let [src0, src1, src2] = src;
+                let src_0_expr = transform_lookup_expression_for_eval(src0, idents);
+                let src_1_expr = transform_lookup_expression_for_eval(src1, idents);
+                let src_2_expr = transform_lookup_expression_for_eval(src2, idents);
 
-            let t = quote! {
-                let #individual_term_ident = {
-                    let src0 = #src_0_expr;
-                    let src1 = #src_1_expr;
-                    let src2 = #src_2_expr;
+                let t = quote! {
+                    let #individual_term_ident = {
+                        let src0 = #src_0_expr;
+                        let src1 = #src_1_expr;
+                        let src2 = #src_2_expr;
 
-                    let mut denom = #lookup_argument_linearization_challenges_ident[2];
-                    let table_id = MersenneField::allocate_constant(cs, Mersenne31Field(#table_type));
-                    denom = denom.mul_by_base(cs, &table_id);
+                        let mut denom = #lookup_argument_linearization_challenges_ident[2];
+                        let table_id = MersenneField::allocate_constant(cs, Mersenne31Field(#table_type));
+                        denom = denom.mul_by_base(cs, &table_id);
 
-                    let mut t = #lookup_argument_linearization_challenges_ident[1];
-                    denom = t.mul_by_base_and_add(cs, &src2, &denom);
+                        let mut t = #lookup_argument_linearization_challenges_ident[1];
+                        t = t.mul_by_base(cs, &src2);
+                        denom = denom.add(cs, &t);
 
-                    let mut t = #lookup_argument_linearization_challenges_ident[0];
-                    denom = t.mul_by_base_and_add(cs, &src1, &denom);
+                        let mut t = #lookup_argument_linearization_challenges_ident[0];
+                        t = t.mul_by_base(cs, &src1);
+                        denom = denom.add(cs, &t);
 
-                    denom = denom.add_base(cs, &src0);
+                        denom = denom.add(cs, &src0);
 
-                    denom = denom.add(cs, &#lookup_argument_gamma_ident);
+                        denom = denom.add(cs, &#lookup_argument_gamma_ident);
 
-                    let mut #individual_term_ident = denom;
-                    let one = MersenneField::one(cs);
-                    #individual_term_ident = #individual_term_ident.mul(cs, & #accumulator_expr);
-                    #individual_term_ident = #individual_term_ident.sub_base(cs, &one);
+                        let one = MersenneField::one(cs);
+                        let mut #individual_term_ident = denom;
+                        #individual_term_ident = #individual_term_ident.mul(cs, & #accumulator_expr);
+                        #individual_term_ident = #individual_term_ident.sub_base(cs, &one);
 
-                    #individual_term_ident
+                        #individual_term_ident
+                    };
                 };
-            };
 
-            streams.push(t);
-
-            i += 1;
-        }
-
-        for (src, table_type_offset, _dst) in width_3_lookups_with_variable_col_id.iter() {
-            let acc = stage_2_layout
-                .get_intermediate_polys_for_generic_lookup_absolute_poly_idx_for_verifier(i);
-            let accumulator_expr = read_stage_2_value_expr(acc, idents, false);
-            let src = src.clone();
-            let [src0, src1, src2] = src;
-            let src_0_expr = transform_lookup_expression_for_eval(src0, idents);
-            let src_1_expr = transform_lookup_expression_for_eval(src1, idents);
-            let src_2_expr = transform_lookup_expression_for_eval(src2, idents);
-            let src_3_expr = read_value_expr(
-                ColumnAddress::WitnessSubtree(*table_type_offset),
-                idents,
-                false,
-            );
-
-            let t = quote! {
-                let #individual_term_ident = {
-                    let src0 = #src_0_expr;
-                    let src1 = #src_1_expr;
-                    let src2 = #src_2_expr;
-                    let table_id = #src_3_expr;
-
-                    let mut denom = #lookup_argument_linearization_challenges_ident[2];
-                    denom = denom.mul(cs, &table_id);
-
-                    let mut t = #lookup_argument_linearization_challenges_ident[1];
-                    denom = t.mul_by_base_and_add(cs, &src2, &denom);
-
-                    let mut t = #lookup_argument_linearization_challenges_ident[0];
-                    denom = t.mul_by_base_and_add(cs, &src1, &denom);
-
-                    denom = denom.add_base(cs, &src0);
-
-                    denom = denom.add(cs, &#lookup_argument_gamma_ident);
-
-                    let mut #individual_term_ident = denom;
-                    let one = MersenneField::one(cs);
-                    #individual_term_ident = #individual_term_ident.mul(cs, & #accumulator_expr);
-                    #individual_term_ident = #individual_term_ident.sub_base(cs, &one);
-
-                    #individual_term_ident
+                streams.push(t);
+            }
+            TableIndex::Variable(table_type) => {
+                let ColumnAddress::WitnessSubtree(table_type_column) = table_type else {
+                    panic!();
                 };
-            };
+                let acc = stage_2_layout
+                    .get_intermediate_polys_for_generic_lookup_absolute_poly_idx_for_verifier(i);
+                let accumulator_expr = read_stage_2_value_expr(acc, idents, false);
+                let src = src.clone();
+                let [src0, src1, src2] = src;
+                let src_0_expr = transform_lookup_expression_for_eval(src0, idents);
+                let src_1_expr = transform_lookup_expression_for_eval(src1, idents);
+                let src_2_expr = transform_lookup_expression_for_eval(src2, idents);
+                let src_3_expr = read_value_expr(
+                    ColumnAddress::WitnessSubtree(table_type_column),
+                    idents,
+                    false,
+                );
 
-            streams.push(t);
+                let t = quote! {
+                    let #individual_term_ident = {
+                        let src0 = #src_0_expr;
+                        let src1 = #src_1_expr;
+                        let src2 = #src_2_expr;
+                        let table_id = #src_3_expr;
 
-            i += 1;
+                        let mut denom = #lookup_argument_linearization_challenges_ident[2];
+                        denom = denom.mul(cs, &table_id);
+
+                        let mut t = #lookup_argument_linearization_challenges_ident[1];
+                        t = t.mul_by_base(cs, &src2);
+                        denom = denom.add(cs, &t);
+
+                        let mut t = #lookup_argument_linearization_challenges_ident[0];
+                        t = t.mul_by_base(cs, &src1);
+                        denom = denom.add(cs, &t);
+
+                        denom = denom.add(cs, &src0);
+
+                        denom = denom.add(cs, &#lookup_argument_gamma_ident);
+
+                        let one = MersenneField::one(cs);
+                        let mut #individual_term_ident = denom;
+                        #individual_term_ident = #individual_term_ident.mul(cs, & #accumulator_expr);
+                        #individual_term_ident = #individual_term_ident.sub_base(cs, &one);
+
+                        #individual_term_ident
+                    };
+                };
+
+                streams.push(t);
+            }
         }
     }
 
@@ -838,6 +821,12 @@ pub(crate) fn transform_multiplicities(
         .start();
     let range_check_16_setup_column = setup_layout.range_check_16_setup_column.start();
 
+    let timestamp_range_check_multiplicities_src = witness_layout
+        .multiplicities_columns_for_timestamp_range_check
+        .start();
+    let timestamp_range_check_setup_column =
+        setup_layout.timestamp_range_check_setup_column.start();
+
     let generic_lookup_multiplicities_src = witness_layout
         .multiplicities_columns_for_generic_lookup
         .start();
@@ -845,6 +834,7 @@ pub(crate) fn transform_multiplicities(
 
     let generic_lookup_setup_columns_start = setup_layout.generic_lookup_setup_columns.start();
 
+    // range check 16
     {
         let intermediate_poly_expr = read_stage_2_value_expr(
             stage_2_layout
@@ -862,6 +852,47 @@ pub(crate) fn transform_multiplicities(
 
         let setup_expr = read_value_expr(
             ColumnAddress::SetupSubtree(range_check_16_setup_column),
+            idents,
+            false,
+        );
+
+        let t = quote! {
+            let #individual_term_ident = {
+                let m = #multiplicity_expr;
+
+                let t = #setup_expr;
+                let mut denom = #lookup_argument_gamma_ident;
+                denom = denom.add(cs, &t);
+
+                let mut #individual_term_ident = denom;
+                #individual_term_ident = #individual_term_ident.mul(cs, & #intermediate_poly_expr);
+                #individual_term_ident = #individual_term_ident.sub(cs, &m);
+
+                #individual_term_ident
+            };
+        };
+
+        streams.push(t);
+    }
+
+    // timestamp range check
+    {
+        let intermediate_poly_expr = read_stage_2_value_expr(
+            stage_2_layout
+                .timestamp_range_check_intermediate_poly_for_multiplicities_absolute_poly_idx_for_verifier(
+                ),
+            idents,
+            false,
+        );
+
+        let multiplicity_expr = read_value_expr(
+            ColumnAddress::WitnessSubtree(timestamp_range_check_multiplicities_src),
+            idents,
+            false,
+        );
+
+        let setup_expr = read_value_expr(
+            ColumnAddress::SetupSubtree(timestamp_range_check_setup_column),
             idents,
             false,
         );
@@ -1330,4 +1361,70 @@ pub(crate) fn transform_delegation_requests_processing(
     }
 
     streams
+}
+
+pub(crate) fn transform_shuffle_ram_lazy_init_padding(
+    shuffle_ram_inits_and_teardowns: ShuffleRamInitAndTeardownLayout,
+    lazy_init_address_aux_vars: &ShuffleRamAuxComparisonSet,
+    idents: &Idents,
+) -> (TokenStream, Vec<TokenStream>) {
+    let Idents {
+        individual_term_ident,
+        ..
+    } = idents;
+
+    let lazy_init_address_start = shuffle_ram_inits_and_teardowns
+        .lazy_init_addesses_columns
+        .start();
+
+    let teardown_values_start = shuffle_ram_inits_and_teardowns
+        .lazy_teardown_values_columns
+        .start();
+
+    let teardown_timestamps_start = shuffle_ram_inits_and_teardowns
+        .lazy_teardown_timestamps_columns
+        .start();
+
+    let comparison_aux_vars = lazy_init_address_aux_vars;
+    let ShuffleRamAuxComparisonSet { final_borrow, .. } = *comparison_aux_vars;
+
+    let final_borrow_value_expr = read_value_expr(final_borrow, idents, false);
+
+    let common_stream = quote! {
+        let final_borrow_value = #final_borrow_value_expr;
+
+        let one = MersenneField::one(cs);
+        let mut final_borrow_minus_one = final_borrow_value;
+        final_borrow_minus_one = final_borrow_minus_one.sub_base(cs, &one);
+    };
+
+    let mut streams = vec![];
+
+    // and now we enforce that if comparison is not strictly this address < next address, then this
+    // address is 0, along with teardown parts
+
+    for place in [
+        ColumnAddress::MemorySubtree(lazy_init_address_start),
+        ColumnAddress::MemorySubtree(lazy_init_address_start + 1),
+        ColumnAddress::MemorySubtree(teardown_values_start),
+        ColumnAddress::MemorySubtree(teardown_values_start + 1),
+        ColumnAddress::MemorySubtree(teardown_timestamps_start),
+        ColumnAddress::MemorySubtree(teardown_timestamps_start + 1),
+    ] {
+        let place_expr = read_value_expr(place, idents, false);
+        let t = quote! {
+            let #individual_term_ident = {
+                let value_to_constraint = #place_expr;
+
+                let mut #individual_term_ident = final_borrow_minus_one;
+                #individual_term_ident = #individual_term_ident.mul(cs, &value_to_constraint);
+
+                #individual_term_ident
+            };
+        };
+
+        streams.push(t);
+    }
+
+    (common_stream, streams)
 }

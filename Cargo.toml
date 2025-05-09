@@ -13,15 +13,19 @@ name = "cli"
 path = "src/main.rs"
 
 [dependencies]
-boojum = { git = "https://github.com/matter-labs/zksync-crypto.git", package="boojum", branch = "oh_mersenne_field" }
+boojum = { git = "https://github.com/matter-labs/zksync-crypto.git", package="boojum", branch = "mmzk_0418_without_field" }
 # boojum = { path = "../zksync-crypto/crates/boojum"}
-bellman = { git = "https://github.com/matter-labs/zksync-crypto.git", package="zksync_bellman", branch = "oh_mersenne_field" }
-rescue_poseidon = { git = "https://github.com/matter-labs/zksync-crypto.git", package="rescue_poseidon", branch = "oh_mersenne_field" }
+bellman = { git = "https://github.com/matter-labs/zksync-crypto.git", package="zksync_bellman", branch = "mmzk_0418_without_field" }
+# bellman = { path = "../zksync-crypto/crates/bellman", package="zksync_bellman"}
+rescue_poseidon = { git = "https://github.com/matter-labs/zksync-crypto.git", package="rescue_poseidon", branch = "mmzk_0418_without_field" }
 # rescue_poseidon = { path = "../zksync-crypto/crates/rescue-poseidon"}
-snark_wrapper = { git = "https://github.com/matter-labs/zksync-crypto.git", package="snark_wrapper", branch = "oh_mersenne_field" }
+snark_wrapper = { git = "https://github.com/matter-labs/zksync-crypto.git", package="snark_wrapper", branch = "mmzk_0418_without_field" }
 # snark_wrapper = { path = "../zksync-crypto/crates/snark-wrapper"}
-risc_verifier = {git="https://github.com/matter-labs/air_compiler.git", package="reduced_machine_for_wrapper_verifier", features=["proof_utils"], branch="oh_for_zkos_wrapper"}
-# risc_verifier = {path="../air_compiler/circuit_defs/reduced_machine_for_wrapper/verifier", package="reduced_machine_for_wrapper_verifier", features=["proof_utils"]}
+risc_verifier = {git="https://github.com/matter-labs/air_compiler.git", package="final_reduced_risc_v_machine_verifier", features=["proof_utils"], branch="oh_binaries_updated"}
+# risc_verifier = {path="../air_compiler/circuit_defs/final_reduced_risc_v_machine/verifier", package="final_reduced_risc_v_machine_verifier", features=["proof_utils"]}
+execution_utils = {git="https://github.com/matter-labs/air_compiler.git", package="execution_utils", branch="oh_binaries_updated"}
+# execution_utils = {path="../air_compiler/execution_utils"}
+circuit_mersenne_field = {path="circuit_mersenne_field"}
 serde_json = { version = "*" }
 serde = { version = "1", default-features = false, features = ["derive", "alloc"]}
 clap = { version = "4.5.21", features = ["derive"] }
@@ -29,4 +33,3 @@ clap = { version = "4.5.21", features = ["derive"] }
 [dev-dependencies]
 rand = "0.8.4"
 hex = "0.4.3"
-#zkos_verifier_worker = { path = "../air_compiler/worker", package="worker" }

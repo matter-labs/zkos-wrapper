@@ -198,15 +198,42 @@ impl<F: SmallField> CSAllocatable<F> for WrappedExternalDelegationArgumentChalle
 #[derive(Clone, Copy)]
 pub struct WrappedAuxArgumentsBoundaryValues<F: SmallField> {
     pub lazy_init_first_row: [MersenneField<F>; REGISTER_SIZE],
+    pub teardown_value_first_row: [MersenneField<F>; REGISTER_SIZE],
+    pub teardown_timestamp_first_row: [MersenneField<F>; REGISTER_SIZE],
     pub lazy_init_one_before_last_row: [MersenneField<F>; REGISTER_SIZE],
+    pub teardown_value_one_before_last_row: [MersenneField<F>; REGISTER_SIZE],
+    pub teardown_timestamp_one_before_last_row: [MersenneField<F>; REGISTER_SIZE],
 }
 
 impl<F: SmallField> WrappedAuxArgumentsBoundaryValues<F> {
     pub(crate) fn to_uint32_vec(&self) -> Vec<UInt32<F>> {
         let mut result = Vec::with_capacity(REGISTER_SIZE * 2);
         result.extend_from_slice(&self.lazy_init_first_row.map(|x| x.into_uint32()));
+        result.extend_from_slice(&self.teardown_value_first_row.map(|x| x.into_uint32()));
+        result.extend_from_slice(&self.teardown_timestamp_first_row.map(|x| x.into_uint32()));
         result.extend_from_slice(&self.lazy_init_one_before_last_row.map(|x| x.into_uint32()));
+        result.extend_from_slice(
+            &self
+                .teardown_value_one_before_last_row
+                .map(|x| x.into_uint32()),
+        );
+        result.extend_from_slice(
+            &self
+                .teardown_timestamp_one_before_last_row
+                .map(|x| x.into_uint32()),
+        );
         result
+    }
+
+    pub(crate) fn zero<CS: ConstraintSystem<F>>(cs: &mut CS) -> Self {
+        Self {
+            lazy_init_first_row: [MersenneField::zero(cs); REGISTER_SIZE],
+            teardown_value_first_row: [MersenneField::zero(cs); REGISTER_SIZE],
+            teardown_timestamp_first_row: [MersenneField::zero(cs); REGISTER_SIZE],
+            lazy_init_one_before_last_row: [MersenneField::zero(cs); REGISTER_SIZE],
+            teardown_value_one_before_last_row: [MersenneField::zero(cs); REGISTER_SIZE],
+            teardown_timestamp_one_before_last_row: [MersenneField::zero(cs); REGISTER_SIZE],
+        }
     }
 }
 
@@ -216,14 +243,26 @@ impl<F: SmallField> CSAllocatable<F> for WrappedAuxArgumentsBoundaryValues<F> {
     fn placeholder_witness() -> Self::Witness {
         AuxArgumentsBoundaryValues {
             lazy_init_first_row: [Mersenne31Field::ZERO; REGISTER_SIZE],
+            teardown_value_first_row: [Mersenne31Field::ZERO; REGISTER_SIZE],
+            teardown_timestamp_first_row: [Mersenne31Field::ZERO; REGISTER_SIZE],
             lazy_init_one_before_last_row: [Mersenne31Field::ZERO; REGISTER_SIZE],
+            teardown_value_one_before_last_row: [Mersenne31Field::ZERO; REGISTER_SIZE],
+            teardown_timestamp_one_before_last_row: [Mersenne31Field::ZERO; REGISTER_SIZE],
         }
     }
     fn allocate_without_value<CS: ConstraintSystem<F>>(cs: &mut CS) -> Self {
         Self {
             lazy_init_first_row: [(); REGISTER_SIZE]
                 .map(|_| MersenneField::allocate_without_value(cs)),
+            teardown_value_first_row: [(); REGISTER_SIZE]
+                .map(|_| MersenneField::allocate_without_value(cs)),
+            teardown_timestamp_first_row: [(); REGISTER_SIZE]
+                .map(|_| MersenneField::allocate_without_value(cs)),
             lazy_init_one_before_last_row: [(); REGISTER_SIZE]
+                .map(|_| MersenneField::allocate_without_value(cs)),
+            teardown_value_one_before_last_row: [(); REGISTER_SIZE]
+                .map(|_| MersenneField::allocate_without_value(cs)),
+            teardown_timestamp_one_before_last_row: [(); REGISTER_SIZE]
                 .map(|_| MersenneField::allocate_without_value(cs)),
         }
     }
@@ -232,8 +271,20 @@ impl<F: SmallField> CSAllocatable<F> for WrappedAuxArgumentsBoundaryValues<F> {
             lazy_init_first_row: witness
                 .lazy_init_first_row
                 .map(|x| MersenneField::allocate(cs, x)),
+            teardown_value_first_row: witness
+                .teardown_value_first_row
+                .map(|x| MersenneField::allocate(cs, x)),
+            teardown_timestamp_first_row: witness
+                .teardown_timestamp_first_row
+                .map(|x| MersenneField::allocate(cs, x)),
             lazy_init_one_before_last_row: witness
                 .lazy_init_one_before_last_row
+                .map(|x| MersenneField::allocate(cs, x)),
+            teardown_value_one_before_last_row: witness
+                .teardown_value_one_before_last_row
+                .map(|x| MersenneField::allocate(cs, x)),
+            teardown_timestamp_one_before_last_row: witness
+                .teardown_timestamp_one_before_last_row
                 .map(|x| MersenneField::allocate(cs, x)),
         }
     }
@@ -259,12 +310,12 @@ pub struct WrappedProofOutput<
 }
 
 impl<
-    F: SmallField,
-    const CAP_SIZE: usize,
-    const NUM_COSETS: usize,
-    const NUM_DELEGATION_CHALLENGES: usize,
-    const NUM_AUX_BOUNDARY_VALUES: usize,
-> CSAllocatable<F>
+        F: SmallField,
+        const CAP_SIZE: usize,
+        const NUM_COSETS: usize,
+        const NUM_DELEGATION_CHALLENGES: usize,
+        const NUM_AUX_BOUNDARY_VALUES: usize,
+    > CSAllocatable<F>
     for WrappedProofOutput<
         F,
         CAP_SIZE,

@@ -34,6 +34,12 @@ pub(crate) fn transform_first_or_last_rows(
         let lazy_init_address_start = shuffle_ram_inits_and_teardowns
             .lazy_init_addesses_columns
             .start();
+        let lazy_teardown_values_columns_start = shuffle_ram_inits_and_teardowns
+            .lazy_teardown_values_columns
+            .start();
+        let lazy_teardown_timestamps_columns_start = shuffle_ram_inits_and_teardowns
+            .lazy_teardown_timestamps_columns
+            .start();
 
         first_row_boundary_constraints.push((
             ColumnAddress::MemorySubtree(lazy_init_address_start),
@@ -48,6 +54,32 @@ pub(crate) fn transform_first_or_last_rows(
             },
         ));
 
+        first_row_boundary_constraints.push((
+            ColumnAddress::MemorySubtree(lazy_teardown_values_columns_start),
+            quote! {
+                #aux_boundary_values_ident.teardown_value_first_row[0]
+            },
+        ));
+        first_row_boundary_constraints.push((
+            ColumnAddress::MemorySubtree(lazy_teardown_values_columns_start + 1),
+            quote! {
+                #aux_boundary_values_ident.teardown_value_first_row[1]
+            },
+        ));
+
+        first_row_boundary_constraints.push((
+            ColumnAddress::MemorySubtree(lazy_teardown_timestamps_columns_start),
+            quote! {
+                #aux_boundary_values_ident.teardown_timestamp_first_row[0]
+            },
+        ));
+        first_row_boundary_constraints.push((
+            ColumnAddress::MemorySubtree(lazy_teardown_timestamps_columns_start + 1),
+            quote! {
+                #aux_boundary_values_ident.teardown_timestamp_first_row[1]
+            },
+        ));
+
         one_before_last_row_boundary_constraints.push((
             ColumnAddress::MemorySubtree(lazy_init_address_start),
             quote! {
@@ -58,6 +90,32 @@ pub(crate) fn transform_first_or_last_rows(
             ColumnAddress::MemorySubtree(lazy_init_address_start + 1),
             quote! {
                 #aux_boundary_values_ident.lazy_init_one_before_last_row[1]
+            },
+        ));
+
+        one_before_last_row_boundary_constraints.push((
+            ColumnAddress::MemorySubtree(lazy_teardown_values_columns_start),
+            quote! {
+                #aux_boundary_values_ident.teardown_value_one_before_last_row[0]
+            },
+        ));
+        one_before_last_row_boundary_constraints.push((
+            ColumnAddress::MemorySubtree(lazy_teardown_values_columns_start + 1),
+            quote! {
+                #aux_boundary_values_ident.teardown_value_one_before_last_row[1]
+            },
+        ));
+
+        one_before_last_row_boundary_constraints.push((
+            ColumnAddress::MemorySubtree(lazy_teardown_timestamps_columns_start),
+            quote! {
+                #aux_boundary_values_ident.teardown_timestamp_one_before_last_row[0]
+            },
+        ));
+        one_before_last_row_boundary_constraints.push((
+            ColumnAddress::MemorySubtree(lazy_teardown_timestamps_columns_start + 1),
+            quote! {
+                #aux_boundary_values_ident.teardown_timestamp_one_before_last_row[1]
             },
         ));
     }
@@ -207,6 +265,7 @@ pub(crate) fn transform_first_or_last_rows(
 
         // range checks
         {
+            // range check 16
             {
                 let offset = stage_2_layout
                     .range_check_16_intermediate_poly_for_multiplicities_absolute_poly_idx_for_verifier();
@@ -249,6 +308,44 @@ pub(crate) fn transform_first_or_last_rows(
 
                 if let Some(_remainder) = stage_2_layout.remainder_for_range_check_16 {
                     todo!();
+                }
+
+                let t = quote! {
+                    let #individual_term_ident = {
+                        #substream
+
+                        #individual_term_ident
+                    };
+                };
+
+                streams.push(t);
+            }
+
+            // timestamp range checks
+            {
+                let offset = stage_2_layout
+                    .timestamp_range_check_intermediate_poly_for_multiplicities_absolute_poly_idx_for_verifier();
+                let multiplicities_acc_expr = read_stage_2_value_expr(offset, idents, false);
+
+                let mut substream = quote! {
+                    let mut #individual_term_ident = #multiplicities_acc_expr;
+                };
+
+                let num_pairs = stage_2_layout
+                    .intermediate_polys_for_timestamp_range_checks
+                    .num_pairs;
+
+                for i in 0..num_pairs {
+                    let offset = stage_2_layout
+                        .intermediate_polys_for_timestamp_range_checks
+                        .get_ext4_poly_index_in_openings(i, stage_2_layout);
+                    let el_expr = read_stage_2_value_expr(offset, idents, false);
+
+                    let t = quote! {
+                        let t = #el_expr;
+                        #individual_term_ident = #individual_term_ident.sub(cs, &t);
+                    };
+                    substream.extend(t);
                 }
 
                 let t = quote! {

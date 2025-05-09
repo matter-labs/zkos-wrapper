@@ -1,5 +1,7 @@
+#![expect(warnings)]
 #![feature(array_chunks)]
 #![feature(slice_from_ptr_range)]
+#![feature(allocator_api)]
 
 mod everywhere_except_last;
 mod everywhere_except_last_two;
@@ -69,25 +71,18 @@ fn format_rust_code(code: &str) -> Result<String, String> {
 struct Cli {
     #[arg(long, default_value = "../src/wrapper_inner_verifier/imports")]
     output_dir: String,
-    #[arg(long, default_value = "layout")]
-    input_layout_file: String,
-    #[arg(long, default_value = "final_circuit_data")]
-    input_final_circuit_data_file: String,
-}
-
-fn deserialize_from_file<T: serde::de::DeserializeOwned>(filename: &str) -> T {
-    let src = std::fs::File::open(filename).unwrap();
-    serde_json::from_reader(src).unwrap()
 }
 
 fn main() {
     let cli = Cli::parse();
-
     let output_dir = cli.output_dir;
-    let input_layout_file = cli.input_layout_file;
 
-    let compiled_circuit: CompiledCircuitArtifact<Mersenne31Field> =
-        deserialize_from_file(&input_layout_file);
+    let dummy_bytecode = vec![0u32; setups::final_reduced_risc_v_machine::MAX_ROM_SIZE / 4];
+    let compiled_circuit = setups::final_reduced_risc_v_machine::get_machine(
+        &dummy_bytecode,
+        setups::final_reduced_risc_v_machine::ALLOWED_DELEGATION_CSRS,
+    );
+
     let (verifier, inline_verifier) = generate_verifier_files(&compiled_circuit);
     std::fs::write(Path::new(&output_dir).join("circuit_layout.rs"), verifier)
         .expect(&format!("Failed to write to {}", output_dir));
@@ -97,20 +92,15 @@ fn main() {
     )
     .expect(&format!("Failed to write to {}", output_dir));
 
-    let input_final_circuit_data_file = cli.input_final_circuit_data_file;
-    let final_circuit_data = deserialize_from_file(&input_final_circuit_data_file);
-
-    // For now
-    let base_layer_data = ExpectedFinalStateData::default();
-    let first_recursion_layer_data = ExpectedFinalStateData::default();
-    let next_recursion_layer_data = ExpectedFinalStateData::default();
+    let binaries = get_binaries();
 
     let end_params_constants = format_rust_code(
         &generate_constants(
-            &base_layer_data,
-            &first_recursion_layer_data,
-            &next_recursion_layer_data,
-            &final_circuit_data,
+            &binaries[0],
+            &binaries[1],
+            &binaries[2],
+            &binaries[3],
+            &binaries[4],
         )
         .to_string(),
     )
@@ -121,4 +111,14 @@ fn main() {
         end_params_constants,
     )
     .expect(&format!("Failed to write to {}", output_dir));
+}
+
+fn get_binaries() -> [&'static [u8]; 5] {
+    [
+        execution_utils::BASE_PROGRAM,
+        execution_utils::BASE_LAYER_VERIFIER,
+        execution_utils::RECURSION_LAYER_VERIFIER,
+        execution_utils::RECURSION_LAYER_NO_DELEGATION_VERIFIER,
+        execution_utils::FINAL_RECURSION_LAYER_VERIFIER,
+    ]
 }

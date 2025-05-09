@@ -3,13 +3,11 @@ use std::mem::MaybeUninit;
 use boojum::cs::traits::cs::ConstraintSystem;
 use boojum::field::SmallField;
 use boojum::gadgets::boolean::Boolean;
-use boojum::gadgets::mersenne_field::extension_trait::CircuitFieldExpression;
-use boojum::gadgets::mersenne_field::fourth_ext::MersenneQuartic;
-use boojum::gadgets::mersenne_field::second_ext::MersenneComplex;
-use boojum::gadgets::mersenne_field::MersenneField;
 use boojum::gadgets::traits::allocatable::CSAllocatable;
 use boojum::gadgets::traits::selectable::Selectable;
 use boojum::gadgets::u32::UInt32;
+use circuit_mersenne_field::extension_trait::CircuitFieldExpression;
+use circuit_mersenne_field::{MersenneComplex, MersenneField, MersenneQuartic};
 
 use risc_verifier::blake2s_u32::*;
 use risc_verifier::concrete::size_constants::*;
@@ -407,10 +405,7 @@ pub fn verify<F: SmallField, CS: ConstraintSystem<F>>(
         let aux_boundary_values = if skeleton.aux_boundary_values.len() > 0 {
             skeleton.aux_boundary_values[0]
         } else {
-            WrappedAuxArgumentsBoundaryValues {
-                lazy_init_first_row: [MersenneField::zero(cs); REGISTER_SIZE],
-                lazy_init_one_before_last_row: [MersenneField::zero(cs); REGISTER_SIZE],
-            }
+            WrappedAuxArgumentsBoundaryValues::zero(cs)
         };
 
         let shift = UInt32::allocate_constant(cs, 1 << CIRCUIT_SEQUENCE_BITS_SHIFT as u32);

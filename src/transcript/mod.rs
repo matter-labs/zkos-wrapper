@@ -2,10 +2,9 @@ use boojum::cs::traits::cs::ConstraintSystem;
 use boojum::field::SmallField;
 use boojum::gadgets::blake2s::mixing_function::Word;
 use boojum::gadgets::traits::allocatable::CSAllocatable;
-use boojum::gadgets::traits::witnessable::WitnessHookable;
-use boojum::gadgets::u8::UInt8;
 use boojum::gadgets::u16::UInt16;
 use boojum::gadgets::u32::UInt32;
+use boojum::gadgets::u8::UInt8;
 
 use risc_verifier::blake2s_u32::*;
 
@@ -301,19 +300,6 @@ impl<F: SmallField> Blake2sWrappedBufferingTranscript<F> {
 
     fn run_absorb<CS: ConstraintSystem<F>>(&mut self, cs: &mut CS) {
         debug_assert_eq!(self.buffer_offset, BLAKE2S_BLOCK_SIZE_U32_WORDS);
-
-        let witness = self
-            .state
-            .input_buffer
-            .iter()
-            .map(|el| {
-                let uint = UInt32::from_le_bytes(cs, el.inner);
-                uint.witness_hook(cs)()
-            })
-            .filter(|x| x.is_some())
-            .map(|x| x.unwrap())
-            .collect::<Vec<_>>();
-        // dbg!(witness);
 
         self.state
             .run_round_function::<_, USE_REDUCED_BLAKE2_ROUNDS>(
