@@ -742,19 +742,19 @@ mod tests {
     use std::alloc::Global;
 
     use super::*;
-    use crate::cs::*;
+    use boojum::cs::*;
 
-    use mersenne_field::FieldExtension;
-    use crate::cs::gates::*;
-    use crate::cs::traits::gate::GatePlacementStrategy;
-    use crate::dag::CircuitResolverOpts;
-    use crate::field::goldilocks::GoldilocksField;
-    use crate::gadgets::tables::range_check_16_bits::{
+    use mersenne_field::{Mersenne31Complex, FieldExtension};
+    use boojum::cs::gates::*;
+    use boojum::cs::traits::gate::GatePlacementStrategy;
+    use boojum::dag::CircuitResolverOpts;
+    use boojum::field::goldilocks::GoldilocksField;
+    use boojum::gadgets::tables::range_check_16_bits::{
         create_range_check_16_bits_table, RangeCheck16BitsTable,
         create_range_check_15_bits_table, RangeCheck15BitsTable,
     };
-    use crate::gadgets::traits::witnessable::WitnessHookable;
-    use crate::worker::Worker;
+    use boojum::gadgets::traits::witnessable::WitnessHookable;
+    use boojum::worker::Worker;
 
     type F = GoldilocksField;
 
@@ -767,16 +767,16 @@ mod tests {
             max_allowed_constraint_degree: 4,
         };
 
-        use crate::config::DevCSConfig;
+        use boojum::config::DevCSConfig;
         type RCfg = <DevCSConfig as CSConfig>::ResolverConfig;
-        use crate::cs::cs_builder_reference::*;
+        use boojum::cs::cs_builder_reference::*;
         let builder_impl =
             CsReferenceImplementationBuilder::<F, F, DevCSConfig>::new(geometry, 1 << 18);
-        use crate::cs::cs_builder::new_builder;
+        use boojum::cs::cs_builder::new_builder;
         let builder = new_builder::<_, F>(builder_impl);
 
         let builder = builder.allow_lookup(
-            crate::cs::LookupParameters::UseSpecializedColumnsWithTableIdAsConstant {
+            boojum::cs::LookupParameters::UseSpecializedColumnsWithTableIdAsConstant {
                 width: 1,
                 num_repetitions: 10,
                 share_table_id: true,

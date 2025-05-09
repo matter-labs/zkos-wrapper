@@ -8,3 +8,4 @@ boojum = { git = "https://github.com/matter-labs/zksync-crypto.git", package="bo
 # boojum = { path = "../../zksync-crypto/crates/boojum"}
 mersenne_field = {git="https://github.com/matter-labs/air_compiler.git", package="field", branch="oh_binaries_updated"}
 # mersenne_field = {path="../../air_compiler/field", package="field"}
+rand = "0.8"
