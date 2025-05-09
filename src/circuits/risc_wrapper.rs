@@ -59,57 +59,7 @@ const NUM_RISC_WRAPPER_PUBLIC_INPUTS: usize = 4;
 
 pub struct RiscWrapperWitness {
     pub final_registers_state: [u32; NUM_REGISTERS * 3],
-    pub final_registers_state: [u32; NUM_REGISTERS * 3],
     pub proof: RiscProof,
-}
-
-impl RiscWrapperWitness {
-    pub fn from_full_proof(full_proof: execution_utils::ProgramProof) -> Self {
-        let execution_utils::ProgramProof {
-            base_layer_proofs,
-            delegation_proofs,
-            register_final_values,
-            end_params,
-            recursion_chain_preimage,
-            recursion_chain_hash,
-        } = full_proof;
-
-        assert!(base_layer_proofs.len() == 1);
-        assert!(delegation_proofs.is_empty());
-        assert!(register_final_values.len() == NUM_REGISTERS);
-        assert_eq!(end_params, FINAL_RISC_CIRCUIT_END_PARAMS);
-
-        assert!(recursion_chain_preimage.is_some());
-        let mut result_hasher = Blake2sBufferingTranscript::new();
-        result_hasher.absorb(&recursion_chain_preimage.unwrap());
-
-        assert!(recursion_chain_hash.is_some());
-        assert_eq!(
-            recursion_chain_hash.unwrap(),
-            result_hasher.finalize_reset().0
-        );
-        assert_eq!(
-            recursion_chain_hash.unwrap(),
-            FINAL_RISC_CIRCUIT_AUX_REGISTERS_VALUES
-        );
-
-        let final_registers_state: Vec<_> = register_final_values
-            .into_iter()
-            .flat_map(|final_values| {
-                let (low, high) = risc_verifier::prover::cs::definitions::split_timestamp(
-                    final_values.last_access_timestamp,
-                );
-                [final_values.value, low, high]
-            })
-            .collect();
-
-        let base_proof = base_layer_proofs.into_iter().next().unwrap();
-
-        Self {
-            final_registers_state: final_registers_state.try_into().unwrap(),
-            proof: base_proof,
-        }
-    }
 }
 
 impl RiscWrapperWitness {

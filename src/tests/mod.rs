@@ -45,12 +45,9 @@ mod snark_wrapper_tests;
 #[test]
 fn all_layers_full_test() {
     println!("Testing Risc wrapper");
-    println!("Testing Risc wrapper");
     risc_wrapper_tests::risc_wrapper_full_test();
     println!("Testing compression");
-    println!("Testing compression");
     compression_tests::compression_full_test();
-    println!("Testing Snark wrapper");
     println!("Testing Snark wrapper");
     snark_wrapper_tests::snark_wrapper_full_test();
 }
@@ -60,13 +57,6 @@ fn all_layers_setup_test() {
     risc_wrapper_tests::risc_wrapper_setup_test();
     compression_tests::compression_setup_test();
     snark_wrapper_tests::snark_wrapper_setup_test();
-}
-
-#[test]
-fn get_setup_caps() {
-    let risc_proof: RiscProof = deserialize_from_file(RISC_PROOF_PATH);
-
-    serialize_to_file(&risc_proof.setup_tree_caps, "testing_data/setup_caps");
 }
 
 const RISC_PROOF_PATH: &str = "testing_data/risc_proof";
