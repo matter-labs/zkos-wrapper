@@ -36,14 +36,12 @@ jobs:
         run: |
           rustup set profile minimal
           git config --global --add url."https://${{ secrets.ZKSYNC_ADMIN_BOT_ORG_REPO_WRITE }}:x-oauth-basic@github.com/".insteadOf https://github.com/
-      - name: Compile 
-        run: |
-          cd circuit_mersenne_field
-          cargo build --verbose
+      - name: Compile
+        working-directory: ./circuit_mersenne_field
+        run: cargo build --verbose
       - name: tests
-        run: |
-          cd circuit_mersenne_field
-          cargo test --release -- --nocapture --test-threads=1
+        working-directory: ./circuit_mersenne_field
+        run: cargo test --release -- --nocapture --test-threads=1
 
   wrapper_generated:
     name: wrapper_generated
@@ -58,9 +56,8 @@ jobs:
           rustup set profile default
           git config --global --add url."https://${{ secrets.ZKSYNC_ADMIN_BOT_ORG_REPO_WRITE }}:x-oauth-basic@github.com/".insteadOf https://github.com/
       - name: Regenerate wrapper
-        run: |
-          cd wrapper_generator
-          cargo run --release
+        working-directory: ./wrapper_generator
+        run: cargo run --release
       - name: Check if anything has changed
         run: |
           MODIFIED_FILES=$(git status --porcelain)
