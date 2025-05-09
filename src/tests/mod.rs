@@ -59,13 +59,6 @@ fn all_layers_setup_test() {
     snark_wrapper_tests::snark_wrapper_setup_test();
 }
 
-#[test]
-fn get_setup_caps() {
-    let risc_proof: RiscProof = deserialize_from_file(RISC_PROOF_PATH);
-
-    serialize_to_file(&risc_proof.setup_tree_caps, "testing_data/setup_caps");
-}
-
 const RISC_PROOF_PATH: &str = "testing_data/risc_proof";
 const RISC_WRAPPER_PROOF_PATH: &str = "testing_data/risc_wrapper_proof";
 const RISC_WRAPPER_VK_PATH: &str = "testing_data/risc_wrapper_vk";
