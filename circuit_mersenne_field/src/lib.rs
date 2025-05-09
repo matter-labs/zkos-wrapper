@@ -1,6 +1,7 @@
 #![feature(unboxed_closures)]
 #![feature(fn_traits)]
 #![feature(allocator_api)]
+#![allow(incomplete_features)]
 #![feature(generic_const_exprs)] 
 
 use boojum::cs::gates::FmaGateInBaseFieldWithoutConstant;

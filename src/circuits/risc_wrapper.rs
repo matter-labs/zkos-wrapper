@@ -343,6 +343,7 @@ pub(crate) fn prepare_proof_for_wrapper<
     (skeleton, queries)
 }
 
+#[allow(invalid_value)]
 pub(crate) fn verify_risc_proof<V: LeafInclusionVerifier>(
     proof: &RiscProof,
 ) -> (

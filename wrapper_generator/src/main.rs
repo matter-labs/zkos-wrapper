@@ -1,3 +1,4 @@
+#![expect(warnings)]
 #![feature(array_chunks)]
 #![feature(slice_from_ptr_range)]
 #![feature(allocator_api)]
@@ -16,7 +17,7 @@ use clap::Parser;
 use end_params_generator::*;
 use prover::{cs::one_row_compiler::CompiledCircuitArtifact, field::Mersenne31Field};
 use quotient_generator::generate_inlined;
-use std::io::{Read, Write};
+use std::io::Write;
 use std::path::Path;
 use std::process::Command;
 use std::process::Stdio;
@@ -70,11 +71,6 @@ fn format_rust_code(code: &str) -> Result<String, String> {
 struct Cli {
     #[arg(long, default_value = "../src/wrapper_inner_verifier/imports")]
     output_dir: String,
-}
-
-fn deserialize_from_file<T: serde::de::DeserializeOwned>(filename: &str) -> T {
-    let src = std::fs::File::open(filename).unwrap();
-    serde_json::from_reader(src).unwrap()
 }
 
 fn main() {

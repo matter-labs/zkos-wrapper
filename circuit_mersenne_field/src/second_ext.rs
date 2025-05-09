@@ -511,7 +511,6 @@ mod tests {
     use super::*;
     use boojum::cs::*;
 
-    use mersenne_field::FieldExtension;
     use boojum::cs::gates::*;
     use boojum::cs::traits::gate::GatePlacementStrategy;
     use boojum::dag::CircuitResolverOpts;
@@ -535,7 +534,6 @@ mod tests {
         };
 
         use boojum::config::DevCSConfig;
-        type RCfg = <DevCSConfig as CSConfig>::ResolverConfig;
         use boojum::cs::cs_builder_reference::*;
         let builder_impl =
             CsReferenceImplementationBuilder::<F, F, DevCSConfig>::new(geometry, 1 << 18);
@@ -593,8 +591,8 @@ mod tests {
 
         let cs = &mut owned_cs;
 
-        let rand_base_witness = [0; 2].map(|_| Mersenne31Field::new(rand::random::<u32>() % M31_MODULUS as u32));
-        let rand_base_vars = rand_base_witness.map(|w| MersenneField::<F>::allocate_checked(cs, w, false));
+        // let rand_base_witness = [0; 2].map(|_| Mersenne31Field::new(rand::random::<u32>() % M31_MODULUS as u32));
+        // let rand_base_vars = rand_base_witness.map(|w| MersenneField::<F>::allocate_checked(cs, w, false));
 
         let rand_witness = [0; 2].map(|_| 
             Mersenne31Complex {
@@ -666,7 +664,7 @@ mod tests {
 
         let worker = Worker::new_with_num_threads(8);
 
-        drop(cs);
+        let _ = cs;
         owned_cs.pad_and_shrink();
         let mut owned_cs = owned_cs.into_assembly::<Global>();
         assert!(owned_cs.check_if_satisfied(&worker));

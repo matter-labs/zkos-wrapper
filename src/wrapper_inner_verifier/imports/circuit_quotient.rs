@@ -1,4 +1,10 @@
-#[allow(unused_braces, unused_mut, unused_variables, unsafe_op_in_unsafe_fn)]
+#[allow(
+    unused_braces,
+    unused_mut,
+    unused_variables,
+    unsafe_op_in_unsafe_fn,
+    unused_assignments
+)]
 unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>(
     cs: &mut CS,
     random_point: MersenneQuartic<F>,
@@ -6706,7 +6712,13 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
     };
     every_row_except_last_contribution
 }
-#[allow(unused_braces, unused_mut, unused_variables, unsafe_op_in_unsafe_fn)]
+#[allow(
+    unused_braces,
+    unused_mut,
+    unused_variables,
+    unsafe_op_in_unsafe_fn,
+    unused_assignments
+)]
 unsafe fn evaluate_every_row_except_two<F: SmallField, CS: ConstraintSystem<F>>(
     cs: &mut CS,
     random_point: MersenneQuartic<F>,
@@ -6811,7 +6823,13 @@ unsafe fn evaluate_every_row_except_two<F: SmallField, CS: ConstraintSystem<F>>(
     };
     every_row_except_two_last_contribution
 }
-#[allow(unused_braces, unused_mut, unused_variables, unsafe_op_in_unsafe_fn)]
+#[allow(
+    unused_braces,
+    unused_mut,
+    unused_variables,
+    unsafe_op_in_unsafe_fn,
+    unused_assignments
+)]
 unsafe fn evaluate_last_row_and_zero<F: SmallField, CS: ConstraintSystem<F>>(
     cs: &mut CS,
     random_point: MersenneQuartic<F>,
@@ -6937,7 +6955,13 @@ unsafe fn evaluate_last_row_and_zero<F: SmallField, CS: ConstraintSystem<F>>(
     };
     last_row_and_zero_contribution
 }
-#[allow(unused_braces, unused_mut, unused_variables, unsafe_op_in_unsafe_fn)]
+#[allow(
+    unused_braces,
+    unused_mut,
+    unused_variables,
+    unsafe_op_in_unsafe_fn,
+    unused_assignments
+)]
 pub unsafe fn evaluate_quotient<F: SmallField, CS: ConstraintSystem<F>>(
     cs: &mut CS,
     random_point: MersenneQuartic<F>,

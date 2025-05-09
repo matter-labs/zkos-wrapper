@@ -1513,7 +1513,6 @@ mod tests {
         };
 
         use boojum::config::DevCSConfig;
-        type RCfg = <DevCSConfig as CSConfig>::ResolverConfig;
         use boojum::cs::cs_builder_reference::*;
         let builder_impl =
             CsReferenceImplementationBuilder::<F, F, DevCSConfig>::new(geometry, 1 << 18);
@@ -1669,7 +1668,7 @@ mod tests {
 
         let worker = Worker::new_with_num_threads(8);
 
-        drop(cs);
+        let _ = cs;
         owned_cs.pad_and_shrink();
         let mut owned_cs = owned_cs.into_assembly::<Global>();
         assert!(owned_cs.check_if_satisfied(&worker));
