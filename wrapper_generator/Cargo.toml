@@ -14,13 +14,13 @@ path = "src/main.rs"
 
 [dependencies]
 clap = { version = "4.5.21", features = ["derive"] }
-zkos_verifier_generator = {git="https://github.com/matter-labs/air_compiler.git", package="verifier_generator", branch="oh_binaries_updated"}
+zkos_verifier_generator = {git="https://github.com/matter-labs/air_compiler.git", package="verifier_generator", branch="main"}
 # zkos_verifier_generator = {path="../../air_compiler/verifier_generator", package="verifier_generator"}
-prover = {git="https://github.com/matter-labs/air_compiler.git", package="prover", branch="oh_binaries_updated"}
+prover = {git="https://github.com/matter-labs/air_compiler.git", package="prover", branch="main"}
 # prover = {path="../../air_compiler/prover", package="prover"}
-execution_utils = {git="https://github.com/matter-labs/air_compiler.git", package="execution_utils", branch="oh_binaries_updated"}
+execution_utils = {git="https://github.com/matter-labs/air_compiler.git", package="execution_utils", branch="main"}
 # execution_utils = {path="../../air_compiler/execution_utils"}
-setups = {git="https://github.com/matter-labs/air_compiler.git", package="setups", branch="oh_binaries_updated"}
+setups = {git="https://github.com/matter-labs/air_compiler.git", package="setups", branch="main"}
 # setups = {path="../../air_compiler/circuit_defs/setups"}
 serde_json = "*"
 serde = { version = "1", default-features = false, features = ["derive", "alloc"]}
