@@ -11,12 +11,12 @@ use clap::Parser;
 use bellman::kate_commitment::{Crs, CrsForMonomialForm};
 use bellman::worker::Worker as BellmanWorker;
 
+use zkos_wrapper::{Bn256, L1_VERIFIER_DOMAIN_SIZE_LOG};
 use zkos_wrapper::{
     circuits::RiscWrapperWitness, get_compression_setup, get_risc_wrapper_setup,
     get_snark_wrapper_setup, prove_compression, prove_risc_wrapper, prove_snark_wrapper,
     verify_compression_proof, verify_risc_wrapper_proof, verify_snark_wrapper_proof,
 };
-use zkos_wrapper::{Bn256, L1_VERIFIER_DOMAIN_SIZE_LOG};
 
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
@@ -39,6 +39,8 @@ fn deserialize_from_file<T: serde::de::DeserializeOwned>(filename: &str) -> T {
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli = Cli::parse();
+
+    println!("=== Phase 1: Creating the Risc wrapper proof");
 
     let worker = boojum::worker::Worker::new_with_num_threads(4);
 
@@ -75,6 +77,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         &Path::new(&cli.output_dir.clone()).join("risc_proof.json"),
     );
 
+    println!("=== Phase 2: Creating compression proof");
+
     let (
         finalization_hint,
         setup_base,
@@ -104,6 +108,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         &compression_proof,
         &Path::new(&cli.output_dir.clone()).join("compression_proof.json"),
     );
+
+    println!("=== Phase 3: Creating SNARK proof");
 
     {
         let worker = BellmanWorker::new_with_cpus(4);

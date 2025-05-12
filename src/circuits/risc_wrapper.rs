@@ -17,7 +17,7 @@ use boojum::{
             byte_split::{ByteSplitTable, create_byte_split_table},
             xor8::{Xor8Table, create_xor8_table},
         },
-        traits::{allocatable::CSAllocatable, witnessable::WitnessHookable},
+        traits::allocatable::CSAllocatable,
         u16::UInt16,
         u32::UInt32,
     },
@@ -459,23 +459,6 @@ pub(crate) fn check_proof_state<F: SmallField, CS: ConstraintSystem<F>>(
             memory_seed,
             NUM_DELEGATION_CHALLENGES > 0,
         );
-
-    dbg!(
-        proof_state
-            .memory_challenges
-            .memory_argument_linearization_challenges
-            .witness_hook(cs)(),
-        proof_state
-            .memory_challenges
-            .memory_argument_gamma
-            .witness_hook(cs)(),
-        memory_argument_challenges
-            .memory_argument_linearization_challenges
-            .witness_hook(cs)(),
-        memory_argument_challenges
-            .memory_argument_gamma
-            .witness_hook(cs)(),
-    );
 
     memory_argument_challenges.enforce_equal(cs, &proof_state.memory_challenges);
     if NUM_DELEGATION_CHALLENGES > 0 {

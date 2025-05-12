@@ -1,7 +1,7 @@
 use proc_macro2::TokenStream;
 use prover::merkle_trees::MerkleTreeCapVarLength;
-use prover::transcript::blake2s_u32::BLAKE2S_DIGEST_SIZE_U32_WORDS;
 use prover::transcript::Blake2sBufferingTranscript;
+use prover::transcript::blake2s_u32::BLAKE2S_DIGEST_SIZE_U32_WORDS;
 use prover::worker::Worker;
 use quote::quote;
 use std::alloc::Global;
@@ -12,13 +12,16 @@ pub struct ExpectedFinalStateData {
     pub setup_caps: Vec<MerkleTreeCapVarLength>,
 }
 
-pub fn generate_constants(
+pub fn generate_params_and_register_values(
     base_layer_bin: &[u8],
     first_recursion_layer_bin: &[u8],
     next_recursion_layer_bin: &[u8],
     first_final_recursion_bin: &[u8],
     next_final_recursion_bin: &[u8],
-) -> TokenStream {
+) -> (
+    [u32; BLAKE2S_DIGEST_SIZE_U32_WORDS],
+    [u32; BLAKE2S_DIGEST_SIZE_U32_WORDS],
+) {
     let worker = Worker::new_with_num_threads(8);
 
     let expected_final_pc = execution_utils::find_binary_exit_point(next_final_recursion_bin);
@@ -36,11 +39,44 @@ pub fn generate_constants(
         first_final_recursion_bin,
         &worker,
     );
+    (end_params, aux_registers_values)
+}
 
-    let [end_params_0, end_params_1, end_params_2, end_params_3, end_params_4, end_params_5, end_params_6, end_params_7] =
-        end_params;
-    let [aux_registers_values_0, aux_registers_values_1, aux_registers_values_2, aux_registers_values_3, aux_registers_values_4, aux_registers_values_5, aux_registers_values_6, aux_registers_values_7] =
-        aux_registers_values;
+pub fn generate_constants(
+    base_layer_bin: &[u8],
+    first_recursion_layer_bin: &[u8],
+    next_recursion_layer_bin: &[u8],
+    first_final_recursion_bin: &[u8],
+    next_final_recursion_bin: &[u8],
+) -> TokenStream {
+    let (end_params, aux_registers_values) = generate_params_and_register_values(
+        base_layer_bin,
+        first_recursion_layer_bin,
+        next_recursion_layer_bin,
+        first_final_recursion_bin,
+        next_final_recursion_bin,
+    );
+
+    let [
+        end_params_0,
+        end_params_1,
+        end_params_2,
+        end_params_3,
+        end_params_4,
+        end_params_5,
+        end_params_6,
+        end_params_7,
+    ] = end_params;
+    let [
+        aux_registers_values_0,
+        aux_registers_values_1,
+        aux_registers_values_2,
+        aux_registers_values_3,
+        aux_registers_values_4,
+        aux_registers_values_5,
+        aux_registers_values_6,
+        aux_registers_values_7,
+    ] = aux_registers_values;
 
     quote! {
         pub(crate) const FINAL_RISC_CIRCUIT_END_PARAMS: [u32; #BLAKE2S_DIGEST_SIZE_U32_WORDS] = [
@@ -117,9 +153,14 @@ fn compute_commitment_for_chain_of_programs(
     hasher.absorb(&first_recursion_layer_end_params);
     let tmp = hasher.finalize_reset().0;
 
-    hasher.absorb(&tmp);
-    hasher.absorb(&next_recursion_layer_end_params);
-    let tmp = hasher.finalize_reset().0;
+    /// If second recursion layer is matching first - we should not apply the hash anymore.
+    let tmp = if next_recursion_layer_end_params != first_recursion_layer_end_params {
+        hasher.absorb(&tmp);
+        hasher.absorb(&next_recursion_layer_end_params);
+        hasher.finalize_reset().0
+    } else {
+        tmp
+    };
 
     hasher.absorb(&tmp);
     hasher.absorb(&first_final_recursion_end_params);

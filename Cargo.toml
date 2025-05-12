@@ -13,7 +13,7 @@ name = "cli"
 path = "src/main.rs"
 
 [dependencies]
-boojum = { git = "https://github.com/matter-labs/zksync-crypto.git", package="boojum", branch = "mmzk_0418_without_field" }
+boojum = { git = "https://github.com/matter-labs/zksync-crypto.git", package="boojum", branch = "mmzk_0418_without_field" , features = ["log_tracing"]}
 # boojum = { path = "../zksync-crypto/crates/boojum"}
 bellman = { git = "https://github.com/matter-labs/zksync-crypto.git", package="zksync_bellman", branch = "mmzk_0418_without_field" }
 # bellman = { path = "../zksync-crypto/crates/bellman", package="zksync_bellman"}

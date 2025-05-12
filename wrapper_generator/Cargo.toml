@@ -5,6 +5,13 @@ name = "wrapper_generator"
 version = "0.1.0"
 edition = "2024"
 
+[lib]
+path = "src/lib.rs"
+
+[[bin]]
+name = "cli"
+path = "src/main.rs"
+
 [dependencies]
 clap = { version = "4.5.21", features = ["derive"] }
 zkos_verifier_generator = {git="https://github.com/matter-labs/air_compiler.git", package="verifier_generator", branch="oh_binaries_updated"}

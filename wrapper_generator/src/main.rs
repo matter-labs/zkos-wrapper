@@ -17,7 +17,7 @@ use clap::Parser;
 use end_params_generator::*;
 use prover::{cs::one_row_compiler::CompiledCircuitArtifact, field::Mersenne31Field};
 use quotient_generator::generate_inlined;
-use std::io::{Read, Write};
+use std::io::Write;
 use std::path::Path;
 use std::process::Command;
 use std::process::Stdio;
