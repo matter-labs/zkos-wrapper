@@ -165,7 +165,7 @@ fn compute_commitment_for_chain_of_programs(
     ])
 }
 
-fn compute_chain_encoding(
+pub fn compute_chain_encoding(
     data: Vec<[u32; BLAKE2S_DIGEST_SIZE_U32_WORDS]>,
 ) -> [u32; BLAKE2S_DIGEST_SIZE_U32_WORDS] {
     let mut hasher = Blake2sBufferingTranscript::new();
