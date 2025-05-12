@@ -6,6 +6,6 @@ edition = "2021"
 [dependencies]
 boojum = { git = "https://github.com/matter-labs/zksync-crypto.git", package="boojum", branch = "mmzk_0418_without_field" }
 # boojum = { path = "../../zksync-crypto/crates/boojum"}
-mersenne_field = {git="https://github.com/matter-labs/air_compiler.git", package="field", branch="oh_binaries_updated"}
+mersenne_field = {git="https://github.com/matter-labs/air_compiler.git", package="field", branch="main"}
 # mersenne_field = {path="../../air_compiler/field", package="field"}
 rand = "0.8"

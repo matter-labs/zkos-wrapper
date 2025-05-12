@@ -2,27 +2,27 @@ use crate::transcript::*;
 use crate::wrapper_inner_verifier::skeleton::*;
 use crate::wrapper_utils::verifier_traits::CircuitBlake2sForEverythingVerifier;
 use crate::wrapper_utils::verifier_traits::CircuitLeafInclusionVerifier;
+use boojum::cs::LookupParameters;
 use boojum::cs::gates::FmaGateInBaseFieldWithoutConstant;
 use boojum::cs::gates::NopGate;
 use boojum::cs::gates::SelectionGate;
 use boojum::cs::gates::ZeroCheckGate;
-use boojum::cs::LookupParameters;
-use boojum::gadgets::tables::create_range_check_15_bits_table;
-use boojum::gadgets::tables::create_range_check_16_bits_table;
 use boojum::gadgets::tables::RangeCheck15BitsTable;
 use boojum::gadgets::tables::RangeCheck16BitsTable;
+use boojum::gadgets::tables::create_range_check_15_bits_table;
+use boojum::gadgets::tables::create_range_check_16_bits_table;
 use boojum::{
     cs::{
+        CSGeometry,
         gates::{ConstantsAllocatorGate, ReductionGate, U32TriAddCarryAsChunkGate, UIntXAddGate},
         traits::{cs::ConstraintSystem, gate::GatePlacementStrategy},
-        CSGeometry,
     },
     dag::CircuitResolverOpts,
     gadgets::blake2s::mixing_function::Word,
     gadgets::{
         tables::{
-            byte_split::{create_byte_split_table, ByteSplitTable},
-            xor8::{create_xor8_table, Xor8Table},
+            byte_split::{ByteSplitTable, create_byte_split_table},
+            xor8::{Xor8Table, create_xor8_table},
         },
         traits::witnessable::WitnessHookable,
         u32::UInt32,

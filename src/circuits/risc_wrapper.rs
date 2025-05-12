@@ -1,5 +1,6 @@
 use boojum::{
     cs::{
+        CSGeometry, GateConfigurationHolder, LookupParameters, StaticToolboxHolder,
         cs_builder::{CsBuilder, CsBuilderImpl},
         gates::{
             ConstantsAllocatorGate, FmaGateInBaseFieldWithoutConstant, NopGate, PublicInputGate,
@@ -8,22 +9,21 @@ use boojum::{
         },
         implementations::prover::ProofConfig,
         traits::{circuit::CircuitBuilder, cs::ConstraintSystem, gate::GatePlacementStrategy},
-        CSGeometry, GateConfigurationHolder, LookupParameters, StaticToolboxHolder,
     },
     field::SmallField,
     gadgets::{
         num::Num,
         tables::{
-            byte_split::{create_byte_split_table, ByteSplitTable},
-            xor8::{create_xor8_table, Xor8Table},
+            byte_split::{ByteSplitTable, create_byte_split_table},
+            xor8::{Xor8Table, create_xor8_table},
         },
-        traits::{allocatable::CSAllocatable, witnessable::WitnessHookable},
+        traits::allocatable::CSAllocatable,
         u16::UInt16,
         u32::UInt32,
     },
 };
 use circuit_mersenne_field::{
-    extension_trait::CircuitFieldExpression, MersenneField, MersenneQuartic,
+    MersenneField, MersenneQuartic, extension_trait::CircuitFieldExpression,
 };
 use std::mem::MaybeUninit;
 
@@ -45,14 +45,14 @@ use risc_verifier::prover::risc_v_simulator::cycle::state::NUM_REGISTERS;
 use risc_verifier::prover::cs::definitions::*;
 
 use risc_verifier::verifier_common::{
-    transcript::Blake2sBufferingTranscript, DefaultNonDeterminismSource, ProofOutput,
-    ProofPublicInputs,
+    DefaultNonDeterminismSource, ProofOutput, ProofPublicInputs,
+    transcript::Blake2sBufferingTranscript,
 };
 
-use boojum::gadgets::tables::create_range_check_15_bits_table;
-use boojum::gadgets::tables::create_range_check_16_bits_table;
 use boojum::gadgets::tables::RangeCheck15BitsTable;
 use boojum::gadgets::tables::RangeCheck16BitsTable;
+use boojum::gadgets::tables::create_range_check_15_bits_table;
+use boojum::gadgets::tables::create_range_check_16_bits_table;
 use risc_verifier::prover::prover_stages::Proof as RiscProof;
 
 const NUM_RISC_WRAPPER_PUBLIC_INPUTS: usize = 4;
@@ -287,7 +287,7 @@ impl<F: SmallField, V: CircuitLeafInclusionVerifier<F>> RiscWrapperCircuit<F, V>
 
         // we carry registers 10-17 to the next layer - those are the output of the base program
         let output_registers_values: Vec<_> = final_registers_state
-            .chunks(2)
+            .chunks(3)
             .skip(10)
             .take(8)
             .flat_map(|chunk| chunk[0].decompose_into_bytes(cs))
@@ -459,23 +459,6 @@ pub(crate) fn check_proof_state<F: SmallField, CS: ConstraintSystem<F>>(
             memory_seed,
             NUM_DELEGATION_CHALLENGES > 0,
         );
-
-    dbg!(
-        proof_state
-            .memory_challenges
-            .memory_argument_linearization_challenges
-            .witness_hook(cs)(),
-        proof_state
-            .memory_challenges
-            .memory_argument_gamma
-            .witness_hook(cs)(),
-        memory_argument_challenges
-            .memory_argument_linearization_challenges
-            .witness_hook(cs)(),
-        memory_argument_challenges
-            .memory_argument_gamma
-            .witness_hook(cs)(),
-    );
 
     memory_argument_challenges.enforce_equal(cs, &proof_state.memory_challenges);
     if NUM_DELEGATION_CHALLENGES > 0 {
