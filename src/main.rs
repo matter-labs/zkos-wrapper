@@ -1,3 +1,5 @@
+#![feature(allocator_api)]
+use std::alloc::Global;
 /// Tool that takes the riscv proof from boojum 2.0, together with the final value of the
 /// registers - and returns the SNARK proof.
 // Inside, it runs 3 submodules:
@@ -11,6 +13,13 @@ use clap::Parser;
 use bellman::kate_commitment::{Crs, CrsForMonomialForm};
 use bellman::worker::Worker as BellmanWorker;
 
+use execution_utils::{
+    final_recursion_layer_verifier_vk, recursion_layer_no_delegation_verifier_vk,
+    recursion_layer_verifier_vk, universal_circuit_no_delegation_verifier_vk,
+    universal_circuit_verifier_vk,
+};
+use risc_verifier::prover::worker::Worker;
+use zkos_wrapper::circuits::BinaryCommitment;
 use zkos_wrapper::{Bn256, L1_VERIFIER_DOMAIN_SIZE_LOG};
 use zkos_wrapper::{
     circuits::RiscWrapperWitness, get_compression_setup, get_risc_wrapper_setup,
@@ -23,6 +32,12 @@ use zkos_wrapper::{
 struct Cli {
     #[arg(short, long)]
     input: String,
+
+    // Binary used to generate the proof.
+    // If not specified, take the default binary (fibonacci hasher).
+    #[arg(long)]
+    input_binary: Option<String>,
+
     #[arg(short, long)]
     output_dir: String,
 }
@@ -37,6 +52,54 @@ fn deserialize_from_file<T: serde::de::DeserializeOwned>(filename: &str) -> T {
     serde_json::from_reader(src).unwrap()
 }
 
+pub fn create_binary_commitment(
+    binary_path: String,
+    expected_end_params: &[u32; 8],
+) -> BinaryCommitment {
+    let bin = std::fs::read(binary_path).unwrap();
+
+    let worker = Worker::new_with_num_threads(8);
+
+    let expected_final_pc = execution_utils::find_binary_exit_point(&bin);
+    let binary: Vec<u32> = execution_utils::get_padded_binary(&bin);
+
+    let base_params = execution_utils::compute_end_parameters(
+        expected_final_pc,
+        &setups::get_main_riscv_circuit_setup::<Global>(&binary, &worker),
+    );
+
+    // Check which verifier was used.
+    if universal_circuit_no_delegation_verifier_vk().params == *expected_end_params {
+        let layers = vec![
+            [0u32; 8],
+            base_params,
+            universal_circuit_verifier_vk().params,
+            universal_circuit_no_delegation_verifier_vk().params,
+        ];
+        BinaryCommitment {
+            end_params: universal_circuit_no_delegation_verifier_vk().params,
+            aux_params: execution_utils::compute_chain_encoding(layers),
+        }
+    } else if final_recursion_layer_verifier_vk().params == *expected_end_params {
+        let layers = vec![
+            [0u32; 8],
+            base_params,
+            recursion_layer_verifier_vk().params,
+            recursion_layer_no_delegation_verifier_vk().params,
+            final_recursion_layer_verifier_vk().params,
+        ];
+        BinaryCommitment {
+            end_params: final_recursion_layer_verifier_vk().params,
+            aux_params: execution_utils::compute_chain_encoding(layers),
+        }
+    } else {
+        panic!(
+            "Cannot find a verifier for the proof end parameters: {:?}",
+            expected_end_params
+        );
+    }
+}
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli = Cli::parse();
 
@@ -44,8 +107,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let worker = boojum::worker::Worker::new_with_num_threads(4);
 
-    let program_proof = deserialize_from_file(&cli.input);
-    let risc_wrapper_witness = RiscWrapperWitness::from_full_proof(program_proof);
+    let program_proof: zkos_wrapper::ProgramProof = deserialize_from_file(&cli.input);
+    let binary_commitment = match cli.input_binary {
+        Some(binary_path) => create_binary_commitment(binary_path, &program_proof.end_params),
+        None => BinaryCommitment::from_default_binary(),
+    };
+    let risc_wrapper_witness =
+        RiscWrapperWitness::from_full_proof(program_proof, &binary_commitment);
 
     let (
         finalization_hint,
@@ -55,7 +123,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         setup_tree,
         vars_hint,
         witness_hints,
-    ) = get_risc_wrapper_setup(&worker);
+    ) = get_risc_wrapper_setup(&worker, binary_commitment.clone());
 
     let risc_wrapper_proof = prove_risc_wrapper(
         risc_wrapper_witness,
@@ -67,6 +135,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         &vars_hint,
         &witness_hints,
         &worker,
+        binary_commitment,
     );
     let is_valid = verify_risc_wrapper_proof(&risc_wrapper_proof, &risc_wrapper_vk);
 

@@ -26,6 +26,8 @@ risc_verifier = {git="https://github.com/matter-labs/air_compiler.git", package=
 # risc_verifier = {path="../air_compiler/circuit_defs/final_reduced_risc_v_machine/verifier", package="final_reduced_risc_v_machine_verifier", features=["proof_utils"]}
 execution_utils = {git="https://github.com/matter-labs/air_compiler.git", package="execution_utils", branch="main"}
 # execution_utils = {path="../air_compiler/execution_utils"}
+setups = {git="https://github.com/matter-labs/air_compiler.git", package="setups", branch="main"}
+# setups = {path="../../air_compiler/circuit_defs/setups"}
 circuit_mersenne_field = {path="circuit_mersenne_field"}
 serde_json = { version = "*" }
 serde = { version = "1", default-features = false, features = ["derive", "alloc"]}
