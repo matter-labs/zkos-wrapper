@@ -378,7 +378,7 @@ const COMPILED_WITNESS_LAYOUT: CompiledWitnessSubtree<Mersenne31Field> = Compile
 };
 const COMPILED_MEMORY_LAYOUT: CompiledMemorySubtree<'static> = CompiledMemorySubtree {
     shuffle_ram_inits_and_teardowns: Some(ShuffleRamInitAndTeardownLayout {
-        lazy_init_addesses_columns: ColumnSet::<2usize> {
+        lazy_init_addresses_columns: ColumnSet::<2usize> {
             start: 0usize,
             num_elements: 1usize,
         },
