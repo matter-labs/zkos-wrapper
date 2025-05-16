@@ -32,7 +32,7 @@ pub(crate) fn transform_first_or_last_rows(
 
     if let Some(shuffle_ram_inits_and_teardowns) = memory_layout.shuffle_ram_inits_and_teardowns {
         let lazy_init_address_start = shuffle_ram_inits_and_teardowns
-            .lazy_init_addesses_columns
+            .lazy_init_addresses_columns
             .start();
         let lazy_teardown_values_columns_start = shuffle_ram_inits_and_teardowns
             .lazy_teardown_values_columns

@@ -8,10 +8,10 @@ use quote::quote;
 
 use prover::cs::definitions::LookupExpression;
 use prover::cs::one_row_compiler::{
-    BatchedRamAccessColumns, ColumnAddress, CompiledDegree1Constraint, CompiledDegree2Constraint,
-    LookupAndMemoryArgumentLayout, MemorySubtree, OptimizedOraclesForLookupWidth1, SetupLayout,
-    ShuffleRamAuxComparisonSet, ShuffleRamInitAndTeardownLayout, TableIndex, WitnessSubtree,
-    COMMON_TABLE_WIDTH,
+    BatchedRamAccessColumns, COMMON_TABLE_WIDTH, ColumnAddress, CompiledDegree1Constraint,
+    CompiledDegree2Constraint, LookupAndMemoryArgumentLayout, MemorySubtree,
+    OptimizedOraclesForLookupWidth1, SetupLayout, ShuffleRamAuxComparisonSet,
+    ShuffleRamInitAndTeardownLayout, TableIndex, WitnessSubtree,
 };
 use prover::field::{Field, PrimeField};
 
@@ -602,7 +602,7 @@ pub(crate) fn transform_shuffle_ram_lazy_init_range_checks(
         .get_range(0)
         .start;
     let a = shuffle_ram_inits_and_teardowns
-        .lazy_init_addesses_columns
+        .lazy_init_addresses_columns
         .start();
     let b = a + 1;
     let a_place = ColumnAddress::MemorySubtree(a);
@@ -1374,7 +1374,7 @@ pub(crate) fn transform_shuffle_ram_lazy_init_padding(
     } = idents;
 
     let lazy_init_address_start = shuffle_ram_inits_and_teardowns
-        .lazy_init_addesses_columns
+        .lazy_init_addresses_columns
         .start();
 
     let teardown_values_start = shuffle_ram_inits_and_teardowns
