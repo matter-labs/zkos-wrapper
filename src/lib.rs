@@ -74,6 +74,7 @@ use bellman::plonk::better_better_cs::cs::PlonkCsWidth4WithNextStepAndCustomGate
 use bellman::plonk::better_better_cs::cs::{ProvingAssembly, SetupAssembly};
 use bellman::plonk::better_better_cs::gates::selector_optimized_with_d_next::SelectorOptimizedWidth4MainGateWithDNext;
 use bellman::plonk::better_better_cs::verifier::verify as verify_snark;
+use boojum::ethereum_types::H256;
 use snark_wrapper::implementations::poseidon2::CircuitPoseidon2Sponge;
 use snark_wrapper::implementations::poseidon2::transcript::CircuitPoseidon2Transcript;
 
@@ -391,4 +392,70 @@ pub fn prove_snark_wrapper(
 
 pub fn verify_snark_wrapper_proof(proof: &SnarkWrapperProof, vk: &SnarkWrapperVK) -> bool {
     verify_snark::<Bn256, SnarkWrapperCircuit, SnarkWrapperTranscript>(vk, proof, None).unwrap()
+}
+
+// TODO: this should probably be moved somewhere into crypto.
+pub fn calculate_verification_key_hash(verification_key: SnarkWrapperVK) -> H256 {
+    use bellman::compact_bn256::Fq;
+    use bellman::{CurveAffine, PrimeField, PrimeFieldRepr};
+    use sha3::{Digest, Keccak256};
+
+    let mut res = vec![];
+
+    // gate setup commitments
+    assert_eq!(8, verification_key.gate_setup_commitments.len());
+
+    for gate_setup in verification_key.gate_setup_commitments {
+        let (x, y) = gate_setup.as_xy();
+        x.into_repr().write_be(&mut res).unwrap();
+        y.into_repr().write_be(&mut res).unwrap();
+    }
+
+    // gate selectors commitments
+    assert_eq!(2, verification_key.gate_selectors_commitments.len());
+
+    for gate_selector in verification_key.gate_selectors_commitments {
+        let (x, y) = gate_selector.as_xy();
+        x.into_repr().write_be(&mut res).unwrap();
+        y.into_repr().write_be(&mut res).unwrap();
+    }
+
+    // permutation commitments
+    assert_eq!(4, verification_key.permutation_commitments.len());
+
+    for permutation in verification_key.permutation_commitments {
+        let (x, y) = permutation.as_xy();
+        x.into_repr().write_be(&mut res).unwrap();
+        y.into_repr().write_be(&mut res).unwrap();
+    }
+
+    // lookup selector commitment
+    let lookup_selector = verification_key.lookup_selector_commitment.unwrap();
+    let (x, y) = lookup_selector.as_xy();
+    x.into_repr().write_be(&mut res).unwrap();
+    y.into_repr().write_be(&mut res).unwrap();
+
+    // lookup tables commitments
+    assert_eq!(4, verification_key.lookup_tables_commitments.len());
+
+    for table_commit in verification_key.lookup_tables_commitments {
+        let (x, y) = table_commit.as_xy();
+        x.into_repr().write_be(&mut res).unwrap();
+        y.into_repr().write_be(&mut res).unwrap();
+    }
+
+    // table type commitment
+    let lookup_table = verification_key.lookup_table_type_commitment.unwrap();
+    let (x, y) = lookup_table.as_xy();
+    x.into_repr().write_be(&mut res).unwrap();
+    y.into_repr().write_be(&mut res).unwrap();
+
+    // flag for using recursive part
+    Fq::default().into_repr().write_be(&mut res).unwrap();
+
+    let mut hasher = Keccak256::new();
+    hasher.update(&res);
+    let computed_vk_hash = hasher.finalize();
+
+    H256::from_slice(&computed_vk_hash)
 }

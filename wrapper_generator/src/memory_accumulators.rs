@@ -5,13 +5,12 @@ use proc_macro2::TokenStream;
 use quote::quote;
 
 use prover::cs::one_row_compiler::{
-    BatchedRamAccessColumns, ColumnAddress, LookupAndMemoryArgumentLayout, MemorySubtree,
-    RegisterOnlyAccessAddress, RegisterOrRamAccessAddress, SetupLayout, ShuffleRamAddress,
-    ShuffleRamQueryColumns, MEM_ARGUMENT_CHALLENGE_POWERS_ADDRESS_HIGH_IDX,
-    MEM_ARGUMENT_CHALLENGE_POWERS_ADDRESS_LOW_IDX,
+    BatchedRamAccessColumns, ColumnAddress, LookupAndMemoryArgumentLayout,
+    MEM_ARGUMENT_CHALLENGE_POWERS_ADDRESS_HIGH_IDX, MEM_ARGUMENT_CHALLENGE_POWERS_ADDRESS_LOW_IDX,
     MEM_ARGUMENT_CHALLENGE_POWERS_TIMESTAMP_HIGH_IDX,
     MEM_ARGUMENT_CHALLENGE_POWERS_TIMESTAMP_LOW_IDX, MEM_ARGUMENT_CHALLENGE_POWERS_VALUE_HIGH_IDX,
-    MEM_ARGUMENT_CHALLENGE_POWERS_VALUE_LOW_IDX,
+    MEM_ARGUMENT_CHALLENGE_POWERS_VALUE_LOW_IDX, MemorySubtree, RegisterOnlyAccessAddress,
+    RegisterOrRamAccessAddress, SetupLayout, ShuffleRamAddress, ShuffleRamQueryColumns,
 };
 
 pub(crate) fn transform_shuffle_ram_memory_accumulators(
@@ -41,7 +40,7 @@ pub(crate) fn transform_shuffle_ram_memory_accumulators(
     assert!(memory_layout.shuffle_ram_access_sets.len() > 0);
 
     let lazy_init_address_start = shuffle_ram_inits_and_teardowns
-        .lazy_init_addesses_columns
+        .lazy_init_addresses_columns
         .start();
     let lazy_teardown_value_start = shuffle_ram_inits_and_teardowns
         .lazy_teardown_values_columns

@@ -21,7 +21,7 @@ pub(crate) fn transform_shuffle_ram_lazy_init(
     } = idents;
 
     let lazy_init_address_start = shuffle_ram_inits_and_teardowns
-        .lazy_init_addesses_columns
+        .lazy_init_addresses_columns
         .start();
 
     let teardown_values_start = shuffle_ram_inits_and_teardowns
