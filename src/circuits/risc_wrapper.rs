@@ -27,13 +27,11 @@ use circuit_mersenne_field::{
 };
 use std::mem::MaybeUninit;
 
-use crate::wrapper_inner_verifier::imports::{
-    FINAL_RISC_CIRCUIT_AUX_REGISTERS_VALUES, FINAL_RISC_CIRCUIT_END_PARAMS,
-};
-use crate::wrapper_inner_verifier::skeleton::{
-    WrappedProofSkeletonInstance, WrappedQueryValuesInstance,
-};
 use crate::wrapper_inner_verifier::*;
+use crate::wrapper_inner_verifier::{
+    imports::{FINAL_RISC_CIRCUIT_AUX_REGISTERS_VALUES, FINAL_RISC_CIRCUIT_END_PARAMS},
+    skeleton::{WrappedProofSkeletonInstance, WrappedQueryValuesInstance},
+};
 use crate::wrapper_utils::prover_structs::*;
 use crate::wrapper_utils::verifier_traits::{CircuitLeafInclusionVerifier, PlaceholderSource};
 use risc_verifier::blake2s_u32::*;
@@ -62,8 +60,28 @@ pub struct RiscWrapperWitness {
     pub proof: RiscProof,
 }
 
+#[derive(Clone, Debug)]
+pub struct BinaryCommitment {
+    pub end_params: [u32; 8],
+    pub aux_params: [u32; 8],
+}
+
+impl BinaryCommitment {
+    // Uses the binary information that was provided by wrapper generator.
+    // In future, this will be the 'active' boojumos binary, but for now this is an example fibonacci code.
+    pub fn from_default_binary() -> Self {
+        Self {
+            end_params: FINAL_RISC_CIRCUIT_END_PARAMS,
+            aux_params: FINAL_RISC_CIRCUIT_AUX_REGISTERS_VALUES,
+        }
+    }
+}
+
 impl RiscWrapperWitness {
-    pub fn from_full_proof(full_proof: execution_utils::ProgramProof) -> Self {
+    pub fn from_full_proof(
+        full_proof: execution_utils::ProgramProof,
+        binary_commitment: &BinaryCommitment,
+    ) -> Self {
         let execution_utils::ProgramProof {
             base_layer_proofs,
             delegation_proofs,
@@ -76,7 +94,7 @@ impl RiscWrapperWitness {
         assert!(base_layer_proofs.len() == 1);
         assert!(delegation_proofs.is_empty());
         assert!(register_final_values.len() == NUM_REGISTERS);
-        assert_eq!(end_params, FINAL_RISC_CIRCUIT_END_PARAMS);
+        assert_eq!(end_params, binary_commitment.end_params);
 
         assert!(recursion_chain_preimage.is_some());
         let mut result_hasher = Blake2sBufferingTranscript::new();
@@ -87,10 +105,7 @@ impl RiscWrapperWitness {
             recursion_chain_hash.unwrap(),
             result_hasher.finalize_reset().0
         );
-        assert_eq!(
-            recursion_chain_hash.unwrap(),
-            FINAL_RISC_CIRCUIT_AUX_REGISTERS_VALUES
-        );
+        assert_eq!(recursion_chain_hash.unwrap(), binary_commitment.aux_params);
 
         let final_registers_state: Vec<_> = register_final_values
             .into_iter()
@@ -113,6 +128,7 @@ impl RiscWrapperWitness {
 
 pub struct RiscWrapperCircuit<F: SmallField, V: CircuitLeafInclusionVerifier<F>> {
     pub witness: Option<RiscWrapperWitness>,
+    pub binary_commitment: BinaryCommitment,
     _phantom: std::marker::PhantomData<(F, V)>,
 }
 
@@ -199,7 +215,11 @@ impl<F: SmallField, V: CircuitLeafInclusionVerifier<F>> CircuitBuilder<F>
 }
 
 impl<F: SmallField, V: CircuitLeafInclusionVerifier<F>> RiscWrapperCircuit<F, V> {
-    pub fn new(witness: Option<RiscWrapperWitness>, verify_inner_proof: bool) -> Self {
+    pub fn new(
+        witness: Option<RiscWrapperWitness>,
+        verify_inner_proof: bool,
+        binary_commitment: BinaryCommitment,
+    ) -> Self {
         if verify_inner_proof {
             if let Some(witness) = &witness {
                 verify_risc_proof::<V::OutOfCircuitImpl>(&witness.proof);
@@ -210,6 +230,7 @@ impl<F: SmallField, V: CircuitLeafInclusionVerifier<F>> RiscWrapperCircuit<F, V>
 
         Self {
             witness,
+            binary_commitment,
             _phantom: std::marker::PhantomData,
         }
     }
@@ -283,7 +304,13 @@ impl<F: SmallField, V: CircuitLeafInclusionVerifier<F>> RiscWrapperCircuit<F, V>
         let (proof_state, proof_input) =
             crate::wrapper_inner_verifier::verify(cs, skeleton, queries);
 
-        check_proof_state(cs, final_registers_state, &proof_state, &proof_input);
+        check_proof_state(
+            cs,
+            final_registers_state,
+            &proof_state,
+            &proof_input,
+            &self.binary_commitment,
+        );
 
         // we carry registers 10-17 to the next layer - those are the output of the base program
         let output_registers_values: Vec<_> = final_registers_state
@@ -405,6 +432,7 @@ pub(crate) fn check_proof_state<F: SmallField, CS: ConstraintSystem<F>>(
         NUM_AUX_BOUNDARY_VALUES,
     >,
     public_input: &WrappedProofPublicInputs<F, NUM_STATE_ELEMENTS>,
+    binary_commitment: &BinaryCommitment,
 ) {
     let mut transcript = Blake2sWrappedBufferingTranscript::new(cs);
 
@@ -502,7 +530,7 @@ pub(crate) fn check_proof_state<F: SmallField, CS: ConstraintSystem<F>>(
 
     for i in 0..8 {
         let end_params_word = UInt32::from_le_bytes(cs, end_params_output.0[i].inner);
-        let expected_word = UInt32::allocate_constant(cs, FINAL_RISC_CIRCUIT_END_PARAMS[i]);
+        let expected_word = UInt32::allocate_constant(cs, binary_commitment.end_params[i]);
         Num::enforce_equal(cs, &expected_word.into_num(), &end_params_word.into_num());
     }
 
@@ -512,8 +540,7 @@ pub(crate) fn check_proof_state<F: SmallField, CS: ConstraintSystem<F>>(
     for i in 0..8 {
         let aux_register_idx = (i + 18) * 3;
         let aux_register = final_registers_state[aux_register_idx];
-        let expected_word =
-            UInt32::allocate_constant(cs, FINAL_RISC_CIRCUIT_AUX_REGISTERS_VALUES[i]);
+        let expected_word = UInt32::allocate_constant(cs, binary_commitment.aux_params[i]);
         Num::enforce_equal(cs, &expected_word.into_num(), &aux_register.into_num());
     }
 }

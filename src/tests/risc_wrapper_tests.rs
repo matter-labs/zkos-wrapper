@@ -1,4 +1,4 @@
-use crate::circuits::RiscWrapperWitness;
+use crate::circuits::{BinaryCommitment, RiscWrapperWitness};
 
 use super::*;
 
@@ -7,7 +7,10 @@ pub(crate) fn risc_wrapper_full_test() {
     let worker = boojum::worker::Worker::new_with_num_threads(4);
 
     let program_proof: execution_utils::ProgramProof = deserialize_from_file(RISC_PROOF_PATH);
-    let risc_wrapper_witness = RiscWrapperWitness::from_full_proof(program_proof);
+    let binary_commitment = BinaryCommitment::from_default_binary();
+
+    let risc_wrapper_witness =
+        RiscWrapperWitness::from_full_proof(program_proof, &binary_commitment);
 
     let (
         finalization_hint,
@@ -17,7 +20,7 @@ pub(crate) fn risc_wrapper_full_test() {
         setup_tree,
         vars_hint,
         witness_hints,
-    ) = crate::get_risc_wrapper_setup(&worker);
+    ) = crate::get_risc_wrapper_setup(&worker, binary_commitment.clone());
 
     let risc_wrapper_proof = crate::prove_risc_wrapper(
         risc_wrapper_witness,
@@ -29,6 +32,7 @@ pub(crate) fn risc_wrapper_full_test() {
         &vars_hint,
         &witness_hints,
         &worker,
+        binary_commitment.clone(),
     );
 
     let is_valid = crate::verify_risc_wrapper_proof(&risc_wrapper_proof, &risc_wrapper_vk);
@@ -42,9 +46,10 @@ pub(crate) fn risc_wrapper_full_test() {
 #[test]
 pub(crate) fn risc_wrapper_setup_test() {
     let worker = boojum::worker::Worker::new_with_num_threads(4);
+    let binary_commitment = BinaryCommitment::from_default_binary();
 
     let (_finalization_hint, _setup_base, _setup, vk, _setup_tree, _vars_hint, _witness_hints) =
-        crate::get_risc_wrapper_setup(&worker);
+        crate::get_risc_wrapper_setup(&worker, binary_commitment);
 
     serialize_to_file(&vk, RISC_WRAPPER_VK_PATH);
 }

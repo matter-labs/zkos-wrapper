@@ -31,6 +31,7 @@ use boojum::cs::traits::circuit::CircuitBuilderProxy;
 use boojum::gadgets::recursion::recursive_transcript::CircuitAlgebraicSpongeBasedTranscript;
 use boojum::gadgets::recursion::recursive_tree_hasher::CircuitGoldilocksPoseidon2Sponge;
 use boojum::implementations::poseidon2::Poseidon2Goldilocks;
+pub use boojum::worker::Worker as BoojumWorker;
 use boojum::worker::*;
 use circuits::*;
 use wrapper_utils::verifier_traits::CircuitBlake2sForEverythingVerifier;
@@ -52,8 +53,8 @@ pub type CircuitRiscWrapperTreeHasher = CircuitGoldilocksPoseidon2Sponge;
 pub type RiscWrapperCircuitBuilder = CircuitBuilderProxy<GL, RiscWrapper>;
 
 pub use rescue_poseidon::franklin_crypto::bellman::pairing::bn256::{Bn256, Fr};
-use rescue_poseidon::poseidon2::transcript::Poseidon2Transcript;
 use rescue_poseidon::poseidon2::Poseidon2Sponge;
+use rescue_poseidon::poseidon2::transcript::Poseidon2Transcript;
 
 use snark_wrapper::implementations::poseidon2::tree_hasher::AbsorptionModeReplacement;
 
@@ -73,8 +74,8 @@ use bellman::plonk::better_better_cs::cs::PlonkCsWidth4WithNextStepAndCustomGate
 use bellman::plonk::better_better_cs::cs::{ProvingAssembly, SetupAssembly};
 use bellman::plonk::better_better_cs::gates::selector_optimized_with_d_next::SelectorOptimizedWidth4MainGateWithDNext;
 use bellman::plonk::better_better_cs::verifier::verify as verify_snark;
-use snark_wrapper::implementations::poseidon2::transcript::CircuitPoseidon2Transcript;
 use snark_wrapper::implementations::poseidon2::CircuitPoseidon2Sponge;
+use snark_wrapper::implementations::poseidon2::transcript::CircuitPoseidon2Transcript;
 
 use bellman::worker::Worker as BellmanWorker;
 
@@ -90,11 +91,14 @@ pub type SnarkWrapperSetup =
 pub type SnarkWrapperTranscript =
     bellman::plonk::commitments::transcript::keccak_transcript::RollingKeccakTranscript<Fr>;
 
+pub use execution_utils::ProgramProof;
+
 //CircuitAlgebraicSpongeBasedTranscript<GoldilocksField, 8, 12, 4, R>,
 
 // RiscV -> Stark Wrapper
 pub fn get_risc_wrapper_setup(
     worker: &Worker,
+    binary_commitment: BinaryCommitment,
 ) -> (
     FinalizationHintsForProver,
     SetupBaseStorage<GL>,
@@ -105,7 +109,7 @@ pub fn get_risc_wrapper_setup(
     DenseWitnessCopyHint,
 ) {
     let verify_inner_proof: bool = false;
-    let circuit = RiscWrapper::new(None, verify_inner_proof);
+    let circuit = RiscWrapper::new(None, verify_inner_proof, binary_commitment);
 
     let geometry = RiscWrapper::geometry();
     let (max_trace_len, num_vars) = circuit.size_hint();
@@ -153,9 +157,14 @@ pub fn prove_risc_wrapper(
     vars_hint: &DenseVariablesCopyHint,
     witness_hints: &DenseWitnessCopyHint,
     worker: &Worker,
+    binary_commitment: BinaryCommitment,
 ) -> RiscWrapperProof {
     let verify_inner_proof = true;
-    let circuit = RiscWrapper::new(Some(risc_wrapper_witness), verify_inner_proof);
+    let circuit = RiscWrapper::new(
+        Some(risc_wrapper_witness),
+        verify_inner_proof,
+        binary_commitment,
+    );
 
     let geometry = RiscWrapper::geometry();
     let (max_trace_len, num_vars) = circuit.size_hint();
