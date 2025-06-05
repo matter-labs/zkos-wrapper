@@ -59,6 +59,11 @@ fn all_layers_setup_test() {
     snark_wrapper_tests::snark_wrapper_setup_test();
 }
 
+// To regenerate this test data (which must happen every time something changes in the verifier)
+// please run (from the zksync-airbender - and make sure to match the current dependency):
+// Make sure that you have a machine with >140GB of RAM for this step:
+// cargo run -p cli --release prove --bin examples/hashed_fibonacci/app.bin --input-file examples/hashed_fibonacci/input.txt --output-dir /tmp/ --until final-proof
+// And then copy /tmp/final_program_proof testing_data/risc_proof
 const RISC_PROOF_PATH: &str = "testing_data/risc_proof";
 const RISC_WRAPPER_PROOF_PATH: &str = "testing_data/risc_wrapper_proof";
 const RISC_WRAPPER_VK_PATH: &str = "testing_data/risc_wrapper_vk";

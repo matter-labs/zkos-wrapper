@@ -116,9 +116,10 @@ fn main() {
 fn get_binaries() -> [&'static [u8]; 5] {
     [
         execution_utils::BASE_PROGRAM,
-        execution_utils::BASE_LAYER_VERIFIER,
-        execution_utils::RECURSION_LAYER_VERIFIER,
-        execution_utils::RECURSION_LAYER_NO_DELEGATION_VERIFIER,
-        execution_utils::FINAL_RECURSION_LAYER_VERIFIER,
+        // Let's use universal verifiers, as it makes it easier to re-generate tests (as this is what CLI supports).
+        execution_utils::UNIVERSAL_CIRCUIT_VERIFIER,
+        execution_utils::UNIVERSAL_CIRCUIT_VERIFIER,
+        execution_utils::UNIVERSAL_CIRCUIT_NO_DELEGATION_VERIFIER,
+        execution_utils::UNIVERSAL_CIRCUIT_NO_DELEGATION_VERIFIER,
     ]
 }
