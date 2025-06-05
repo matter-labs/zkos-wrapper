@@ -54,16 +54,16 @@ pub fn generate_params_for_binary_and_machine(
     match machine {
         MachineType::Standard => execution_utils::compute_end_parameters(
             expected_final_pc,
-            &setups::get_main_riscv_circuit_setup::<Global>(&binary, &worker),
+            &setups::get_main_riscv_circuit_setup::<Global, Global>(&binary, &worker),
         ),
         MachineType::Reduced => execution_utils::compute_end_parameters(
             expected_final_pc,
-            &setups::get_reduced_riscv_circuit_setup::<Global>(&binary, &worker),
+            &setups::get_reduced_riscv_circuit_setup::<Global, Global>(&binary, &worker),
         ),
 
         MachineType::ReducedFinal => execution_utils::compute_end_parameters(
             expected_final_pc,
-            &setups::get_final_reduced_riscv_circuit_setup::<Global>(&binary, &worker),
+            &setups::get_final_reduced_riscv_circuit_setup::<Global, Global>(&binary, &worker),
         ),
     }
 }
