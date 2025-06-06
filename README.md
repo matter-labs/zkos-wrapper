@@ -1,12 +1,20 @@
 # zkos-wrapper
 Library for verifying zkos with boojum
 
-It takes the zkos proof (in json format), and returns the boojum proof.
+It takes the zkos proof (in json format), and returns the snark proof going through the following steps:
+
+[![diagram](diagram.svg)]
 
 You can use it as a library, or as a cli tool:
 
 ```
 cargo run --release -- prove --input testing_data/risc_proof --output-dir tmp.json
+```
+
+Also you should update generated files:
+```
+cd wrapper_generator
+cargo run --release
 ```
 
 ## CRS file
@@ -26,3 +34,20 @@ cargo run --release generate-vk --input-binary ../air_compiler/examples/hashed_f
 
 This will generate the verification key (and verification key hash) - that can be put into the solidity code.
 Or you can use era-boojum-verifier-cli tool to verify the proofs manually.
+
+## Security
+
+See [SECURITY.md](./SECURITY.md).
+
+## License
+
+Licensed under either of
+
+ * Apache License, Version 2.0, ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
+ * MIT license ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
+
+at your option.
+
+### Contribution
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md).
