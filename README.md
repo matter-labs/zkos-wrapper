@@ -3,7 +3,7 @@ Library for verifying zkos with boojum
 
 It takes the zkos proof (in json format), and returns the snark proof going through the following steps:
 
-[![diagram](diagram.svg)]
+![diagram](diagram.svg)
 
 You can use it as a library, or as a cli tool:
 
