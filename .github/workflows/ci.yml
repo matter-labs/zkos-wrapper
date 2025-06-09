@@ -56,7 +56,6 @@ jobs:
           rustup set profile default
           git config --global --add url."https://${{ secrets.ZKSYNC_ADMIN_BOT_ORG_REPO_WRITE }}:x-oauth-basic@github.com/".insteadOf https://github.com/
       - name: Regenerate wrapper
-        working-directory: ./wrapper_generator
         run: cargo run --bin wrapper_generator --release
       - name: Check if anything has changed
         run: |
