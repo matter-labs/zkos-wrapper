@@ -1,39 +1,58 @@
-cargo-features = ["edition2024"]
+[workspace]
+resolver = "2"
 
-[package]
-name = "zkos-wrapper"
+members = [
+    "circuit_mersenne_field",
+    "wrapper",
+    "wrapper_generator"
+]
+
+
+[workspace.package]
 version = "0.1.0"
 edition = "2024"
+authors = ["The Matter Labs Team <hello@matterlabs.dev>"]
+homepage = "https://zksync.io/"
+repository = "https://github.com/matter-labs/zkos-wrapper/"
 license = "MIT OR Apache-2.0"
+keywords = ["blockchain", "zksync", "zk", "risc-v"]
+categories = ["cryptography"]
 
-[lib]
-path = "src/lib.rs"
 
-[[bin]]
-name = "cli"
-path = "src/main.rs"
+[workspace.dependencies]
 
-[dependencies]
+circuit_mersenne_field = { path = "circuit_mersenne_field"}
+
 boojum = { git = "https://github.com/matter-labs/zksync-crypto.git", package="boojum", branch = "main" , features = ["log_tracing"]}
-# boojum = { path = "../zksync-crypto/crates/boojum"}
 bellman = { git = "https://github.com/matter-labs/zksync-crypto.git", package="zksync_bellman", branch = "main" }
-# bellman = { path = "../zksync-crypto/crates/bellman", package="zksync_bellman"}
 rescue_poseidon = { git = "https://github.com/matter-labs/zksync-crypto.git", package="rescue_poseidon", branch = "main" }
-# rescue_poseidon = { path = "../zksync-crypto/crates/rescue-poseidon"}
 snark_wrapper = { git = "https://github.com/matter-labs/zksync-crypto.git", package="snark_wrapper", branch = "main" }
+
+# boojum = { path = "../zksync-crypto/crates/boojum"}
+# bellman = { path = "../zksync-crypto/crates/bellman", package="zksync_bellman"}
+# rescue_poseidon = { path = "../zksync-crypto/crates/rescue-poseidon"}
 # snark_wrapper = { path = "../zksync-crypto/crates/snark-wrapper"}
+
+
 risc_verifier = {git="https://github.com/matter-labs/zksync-airbender.git", package="final_reduced_risc_v_machine_verifier", features=["proof_utils"], tag="0.0.5"}
-# risc_verifier = {path="../air_compiler/circuit_defs/final_reduced_risc_v_machine/verifier", package="final_reduced_risc_v_machine_verifier", features=["proof_utils"]}
 execution_utils = {git="https://github.com/matter-labs/zksync-airbender.git", package="execution_utils", tag="0.0.5"}
-# execution_utils = {path="../air_compiler/execution_utils"}
 setups = {git="https://github.com/matter-labs/zksync-airbender.git", package="setups", tag="0.0.5"}
+mersenne_field = {git="https://github.com/matter-labs/zksync-airbender.git", package="field", tag="0.0.5"}
+zkos_verifier_generator = {git="https://github.com/matter-labs/zksync-airbender.git", package="verifier_generator", tag="0.0.5"}
+prover = {git="https://github.com/matter-labs/zksync-airbender.git", package="prover", tag="0.0.5"}
+
+# risc_verifier = {path="../air_compiler/circuit_defs/final_reduced_risc_v_machine/verifier", package="final_reduced_risc_v_machine_verifier", features=["proof_utils"]}
+# execution_utils = {path="../air_compiler/execution_utils"}
 # setups = {path="../../air_compiler/circuit_defs/setups"}
-circuit_mersenne_field = {path="circuit_mersenne_field"}
+# mersenne_field = {path="../../air_compiler/field", package="field"}
+# zkos_verifier_generator = {path="../../air_compiler/verifier_generator", package="verifier_generator"}
+# prover = {path="../../air_compiler/prover", package="prover"}
+
+
 serde_json = { version = "*" }
 serde = { version = "1", default-features = false, features = ["derive", "alloc"]}
 clap = { version = "4.5.21", features = ["derive"] }
 sha3 = "*"
+rand = "0.8"
 
-[dev-dependencies]
-rand = "0.8.4"
-hex = "0.4.3"
+
