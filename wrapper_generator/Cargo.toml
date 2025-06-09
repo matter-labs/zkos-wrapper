@@ -10,7 +10,7 @@ license = "MIT OR Apache-2.0"
 path = "src/lib.rs"
 
 [[bin]]
-name = "cli"
+name = "wrapper_generator"
 path = "src/main.rs"
 
 [dependencies]

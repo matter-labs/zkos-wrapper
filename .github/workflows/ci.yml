@@ -18,7 +18,7 @@ jobs:
         run: |
           rustup set profile minimal
           git config --global --add url."https://${{ secrets.ZKSYNC_ADMIN_BOT_ORG_REPO_WRITE }}:x-oauth-basic@github.com/".insteadOf https://github.com/
-      - name: Compile 
+      - name: Compile
         run: cargo build --verbose
       - name: tests
         # We need to increase the stack size for the tests (due to quotient computation)
@@ -57,7 +57,7 @@ jobs:
           git config --global --add url."https://${{ secrets.ZKSYNC_ADMIN_BOT_ORG_REPO_WRITE }}:x-oauth-basic@github.com/".insteadOf https://github.com/
       - name: Regenerate wrapper
         working-directory: ./wrapper_generator
-        run: cargo run --release
+        run: cargo run --bin wrapper_generator --release
       - name: Check if anything has changed
         run: |
           MODIFIED_FILES=$(git status --porcelain)
