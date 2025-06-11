@@ -8,4 +8,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
+    - name: Clear Cargo Registry
+      run: |
+        rm -rf ~/.cargo/registry/index
+        cargo update
     - uses: EmbarkStudios/cargo-deny-action@v1
