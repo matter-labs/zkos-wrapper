@@ -1,0 +1,32 @@
+cargo-features = ["edition2024"]
+
+[package]
+name = "zkos-wrapper"
+version = "0.1.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+
+[lib]
+path = "src/lib.rs"
+
+[[bin]]
+name = "wrapper"
+path = "src/main.rs"
+
+[dependencies]
+boojum.workspace = true
+bellman.workspace = true
+rescue_poseidon.workspace = true
+snark_wrapper.workspace = true
+risc_verifier.workspace = true
+execution_utils.workspace = true
+setups.workspace = true
+circuit_mersenne_field.workspace = true
+serde_json.workspace = true
+serde.workspace = true
+clap.workspace = true
+sha3.workspace = true
+
+[dev-dependencies]
+rand.workspace = true
+hex = "0.4.3"

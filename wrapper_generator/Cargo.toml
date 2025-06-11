@@ -10,21 +10,17 @@ license = "MIT OR Apache-2.0"
 path = "src/lib.rs"
 
 [[bin]]
-name = "cli"
+name = "wrapper_generator"
 path = "src/main.rs"
 
 [dependencies]
-clap = { version = "4.5.21", features = ["derive"] }
-zkos_verifier_generator = {git="https://github.com/matter-labs/zksync-airbender.git", package="verifier_generator", tag="0.0.5"}
-# zkos_verifier_generator = {path="../../air_compiler/verifier_generator", package="verifier_generator"}
-prover = {git="https://github.com/matter-labs/zksync-airbender.git", package="prover", tag="0.0.5"}
-# prover = {path="../../air_compiler/prover", package="prover"}
-execution_utils = {git="https://github.com/matter-labs/zksync-airbender.git", package="execution_utils", tag="0.0.5"}
-# execution_utils = {path="../../air_compiler/execution_utils"}
-setups = {git="https://github.com/matter-labs/zksync-airbender.git", package="setups", tag="0.0.5"}
-# setups = {path="../../air_compiler/circuit_defs/setups"}
-serde_json = "*"
-serde = { version = "1", default-features = false, features = ["derive", "alloc"]}
+clap.workspace = true
+zkos_verifier_generator.workspace = true
+prover.workspace = true
+execution_utils.workspace = true
+setups.workspace = true
+serde_json.workspace = true
+serde.workspace = true
 
 
 syn = { version = "2", features = ["extra-traits", "printing", "full"]}

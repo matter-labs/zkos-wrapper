@@ -8,13 +8,12 @@ It takes the zkos proof (in json format), and returns the snark proof going thro
 You can use it as a library, or as a cli tool:
 
 ```
-cargo run --release -- prove --input testing_data/risc_proof --output-dir tmp.json
+cargo run --bin wrapper --release -- prove --input testing_data/risc_proof --output-dir tmp.json
 ```
 
 Also you should update generated files:
 ```
-cd wrapper_generator
-cargo run --release
+cargo run --bin wrapper_generator --release
 ```
 
 ## CRS file
@@ -29,7 +28,7 @@ The tool also offers to use the 'fake' file - that works for local testing, but 
 
 
 ```shell
-cargo run --release generate-vk --input-binary ../air_compiler/examples/hashed_fibonacci/app.bin --output-dir /tmp --trusted-setup-file crs/setup.key --universal-verifier
+cargo run --bin wrapper_generator --release generate-vk --input-binary ../air_compiler/examples/hashed_fibonacci/app.bin --output-dir /tmp --trusted-setup-file crs/setup.key --universal-verifier
 ```
 
 This will generate the verification key (and verification key hash) - that can be put into the solidity code.
