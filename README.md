@@ -28,7 +28,7 @@ The tool also offers to use the 'fake' file - that works for local testing, but 
 
 
 ```shell
-cargo run --bin wrapper_generator --release generate-vk --input-binary ../air_compiler/examples/hashed_fibonacci/app.bin --output-dir /tmp --trusted-setup-file crs/setup.key
+cargo run --bin wrapper_generator --release generate-vk --input-binary ../air_compiler/examples/hashed_fibonacci/app.bin --output-dir /tmp --trusted-setup-file crs/setup.key --universal-verifier
 ```
 
 This will generate the verification key (and verification key hash) - that can be put into the solidity code.

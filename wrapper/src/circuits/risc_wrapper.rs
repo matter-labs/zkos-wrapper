@@ -327,7 +327,7 @@ impl<F: SmallField, V: CircuitLeafInclusionVerifier<F>> RiscWrapperCircuit<F, V>
         {
             let mut lc = Vec::with_capacity(chunk.len());
             // treat as LE
-            for (idx, el) in chunk.iter().enumerate() {
+            for (idx, el) in chunk.iter().rev().enumerate() {
                 lc.push((el.get_variable(), F::SHIFTS[idx * 8]));
             }
             let as_num = Num::linear_combination(cs, &lc);
