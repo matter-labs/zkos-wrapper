@@ -76,12 +76,6 @@ enum Commands {
     },
 }
 
-
-
-
-
-
-
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli = Cli::parse();
 
@@ -164,4 +158,3 @@ fn generate_vk(
 
     Ok(())
 }
-

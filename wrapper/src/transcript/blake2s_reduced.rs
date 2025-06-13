@@ -2,8 +2,8 @@ use super::*;
 
 use boojum::cs::gates::ConstantAllocatableCS;
 use boojum::gadgets::blake2s::{
-    mixing_function::mixing_function_g, mixing_function::Word, round_function::Blake2sControl, IV,
-    SIGMAS,
+    IV, SIGMAS, mixing_function::Word, mixing_function::mixing_function_g,
+    round_function::Blake2sControl,
 };
 use boojum::gadgets::u8::UInt8;
 use std::mem::MaybeUninit;

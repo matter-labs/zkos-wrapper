@@ -11,8 +11,6 @@ pub mod wrapper_utils;
 #[cfg(test)]
 mod tests;
 
-use std::alloc::Global;
-use std::path::Path;
 use boojum::algebraic_props::round_function::AbsorptionModeOverwrite;
 use boojum::algebraic_props::sponge::GoldilocksPoseidon2Sponge;
 use boojum::config::{DevCSConfig, ProvingCSConfig, SetupCSConfig};
@@ -36,6 +34,8 @@ use boojum::implementations::poseidon2::Poseidon2Goldilocks;
 pub use boojum::worker::Worker as BoojumWorker;
 use boojum::worker::*;
 use circuits::*;
+use std::alloc::Global;
+use std::path::Path;
 use wrapper_utils::verifier_traits::CircuitBlake2sForEverythingVerifier;
 
 pub type GL = boojum::field::goldilocks::GoldilocksField;
@@ -95,7 +95,11 @@ pub type SnarkWrapperTranscript =
     bellman::plonk::commitments::transcript::keccak_transcript::RollingKeccakTranscript<Fr>;
 
 pub use execution_utils::ProgramProof;
-use execution_utils::{final_recursion_layer_verifier_vk, recursion_layer_no_delegation_verifier_vk, recursion_layer_verifier_vk, universal_circuit_no_delegation_verifier_vk, universal_circuit_verifier_vk};
+use execution_utils::{
+    final_recursion_layer_verifier_vk, recursion_layer_no_delegation_verifier_vk,
+    recursion_layer_verifier_vk, universal_circuit_no_delegation_verifier_vk,
+    universal_circuit_verifier_vk,
+};
 //CircuitAlgebraicSpongeBasedTranscript<GoldilocksField, 8, 12, 4, R>,
 
 // RiscV -> Stark Wrapper

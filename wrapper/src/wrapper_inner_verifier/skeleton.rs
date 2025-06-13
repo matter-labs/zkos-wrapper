@@ -54,19 +54,19 @@ pub struct WrappedProofSkeleton<
 }
 
 impl<
-        F: SmallField,
-        const CAP_SIZE: usize,
-        const NUM_COSETS: usize,
-        const NUM_PUBLIC_INPUTS: usize,
-        const NUM_DELEGATION_CHALLENGES: usize,
-        const NUM_AUX_BOUNDARY_VALUES: usize,
-        const NUM_PUBLIC_INPUTS_FROM_STATE_ELEMENTS: usize,
-        const NUM_OPENINGS_AT_Z: usize,
-        const NUM_OPENINGS_AT_Z_OMEGA: usize,
-        const NUM_FRI_STEPS_WITH_ORACLES: usize,
-        const FINAL_FRI_STEP_LEAF_SIZE_PER_COSET: usize,
-        const FRI_FINAL_DEGREE: usize,
-    > CSAllocatable<F>
+    F: SmallField,
+    const CAP_SIZE: usize,
+    const NUM_COSETS: usize,
+    const NUM_PUBLIC_INPUTS: usize,
+    const NUM_DELEGATION_CHALLENGES: usize,
+    const NUM_AUX_BOUNDARY_VALUES: usize,
+    const NUM_PUBLIC_INPUTS_FROM_STATE_ELEMENTS: usize,
+    const NUM_OPENINGS_AT_Z: usize,
+    const NUM_OPENINGS_AT_Z_OMEGA: usize,
+    const NUM_FRI_STEPS_WITH_ORACLES: usize,
+    const FINAL_FRI_STEP_LEAF_SIZE_PER_COSET: usize,
+    const FRI_FINAL_DEGREE: usize,
+> CSAllocatable<F>
     for WrappedProofSkeleton<
         F,
         CAP_SIZE,
@@ -383,18 +383,18 @@ pub(crate) struct WrappedQueryValues<
 }
 
 impl<
-        F: SmallField,
-        const BITS_FOR_QUERY_INDEX: usize,
-        const DEFAULT_MERKLE_PATH_LENGTH: usize,
-        const TOTAL_FRI_ORACLES_PATHS_LENGTH: usize,
-        const LEAF_SIZE_SETUP: usize,
-        const LEAF_SIZE_WITNESS_TREE: usize,
-        const LEAF_SIZE_MEMORY_TREE: usize,
-        const LEAF_SIZE_STAGE_2: usize,
-        const LEAF_SIZE_QUOTIENT: usize,
-        const TOTAL_FRI_LEAFS_SIZES: usize,
-        const NUM_FRI_STEPS: usize,
-    > CSAllocatable<F>
+    F: SmallField,
+    const BITS_FOR_QUERY_INDEX: usize,
+    const DEFAULT_MERKLE_PATH_LENGTH: usize,
+    const TOTAL_FRI_ORACLES_PATHS_LENGTH: usize,
+    const LEAF_SIZE_SETUP: usize,
+    const LEAF_SIZE_WITNESS_TREE: usize,
+    const LEAF_SIZE_MEMORY_TREE: usize,
+    const LEAF_SIZE_STAGE_2: usize,
+    const LEAF_SIZE_QUOTIENT: usize,
+    const TOTAL_FRI_LEAFS_SIZES: usize,
+    const NUM_FRI_STEPS: usize,
+> CSAllocatable<F>
     for WrappedQueryValues<
         F,
         BITS_FOR_QUERY_INDEX,
@@ -495,7 +495,7 @@ impl<F: SmallField> WrappedQueryValuesInstance<F> {
             unsafe { dst.add(i).write(I::read_reduced_field_element(modulus)) };
             i += 1;
         }
-        let source = unsafe{ source.assume_init() };
+        let source = unsafe { source.assume_init() };
         let query = Self::allocate(cs, source.clone());
 
         // for all except FRI the following is valid

@@ -11,9 +11,9 @@ use circuit_mersenne_field::{MersenneComplex, MersenneField, MersenneQuartic};
 
 use risc_verifier::blake2s_u32::*;
 use risc_verifier::concrete::size_constants::*;
+use risc_verifier::concrete::skeleton_instance::BASE_CIRCUIT_QUERY_VALUES_NO_PADDING_U32_WORDS;
 use risc_verifier::concrete::skeleton_instance::ProofSkeletonInstance;
 use risc_verifier::concrete::skeleton_instance::QueryValuesInstance;
-use risc_verifier::concrete::skeleton_instance::BASE_CIRCUIT_QUERY_VALUES_NO_PADDING_U32_WORDS;
 use risc_verifier::field::*;
 use risc_verifier::prover::cs::definitions::*;
 use risc_verifier::skeleton::{ProofSkeleton, QueryValues};
@@ -358,7 +358,13 @@ pub fn verify<F: SmallField, CS: ConstraintSystem<F>>(
             Boolean::enforce_equal(cs, &is_zero, &boolean_false);
         }
 
-        let [z_inv, vanishing_inv, first_row, one_before_last_row, last_row] = to_batch_inverse;
+        let [
+            z_inv,
+            vanishing_inv,
+            first_row,
+            one_before_last_row,
+            last_row,
+        ] = to_batch_inverse;
 
         // everywhere except last row (x - omega^-1) / (x^n - 1)
         let everywhere_except_last = z_minus_omega_inv.mul(cs, &vanishing_inv);
