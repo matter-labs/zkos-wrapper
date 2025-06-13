@@ -1,5 +1,6 @@
 use boojum::{
     cs::{
+        CSGeometry, GateConfigurationHolder, LookupParameters, StaticToolboxHolder,
         cs_builder::{CsBuilder, CsBuilderImpl},
         gates::{
             BooleanConstraintGate, ConditionalSwapGate, ConstantsAllocatorGate,
@@ -8,7 +9,6 @@ use boojum::{
         },
         implementations::prover::ProofConfig,
         traits::{circuit::CircuitBuilder, cs::ConstraintSystem, gate::GatePlacementStrategy},
-        CSGeometry, GateConfigurationHolder, LookupParameters, StaticToolboxHolder,
     },
     gadgets::{
         boolean::Boolean,

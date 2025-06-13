@@ -310,12 +310,12 @@ pub struct WrappedProofOutput<
 }
 
 impl<
-        F: SmallField,
-        const CAP_SIZE: usize,
-        const NUM_COSETS: usize,
-        const NUM_DELEGATION_CHALLENGES: usize,
-        const NUM_AUX_BOUNDARY_VALUES: usize,
-    > CSAllocatable<F>
+    F: SmallField,
+    const CAP_SIZE: usize,
+    const NUM_COSETS: usize,
+    const NUM_DELEGATION_CHALLENGES: usize,
+    const NUM_AUX_BOUNDARY_VALUES: usize,
+> CSAllocatable<F>
     for WrappedProofOutput<
         F,
         CAP_SIZE,

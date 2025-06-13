@@ -5,8 +5,8 @@ use boojum::gadgets::boolean::Boolean;
 use boojum::gadgets::num::Num;
 use boojum::gadgets::traits::allocatable::CSAllocatable;
 use boojum::gadgets::traits::selectable::Selectable;
-use boojum::gadgets::u32::UInt32;
 use boojum::gadgets::u8::UInt8;
+use boojum::gadgets::u32::UInt32;
 use circuit_mersenne_field::{MersenneField, MersenneQuartic};
 
 use risc_verifier::field::*;
