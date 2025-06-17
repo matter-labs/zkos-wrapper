@@ -37,7 +37,7 @@ struct Cli {
 #[derive(Subcommand)]
 enum Commands {
     /// Take the riscV final proof, and create a SNARK proof.
-    Prove {
+    ProveFull {
         #[arg(short, long)]
         input: String,
 
@@ -54,8 +54,21 @@ enum Commands {
         #[arg(long)]
         trusted_setup_file: Option<String>,
     },
+    /// Take the riscV final proof, and create a RiscWrapper proof.
+    ProveRiscWrapper {
+        #[arg(short, long)]
+        input: String,
+
+        // Binary used to generate the proof.
+        // If not specified, take the default binary (fibonacci hasher).
+        #[arg(long)]
+        input_binary: Option<String>,
+
+        #[arg(short, long)]
+        output_dir: String,
+    },
     /// Generate verification key for the SNARK proof.
-    GenerateVk {
+    GenerateSnarkVk {
         // Binary used to generate the proof.
         // If not specified, take the default binary (fibonacci hasher).
         #[arg(long)]
@@ -67,7 +80,22 @@ enum Commands {
         /// File with the trusted setup.
         /// If missing - will use the 'fake' trusted setup.
         #[arg(long)]
-        trusted_setup_file: String,
+        trusted_setup_file: Option<String>,
+
+        /// If true, then create VK for universal verifier program.
+        /// If false then for the separate verifiers.
+        #[arg(long)]
+        universal_verifier: bool,
+    },
+    /// Generate verification key for the RiscWrapper proof.
+    GenerateRiscWrapperVk {
+        // Binary used to generate the proof.
+        // If not specified, take the default binary (fibonacci hasher).
+        #[arg(long)]
+        input_binary: String,
+
+        #[arg(short, long)]
+        output_dir: String,
 
         /// If true, then create VK for universal verifier program.
         /// If false then for the separate verifiers.
@@ -80,16 +108,24 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::Prove {
+        Commands::ProveFull {
             input,
             input_binary,
             output_dir,
             trusted_setup_file,
         } => {
             println!("=== Phase 0: Proving");
-            zkos_wrapper::prove(input, input_binary, output_dir, trusted_setup_file)?;
+            zkos_wrapper::prove(input, input_binary, output_dir, trusted_setup_file, false)?;
         }
-        Commands::GenerateVk {
+        Commands::ProveRiscWrapper {
+            input,
+            input_binary,
+            output_dir,
+        } => {
+            println!("=== Phase 0: Proving RiscWrapper");
+            zkos_wrapper::prove(input, input_binary, output_dir, None, true)?;
+        }
+        Commands::GenerateSnarkVk {
             input_binary,
             output_dir,
             trusted_setup_file,
@@ -101,6 +137,21 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 output_dir,
                 trusted_setup_file,
                 universal_verifier,
+                false,
+            )?;
+        },
+        Commands::GenerateRiscWrapperVk {
+            input_binary,
+            output_dir,
+            universal_verifier,
+        } => {
+            println!("=== Phase 0: Generating the RiscWrapper verification key");
+            generate_vk(
+                input_binary,
+                output_dir,
+                None,
+                universal_verifier,
+                true,
             )?;
         }
     }
@@ -110,21 +161,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 fn generate_vk(
     input_binary: String,
     output_dir: String,
-    trusted_setup_file: String,
+    trusted_setup_file: Option<String>,
     universal_verifier: bool,
+    risc_wrapper_only: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let worker = BellmanWorker::new_with_cpus(4);
-    let boojum_worker = boojum::worker::Worker::new_with_num_threads(4);
+    let worker = BellmanWorker::new();
+    let boojum_worker = boojum::worker::Worker::new();
 
-    let trusted_setup_file = Some(trusted_setup_file);
-
-    let crs_mons = match trusted_setup_file {
-        Some(ref crs_file_str) => zkos_wrapper::get_trusted_setup(crs_file_str),
-        None => Crs::<Bn256, CrsForMonomialForm>::crs_42(
-            1 << L1_VERIFIER_DOMAIN_SIZE_LOG,
-            &BellmanWorker::new(),
-        ),
-    };
     println!("=== Phase 1: Creating the Risc wrapper key");
 
     let verifier_params = if universal_verifier {
@@ -138,11 +181,27 @@ fn generate_vk(
     let (_, _, _, risc_wrapper_vk, _, _, _) =
         get_risc_wrapper_setup(&boojum_worker, binary_commitment.clone());
 
+    if risc_wrapper_only {
+        zkos_wrapper::serialize_to_file(
+            &risc_wrapper_vk,
+            &Path::new(&output_dir.clone()).join("risc_wrapper_vk_expected.json"),
+        );
+        return Ok(());
+    }
+
     println!("=== Phase 2: Creating the Compression key");
     let (_, _, _, compression_vk, _, _, _) =
         get_compression_setup(risc_wrapper_vk.clone(), &boojum_worker);
 
     println!("=== Phase 3: Creating the SNARK key");
+
+    let crs_mons = match trusted_setup_file {
+        Some(ref crs_file_str) => zkos_wrapper::get_trusted_setup(crs_file_str),
+        None => Crs::<Bn256, CrsForMonomialForm>::crs_42(
+            1 << L1_VERIFIER_DOMAIN_SIZE_LOG,
+            &BellmanWorker::new(),
+        ),
+    };
 
     let (_, snark_wrapper_vk) = get_snark_wrapper_setup(compression_vk.clone(), &crs_mons, &worker);
 

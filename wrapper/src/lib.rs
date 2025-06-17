@@ -490,7 +490,7 @@ pub fn create_binary_commitment(
 ) -> BinaryCommitment {
     let bin = std::fs::read(binary_path).unwrap();
 
-    let worker = risc_verifier::prover::worker::Worker::new_with_num_threads(8);
+    let worker = risc_verifier::prover::worker::Worker::new();
 
     let expected_final_pc = execution_utils::find_binary_exit_point(&bin);
     let binary: Vec<u32> = execution_utils::get_padded_binary(&bin);
@@ -537,18 +537,11 @@ pub fn prove(
     input_binary: Option<String>,
     output_dir: String,
     trusted_setup_file: Option<String>,
+    risc_wrapper_only: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let crs_mons = match trusted_setup_file {
-        Some(ref crs_file_str) => get_trusted_setup(crs_file_str),
-        None => Crs::<Bn256, CrsForMonomialForm>::crs_42(
-            1 << L1_VERIFIER_DOMAIN_SIZE_LOG,
-            &BellmanWorker::new(),
-        ),
-    };
-
     println!("=== Phase 1: Creating the Risc wrapper proof");
 
-    let worker = boojum::worker::Worker::new_with_num_threads(4);
+    let worker = boojum::worker::Worker::new();
 
     let program_proof: crate::ProgramProof = deserialize_from_file(&input);
     let binary_commitment = match input_binary {
@@ -584,10 +577,17 @@ pub fn prove(
 
     assert!(is_valid);
 
-    serialize_to_file(
-        &risc_wrapper_proof,
-        &Path::new(&output_dir.clone()).join("risc_proof.json"),
-    );
+    if risc_wrapper_only {
+        serialize_to_file(
+            &risc_wrapper_vk,
+            &Path::new(&output_dir.clone()).join("risc_wrapper_vk.json"),
+        );
+        serialize_to_file(
+            &risc_wrapper_proof,
+            &Path::new(&output_dir.clone()).join("risc_wrapper_proof.json"),
+        );
+        return Ok(());
+    }
 
     println!("=== Phase 2: Creating compression proof");
 
@@ -616,15 +616,18 @@ pub fn prove(
 
     assert!(is_valid);
 
-    serialize_to_file(
-        &compression_proof,
-        &Path::new(&output_dir.clone()).join("compression_proof.json"),
-    );
-
     println!("=== Phase 3: Creating SNARK proof");
 
+    let crs_mons = match trusted_setup_file {
+        Some(ref crs_file_str) => get_trusted_setup(crs_file_str),
+        None => Crs::<Bn256, CrsForMonomialForm>::crs_42(
+            1 << L1_VERIFIER_DOMAIN_SIZE_LOG,
+            &BellmanWorker::new(),
+        ),
+    };
+
     {
-        let worker = BellmanWorker::new_with_cpus(4);
+        let worker = BellmanWorker::new();
 
         let (snark_setup, snark_wrapper_vk) =
             get_snark_wrapper_setup(compression_vk.clone(), &crs_mons, &worker);
