@@ -532,18 +532,82 @@ pub fn create_binary_commitment(
     }
 }
 
-pub fn prove(
-    input: String,
-    input_binary: Option<String>,
-    output_dir: String,
+pub fn prove_risc_wrapper_with_snark(
+    risc_wrapper_proof: RiscWrapperProof,
+    risc_wrapper_vk: RiscWrapperVK,
     trusted_setup_file: Option<String>,
-    risc_wrapper_only: bool,
-) -> Result<(), Box<dyn std::error::Error>> {
+) -> Result<(SnarkWrapperProof, SnarkWrapperVK), Box<dyn std::error::Error>> {
+    let worker = boojum::worker::Worker::new();
+    println!("=== Phase 2: Creating compression proof");
+
+    let (
+        finalization_hint,
+        setup_base,
+        setup,
+        compression_vk,
+        setup_tree,
+        vars_hint,
+        witness_hints,
+    ) = get_compression_setup(risc_wrapper_vk.clone(), &worker);
+    let compression_proof = prove_compression(
+        risc_wrapper_proof,
+        risc_wrapper_vk,
+        &finalization_hint,
+        &setup_base,
+        &setup,
+        &compression_vk,
+        &setup_tree,
+        &vars_hint,
+        &witness_hints,
+        &worker,
+    );
+    let is_valid = verify_compression_proof(&compression_proof, &compression_vk);
+
+    if !is_valid {
+        return Err("Compression proof is not valid".into());
+    }
+
+    println!("=== Phase 3: Creating SNARK proof");
+
+    let crs_mons = match trusted_setup_file {
+        Some(ref crs_file_str) => get_trusted_setup(crs_file_str),
+        None => Crs::<Bn256, CrsForMonomialForm>::crs_42(
+            1 << L1_VERIFIER_DOMAIN_SIZE_LOG,
+            &BellmanWorker::new(),
+        ),
+    };
+
+    {
+        let worker = BellmanWorker::new();
+
+        let (snark_setup, snark_wrapper_vk) =
+            get_snark_wrapper_setup(compression_vk.clone(), &crs_mons, &worker);
+
+        let snark_wrapper_proof = prove_snark_wrapper(
+            compression_proof,
+            compression_vk,
+            &snark_setup,
+            &crs_mons,
+            &worker,
+        );
+
+        let is_valid = verify_snark_wrapper_proof(&snark_wrapper_proof, &snark_wrapper_vk);
+
+        if !is_valid {
+            return Err("Snark wrapper proof is not valid".into());
+        }
+        Ok((snark_wrapper_proof, snark_wrapper_vk))
+    }
+}
+
+pub fn prove_fri_risc_wrapper(
+    program_proof: ProgramProof,
+    input_binary: Option<String>,
+) -> Result<(RiscWrapperProof, RiscWrapperVK), Box<dyn std::error::Error>> {
     println!("=== Phase 1: Creating the Risc wrapper proof");
 
     let worker = boojum::worker::Worker::new();
 
-    let program_proof: crate::ProgramProof = deserialize_from_file(&input);
     let binary_commitment = match input_binary {
         Some(binary_path) => create_binary_commitment(binary_path, &program_proof.end_params),
         None => BinaryCommitment::from_default_binary(),
@@ -574,8 +638,23 @@ pub fn prove(
         binary_commitment,
     );
     let is_valid = verify_risc_wrapper_proof(&risc_wrapper_proof, &risc_wrapper_vk);
+    if !is_valid {
+        return Err("Risc wrapper proof is not valid".into());
+    }
 
-    assert!(is_valid);
+    Ok((risc_wrapper_proof, risc_wrapper_vk))
+}
+
+pub fn prove(
+    input: String,
+    input_binary: Option<String>,
+    output_dir: String,
+    trusted_setup_file: Option<String>,
+    risc_wrapper_only: bool,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let program_proof: crate::ProgramProof = deserialize_from_file(&input);
+    let (risc_wrapper_proof, risc_wrapper_vk) =
+        prove_fri_risc_wrapper(program_proof, input_binary).unwrap();
 
     if risc_wrapper_only {
         serialize_to_file(
@@ -589,70 +668,21 @@ pub fn prove(
         return Ok(());
     }
 
-    println!("=== Phase 2: Creating compression proof");
-
-    let (
-        finalization_hint,
-        setup_base,
-        setup,
-        compression_vk,
-        setup_tree,
-        vars_hint,
-        witness_hints,
-    ) = get_compression_setup(risc_wrapper_vk.clone(), &worker);
-    let compression_proof = prove_compression(
+    let (snark_wrapper_proof, snark_wrapper_vk) = prove_risc_wrapper_with_snark(
         risc_wrapper_proof,
         risc_wrapper_vk,
-        &finalization_hint,
-        &setup_base,
-        &setup,
-        &compression_vk,
-        &setup_tree,
-        &vars_hint,
-        &witness_hints,
-        &worker,
+        trusted_setup_file.clone(),
+    )
+    .unwrap();
+
+    serialize_to_file(
+        &snark_wrapper_proof,
+        &Path::new(&output_dir.clone()).join("snark_proof.json"),
     );
-    let is_valid = verify_compression_proof(&compression_proof, &compression_vk);
-
-    assert!(is_valid);
-
-    println!("=== Phase 3: Creating SNARK proof");
-
-    let crs_mons = match trusted_setup_file {
-        Some(ref crs_file_str) => get_trusted_setup(crs_file_str),
-        None => Crs::<Bn256, CrsForMonomialForm>::crs_42(
-            1 << L1_VERIFIER_DOMAIN_SIZE_LOG,
-            &BellmanWorker::new(),
-        ),
-    };
-
-    {
-        let worker = BellmanWorker::new();
-
-        let (snark_setup, snark_wrapper_vk) =
-            get_snark_wrapper_setup(compression_vk.clone(), &crs_mons, &worker);
-
-        let snark_wrapper_proof = prove_snark_wrapper(
-            compression_proof,
-            compression_vk,
-            &snark_setup,
-            &crs_mons,
-            &worker,
-        );
-
-        let is_valid = verify_snark_wrapper_proof(&snark_wrapper_proof, &snark_wrapper_vk);
-
-        assert!(is_valid);
-
-        serialize_to_file(
-            &snark_wrapper_proof,
-            &Path::new(&output_dir.clone()).join("snark_proof.json"),
-        );
-        serialize_to_file(
-            &snark_wrapper_vk,
-            &Path::new(&output_dir.clone()).join("snark_vk.json"),
-        );
-    }
+    serialize_to_file(
+        &snark_wrapper_vk,
+        &Path::new(&output_dir.clone()).join("snark_vk.json"),
+    );
 
     Ok(())
 }
