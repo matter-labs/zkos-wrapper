@@ -687,18 +687,27 @@ pub fn prove(
     Ok(())
 }
 
-pub fn generate_vk(
+pub fn generate_and_save_risc_wrapper_vk(
     input_binary: String,
     output_dir: String,
-    trusted_setup_file: Option<String>,
     universal_verifier: bool,
-    risc_wrapper_only: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let worker = BellmanWorker::new();
-    let boojum_worker = boojum::worker::Worker::new();
+    let boojum_worker = BoojumWorker::new();
+    let risc_wrapper_vk =
+        generate_risk_wrapper_vk(input_binary, universal_verifier, &boojum_worker)?;
 
-    println!("=== Phase 1: Creating the Risc wrapper key");
+    serialize_to_file(
+        &risc_wrapper_vk,
+        &Path::new(&output_dir.clone()).join("risc_wrapper_vk_expected.json"),
+    );
+    Ok(())
+}
 
+fn generate_risk_wrapper_vk(
+    input_binary: String,
+    universal_verifier: bool,
+    boojum_worker: &Worker,
+) -> Result<RiscWrapperVK, Box<dyn std::error::Error>> {
     let verifier_params = if universal_verifier {
         universal_circuit_no_delegation_verifier_vk().params
     } else {
@@ -708,15 +717,23 @@ pub fn generate_vk(
     let binary_commitment = create_binary_commitment(input_binary, &verifier_params);
 
     let (_, _, _, risc_wrapper_vk, _, _, _) =
-        get_risc_wrapper_setup(&boojum_worker, binary_commitment.clone());
+        get_risc_wrapper_setup(boojum_worker, binary_commitment.clone());
+    Ok(risc_wrapper_vk)
+}
 
-    if risc_wrapper_only {
-        serialize_to_file(
-            &risc_wrapper_vk,
-            &Path::new(&output_dir.clone()).join("risc_wrapper_vk_expected.json"),
-        );
-        return Ok(());
-    }
+pub fn generate_vk(
+    input_binary: String,
+    output_dir: String,
+    trusted_setup_file: Option<String>,
+    universal_verifier: bool,
+) -> Result<H256, Box<dyn std::error::Error>> {
+    let worker = BellmanWorker::new();
+    let boojum_worker = boojum::worker::Worker::new();
+
+    println!("=== Phase 1: Creating the Risc wrapper key");
+
+    let risc_wrapper_vk =
+        generate_risk_wrapper_vk(input_binary, universal_verifier, &boojum_worker)?;
 
     println!("=== Phase 2: Creating the Compression key");
     let (_, _, _, compression_vk, _, _, _) =
@@ -739,10 +756,8 @@ pub fn generate_vk(
         &Path::new(&output_dir.clone()).join("snark_vk_expected.json"),
     );
 
-    println!(
-        "VK key hash: {:?}",
-        calculate_verification_key_hash(snark_wrapper_vk)
-    );
+    let verification_key = calculate_verification_key_hash(snark_wrapper_vk);
+    println!("VK key hash: {:?}", verification_key);
 
-    Ok(())
+    Ok(verification_key)
 }
