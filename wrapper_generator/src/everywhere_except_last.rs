@@ -977,7 +977,7 @@ pub(crate) fn transform_multiplicities(
     streams
 }
 
-pub(crate) fn transform_batch_ram_conventions(
+pub(crate) fn transform_delegation_ram_conventions(
     memory_layout: &MemorySubtree,
     idents: &Idents,
 ) -> (TokenStream, Vec<TokenStream>) {
@@ -1173,6 +1173,254 @@ pub(crate) fn transform_batch_ram_conventions(
                             };
                         };
                         streams.push(t);
+                    }
+                }
+            }
+        }
+    }
+
+    // same for indirects
+    let bound = memory_layout.register_and_indirect_accesses.len();
+    for i in 0..bound {
+        let access = &memory_layout.register_and_indirect_accesses[i];
+        use prover::cs::definitions::{RegisterAccessColumns, IndirectAccessColumns};
+        match access.register_access {
+            RegisterAccessColumns::ReadAccess {
+                read_timestamp,
+                read_value,
+                ..
+            } => {
+                for set in [read_timestamp, read_value].into_iter() {
+                    // low and high
+                    {
+                        let low_expr = read_value_expr(
+                            ColumnAddress::MemorySubtree(set.start()),
+                            idents,
+                            false,
+                        );
+                        let t = quote! {
+                            let #individual_term_ident = {
+                                let low = #low_expr;
+
+                                let mut #individual_term_ident = low;
+                                #individual_term_ident = #individual_term_ident.mul(cs, &predicate_minus_one);
+
+                                #individual_term_ident
+                            };
+                        };
+                        streams.push(t);
+
+                        let high_expr = read_value_expr(
+                            ColumnAddress::MemorySubtree(set.start() + 1),
+                            idents,
+                            false,
+                        );
+                        let t = quote! {
+                            let #individual_term_ident = {
+                                let high = #high_expr;
+
+                                let mut #individual_term_ident = high;
+                                #individual_term_ident = #individual_term_ident.mul(cs, &predicate_minus_one);
+
+                                #individual_term_ident
+                            };
+                        };
+                        streams.push(t);
+                    }
+                }
+            }
+            RegisterAccessColumns::WriteAccess {
+                read_timestamp,
+                read_value,
+                write_value,
+                ..
+            } => {
+                for set in [read_timestamp, read_value, write_value].into_iter() {
+                    // low and high
+                    {
+                        let low_expr = read_value_expr(
+                            ColumnAddress::MemorySubtree(set.start()),
+                            idents,
+                            false,
+                        );
+                        let t = quote! {
+                            let #individual_term_ident = {
+                                let low = #low_expr;
+
+                                let mut #individual_term_ident = low;
+                                #individual_term_ident = #individual_term_ident.mul(cs, &predicate_minus_one);
+
+                                #individual_term_ident
+                            };
+                        };
+                        streams.push(t);
+
+                        let high_expr = read_value_expr(
+                            ColumnAddress::MemorySubtree(set.start() + 1),
+                            idents,
+                            false,
+                        );
+                        let t = quote! {
+                            let #individual_term_ident = {
+                                let high = #high_expr;
+
+                                let mut #individual_term_ident = high;
+                                #individual_term_ident = #individual_term_ident.mul(cs, &predicate_minus_one);
+
+                                #individual_term_ident
+                            };
+                        };
+                        streams.push(t);
+                    }
+                }
+            }
+        }
+
+        if access.indirect_accesses.len() > 0 {
+            for (idx, access) in access.indirect_accesses.iter().enumerate() {
+                match access {
+                    IndirectAccessColumns::ReadAccess {
+                        read_timestamp,
+                        read_value,
+                        address_derivation_carry_bit,
+                        ..
+                    } => {
+                        for set in [read_timestamp, read_value].into_iter() {
+                            // low and high
+                            {
+                                let low_expr = read_value_expr(
+                                    ColumnAddress::MemorySubtree(set.start()),
+                                    idents,
+                                    false,
+                                );
+                                let t = quote! {
+                                    let #individual_term_ident = {
+                                        let low = #low_expr;
+
+                                        let mut #individual_term_ident = low;
+                                        #individual_term_ident = #individual_term_ident.mul(cs, &predicate_minus_one);
+
+                                        #individual_term_ident
+                                    };
+                                };
+                                streams.push(t);
+
+                                let high_expr = read_value_expr(
+                                    ColumnAddress::MemorySubtree(set.start() + 1),
+                                    idents,
+                                    false,
+                                );
+                                let t = quote! {
+                                    let #individual_term_ident = {
+                                        let high = #high_expr;
+
+                                        let mut #individual_term_ident = high;
+                                        #individual_term_ident = #individual_term_ident.mul(cs, &predicate_minus_one);
+
+                                        #individual_term_ident
+                                    };
+                                };
+                                streams.push(t);
+                            }
+                        }
+
+                        // carry bit is boolean
+                        if idx > 0 && address_derivation_carry_bit.num_elements() > 0 {
+                            let carry_bit_expr = read_value_expr(
+                                ColumnAddress::MemorySubtree(address_derivation_carry_bit.start()),
+                                idents,
+                                false,
+                            );
+
+                            let t = quote! {
+                                let #individual_term_ident = {
+                                    let carry_bit = #carry_bit_expr;
+
+                                    let mut #individual_term_ident = carry_bit;
+                                    let one = MersenneField::one(cs);
+                                    #individual_term_ident = #individual_term_ident.sub_base(cs, &one);
+                                    #individual_term_ident = #individual_term_ident.mul(cs, &carry_bit);
+
+                                    #individual_term_ident
+                                };
+                            };
+
+                            streams.push(t);
+                        }
+                    }
+                    IndirectAccessColumns::WriteAccess {
+                        read_timestamp,
+                        read_value,
+                        write_value,
+                        address_derivation_carry_bit,
+                        ..
+                    } => {
+                        for set in [read_timestamp, read_value, write_value].into_iter() {
+                            // low and high
+                            {
+                                let low_expr = read_value_expr(
+                                    ColumnAddress::MemorySubtree(set.start()),
+                                    idents,
+                                    false,
+                                );
+                                let t = quote! {
+                                    let #individual_term_ident = {
+                                        let low = #low_expr;
+
+                                        let mut #individual_term_ident = low;
+                                        #individual_term_ident = #individual_term_ident.mul(cs, &predicate_minus_one);
+
+                                        #individual_term_ident
+                                    };
+                                };
+                                streams.push(t);
+
+                                let high_expr = read_value_expr(
+                                    ColumnAddress::MemorySubtree(set.start() + 1),
+                                    idents,
+                                    false,
+                                );
+                                let t = quote! {
+                                    let #individual_term_ident = {
+                                        let high = #high_expr;
+
+                                        let mut #individual_term_ident = high;
+                                        #individual_term_ident = #individual_term_ident.mul(cs, &predicate_minus_one);
+
+                                        #individual_term_ident
+                                    };
+                                };
+                                streams.push(t);
+                            }
+                        }
+
+                        // carry bit is boolean
+                        if idx > 0 {
+                            if address_derivation_carry_bit.num_elements() > 0 {
+                                let carry_bit_expr = read_value_expr(
+                                    ColumnAddress::MemorySubtree(
+                                        address_derivation_carry_bit.start(),
+                                    ),
+                                    idents,
+                                    false,
+                                );
+
+                                let t = quote! {
+                                    let #individual_term_ident = {
+                                        let carry_bit = #carry_bit_expr;
+
+                                        let mut #individual_term_ident = carry_bit;
+                                        let one = MersenneField::one(cs);
+                                        #individual_term_ident = #individual_term_ident.sub_base(cs, &one);
+                                        #individual_term_ident = #individual_term_ident.mul(cs, &carry_bit);
+
+                                        #individual_term_ident
+                                    };
+                                };
+
+                                streams.push(t);
+                            }
+                        }
                     }
                 }
             }
