@@ -27,6 +27,8 @@ use zkos_verifier_generator::generate_from_parts;
 fn generate_verifier_files(circuit: &CompiledCircuitArtifact<Mersenne31Field>) -> (String, String) {
     let verifier = format_rust_code(&generate_from_parts(&circuit).to_string()).unwrap();
 
+    let _ = zkos_verifier_generator::generate_inlined(circuit.clone());
+
     let inlined_verifier =
         format_rust_code(&generate_inlined(circuit.clone()).to_string()).unwrap();
 
@@ -69,18 +71,36 @@ fn format_rust_code(code: &str) -> Result<String, String> {
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
 struct Cli {
-    #[arg(long, default_value = "wrapper/src/wrapper_inner_verifier/imports")]
+    #[arg(long, default_value = "../wrapper/src/wrapper_inner_verifier/imports")]
     output_dir: String,
+    #[arg(long, default_value = "../wrapper/src/blake2_inner_verifier/imports")]
+    blake_output_dir: String,
 }
 
 fn main() {
     let cli = Cli::parse();
     let output_dir = cli.output_dir;
+    let blake_output_dir = cli.blake_output_dir;
 
     let dummy_bytecode = vec![0u32; setups::final_reduced_risc_v_machine::MAX_ROM_SIZE / 4];
     let compiled_circuit = setups::final_reduced_risc_v_machine::get_machine(
         &dummy_bytecode,
         setups::final_reduced_risc_v_machine::ALLOWED_DELEGATION_CSRS,
+    );
+
+    let (verifier, inline_verifier) = generate_verifier_files(&compiled_circuit);
+    std::fs::write(Path::new(&output_dir).join("circuit_layout_for_final_machine.rs"), verifier)
+        .expect(&format!("Failed to write to {}", output_dir));
+    std::fs::write(
+        Path::new(&output_dir).join("circuit_quotient_for_final_machine.rs"),
+        inline_verifier,
+    )
+    .expect(&format!("Failed to write to {}", output_dir));
+
+    let dummy_bytecode = vec![0u32; setups::reduced_risc_v_log_23_machine::MAX_ROM_SIZE / 4];
+    let compiled_circuit = setups::reduced_risc_v_log_23_machine::get_machine(
+        &dummy_bytecode,
+        setups::reduced_risc_v_log_23_machine::ALLOWED_DELEGATION_CSRS,
     );
 
     let (verifier, inline_verifier) = generate_verifier_files(&compiled_circuit);
@@ -92,15 +112,34 @@ fn main() {
     )
     .expect(&format!("Failed to write to {}", output_dir));
 
+    let blake_compiled_circuit = setups::blake2_with_compression::get_delegation_circuit().compiled_circuit;
+    let (verifier, inline_verifier) = generate_verifier_files(&blake_compiled_circuit);
+    std::fs::write(Path::new(&blake_output_dir).join("circuit_layout.rs"), verifier)
+        .expect(&format!("Failed to write to {}", blake_output_dir));
+    std::fs::write(
+        Path::new(&blake_output_dir).join("circuit_quotient.rs"),
+        inline_verifier,
+    )
+    .expect(&format!("Failed to write to {}", blake_output_dir));
+
     let binaries = get_binaries();
+
+    let worker = prover::worker::Worker::new();
+    let machines_chain = vec![
+        (binaries[0], MachineType::Standard),
+        (binaries[1], MachineType::Reduced),
+        (binaries[2], MachineType::Reduced),
+        (binaries[3], MachineType::ReducedFinal),
+    ];
 
     let end_params_constants = format_rust_code(
         &generate_constants(
-            &binaries[0],
-            &binaries[1],
-            &binaries[2],
-            &binaries[3],
-            &binaries[4],
+            &machines_chain,
+            (
+                binaries[4],
+                MachineType::ReducedFinal,
+            ),
+            &worker,
         )
         .to_string(),
     )
@@ -108,6 +147,31 @@ fn main() {
 
     std::fs::write(
         Path::new(&output_dir).join("final_state_constants.rs"),
+        end_params_constants,
+    )
+    .expect(&format!("Failed to write to {}", output_dir));
+
+    let machines_chain = vec![
+        (binaries[0], MachineType::Standard),
+        (binaries[1], MachineType::Reduced),
+        (binaries[2], MachineType::Reduced),
+    ];
+
+    let end_params_constants = format_rust_code(
+        &generate_constants(
+            &machines_chain,
+            (
+                binaries[2],
+                MachineType::ReducedLog23,
+            ),
+            &worker,
+        )
+        .to_string(),
+    )
+    .unwrap();
+
+    std::fs::write(
+        Path::new(&output_dir).join("final_state_constants_for_final_machine.rs"),
         end_params_constants,
     )
     .expect(&format!("Failed to write to {}", output_dir));

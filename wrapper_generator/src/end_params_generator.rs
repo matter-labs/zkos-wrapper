@@ -2,7 +2,7 @@ use proc_macro2::TokenStream;
 use prover::merkle_trees::MerkleTreeCapVarLength;
 use prover::transcript::Blake2sBufferingTranscript;
 use prover::transcript::blake2s_u32::BLAKE2S_DIGEST_SIZE_U32_WORDS;
-use prover::worker::Worker;
+use prover::worker::{self, Worker};
 use quote::quote;
 use std::alloc::Global;
 
@@ -13,32 +13,28 @@ pub struct ExpectedFinalStateData {
 }
 
 pub fn generate_params_and_register_values(
-    base_layer_bin: &[u8],
-    first_recursion_layer_bin: &[u8],
-    next_recursion_layer_bin: &[u8],
-    first_final_recursion_bin: &[u8],
-    next_final_recursion_bin: &[u8],
+    machines_chain: &[(&[u8], MachineType)],
+    last_machine: (&[u8], MachineType),
+    worker: &Worker,
 ) -> (
     [u32; BLAKE2S_DIGEST_SIZE_U32_WORDS],
     [u32; BLAKE2S_DIGEST_SIZE_U32_WORDS],
 ) {
-    let worker = Worker::new_with_num_threads(8);
     let end_params =
-        generate_params_for_binary_and_machine(next_final_recursion_bin, MachineType::ReducedFinal);
+        generate_params_for_binary_and_machine(last_machine.0, last_machine.1);
 
     let aux_registers_values = compute_commitment_for_chain_of_programs(
-        base_layer_bin,
-        first_recursion_layer_bin,
-        next_recursion_layer_bin,
-        first_final_recursion_bin,
+        machines_chain,
         &worker,
     );
     (end_params, aux_registers_values)
 }
 
+#[derive(Clone, Copy)]
 pub enum MachineType {
     Standard,
     Reduced,
+    ReducedLog23,
     // Final reduced machine, used to generate a single proof at the end.
     ReducedFinal,
 }
@@ -60,6 +56,10 @@ pub fn generate_params_for_binary_and_machine(
             expected_final_pc,
             &setups::get_reduced_riscv_circuit_setup::<Global, Global>(&binary, &worker),
         ),
+        MachineType::ReducedLog23 => execution_utils::compute_end_parameters(
+            expected_final_pc,
+            &setups::get_reduced_riscv_log_23_circuit_setup::<Global, Global>(&binary, &worker),
+        ),
 
         MachineType::ReducedFinal => execution_utils::compute_end_parameters(
             expected_final_pc,
@@ -69,18 +69,14 @@ pub fn generate_params_for_binary_and_machine(
 }
 
 pub fn generate_constants(
-    base_layer_bin: &[u8],
-    first_recursion_layer_bin: &[u8],
-    next_recursion_layer_bin: &[u8],
-    first_final_recursion_bin: &[u8],
-    next_final_recursion_bin: &[u8],
+    machines_chain: &[(&[u8], MachineType)],
+    last_machine: (&[u8], MachineType),
+    worker: &Worker,
 ) -> TokenStream {
     let (end_params, aux_registers_values) = generate_params_and_register_values(
-        base_layer_bin,
-        first_recursion_layer_bin,
-        next_recursion_layer_bin,
-        first_final_recursion_bin,
-        next_final_recursion_bin,
+        machines_chain,
+        last_machine,
+        worker,
     );
 
     let [
@@ -136,37 +132,21 @@ pub fn generate_constants(
 ///     || next_recursion_step_end_params
 /// )
 fn compute_commitment_for_chain_of_programs(
-    base_layer_bin: &[u8],
-    first_recursion_layer_bin: &[u8],
-    next_recursion_layer_bin: &[u8],
-    first_final_recursion_bin: &[u8],
+    binaries_and_machines: &[(&[u8], MachineType)],
     worker: &Worker,
 ) -> [u32; BLAKE2S_DIGEST_SIZE_U32_WORDS] {
-    let base_layer_end_params =
-        generate_params_for_binary_and_machine(base_layer_bin, MachineType::Standard);
+    let mut end_params = binaries_and_machines
+        .iter()
+        .map(|(bin, machine)| generate_params_for_binary_and_machine(bin, *machine))
+        .collect::<Vec<_>>();
 
-    let first_recursion_layer_end_params =
-        generate_params_for_binary_and_machine(first_recursion_layer_bin, MachineType::Reduced);
+    end_params.insert(0, [0u32; BLAKE2S_DIGEST_SIZE_U32_WORDS]);
 
-    let next_recursion_layer_end_params =
-        generate_params_for_binary_and_machine(next_recursion_layer_bin, MachineType::Reduced);
-
-    let first_final_recursion_end_params = generate_params_for_binary_and_machine(
-        first_final_recursion_bin,
-        MachineType::ReducedFinal,
-    );
-
-    compute_chain_encoding(vec![
-        [0u32; BLAKE2S_DIGEST_SIZE_U32_WORDS],
-        base_layer_end_params,
-        first_recursion_layer_end_params,
-        next_recursion_layer_end_params,
-        first_final_recursion_end_params,
-    ])
+    compute_chain_encoding(&end_params)
 }
 
 pub fn compute_chain_encoding(
-    data: Vec<[u32; BLAKE2S_DIGEST_SIZE_U32_WORDS]>,
+    data: &[[u32; BLAKE2S_DIGEST_SIZE_U32_WORDS]],
 ) -> [u32; BLAKE2S_DIGEST_SIZE_U32_WORDS] {
     let mut hasher = Blake2sBufferingTranscript::new();
     let mut previous = data[0];

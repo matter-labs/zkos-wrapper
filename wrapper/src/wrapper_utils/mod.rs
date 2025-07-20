@@ -9,6 +9,7 @@ use boojum::gadgets::u8::UInt8;
 use boojum::gadgets::u32::UInt32;
 use circuit_mersenne_field::{MersenneField, MersenneQuartic};
 
+use crate::risc_verifier;
 use risc_verifier::field::*;
 use risc_verifier::prover::cs::definitions::*;
 use risc_verifier::prover::definitions::*;

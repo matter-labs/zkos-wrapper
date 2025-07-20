@@ -1,31 +1,14 @@
 #![feature(allocator_api)]
-use std::alloc::Global;
 /// Tool that takes the riscv proof from boojum 2.0, together with the final value of the
 /// registers - and returns the SNARK proof.
 // Inside, it runs 3 submodules:
 // - wrapping boojum 2.0 proof into boojum
 // - doing the compression
 // - wrapping the proof into SNARK.
-use std::path::Path;
 
 use clap::{Parser, Subcommand};
 
-use bellman::kate_commitment::{Crs, CrsForMonomialForm};
-use bellman::worker::Worker as BellmanWorker;
-
-use execution_utils::{
-    final_recursion_layer_verifier_vk, recursion_layer_no_delegation_verifier_vk,
-    recursion_layer_verifier_vk, universal_circuit_no_delegation_verifier_vk,
-    universal_circuit_verifier_vk,
-};
-use risc_verifier::prover::worker::Worker;
-use zkos_wrapper::circuits::BinaryCommitment;
-use zkos_wrapper::{Bn256, L1_VERIFIER_DOMAIN_SIZE_LOG, calculate_verification_key_hash};
-use zkos_wrapper::{
-    circuits::RiscWrapperWitness, get_compression_setup, get_risc_wrapper_setup,
-    get_snark_wrapper_setup, prove_compression, prove_risc_wrapper, prove_snark_wrapper,
-    verify_compression_proof, verify_risc_wrapper_proof, verify_snark_wrapper_proof, generate_vk
-};
+use zkos_wrapper::generate_vk;
 
 #[derive(Parser)]
 #[command(version, about, long_about = None)]

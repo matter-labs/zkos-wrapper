@@ -9,6 +9,7 @@ use boojum::gadgets::u32::UInt32;
 use circuit_mersenne_field::extension_trait::CircuitFieldExpression;
 use circuit_mersenne_field::{MersenneComplex, MersenneField, MersenneQuartic};
 
+use crate::risc_verifier;
 use risc_verifier::blake2s_u32::*;
 use risc_verifier::concrete::size_constants::*;
 use risc_verifier::concrete::skeleton_instance::BASE_CIRCUIT_QUERY_VALUES_NO_PADDING_U32_WORDS;

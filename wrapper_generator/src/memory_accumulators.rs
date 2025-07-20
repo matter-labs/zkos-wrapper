@@ -1199,8 +1199,6 @@ pub(crate) fn transform_delegation_ram_memory_accumulators(
         streams.push(t);
     }
 
-    // assert_eq!(i, memory_layout.batched_ram_accesses.len());
-
     let mut expected_num_accesses = memory_layout.batched_ram_accesses.len();
     expected_num_accesses += memory_layout.register_and_indirect_accesses.len();
     expected_num_accesses += memory_layout

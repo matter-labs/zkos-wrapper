@@ -6,10 +6,16 @@
 pub mod circuits;
 pub mod transcript;
 mod wrapper_inner_verifier;
+mod blake2_inner_verifier;
 pub mod wrapper_utils;
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(feature="final_machine")]
+pub use final_risc_verifier as risc_verifier;
+#[cfg(not(feature="final_machine"))]
+pub use reduced_risc_verifier as risc_verifier;
 
 use boojum::algebraic_props::round_function::AbsorptionModeOverwrite;
 use boojum::algebraic_props::sponge::GoldilocksPoseidon2Sponge;
@@ -176,7 +182,7 @@ pub fn prove_risc_wrapper(
     let geometry = RiscWrapper::geometry();
     let (max_trace_len, num_vars) = circuit.size_hint();
 
-    let builder_impl = CsReferenceImplementationBuilder::<GL, GL, DevCSConfig>::new(
+    let builder_impl = CsReferenceImplementationBuilder::<GL, GL, ProvingCSConfig>::new(
         geometry,
         max_trace_len.unwrap(),
     );

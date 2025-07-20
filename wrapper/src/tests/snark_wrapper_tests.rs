@@ -3,7 +3,7 @@ use bellman::kate_commitment::{Crs, CrsForMonomialForm};
 
 #[test]
 pub(crate) fn snark_wrapper_full_test() {
-    let worker = crate::BellmanWorker::new_with_cpus(4);
+    let worker = crate::BellmanWorker::new();
 
     let compression_proof = deserialize_from_file(COMPRESSION_PROOF_PATH);
     let compression_vk: crate::CompressionVK = deserialize_from_file(COMPRESSION_VK_PATH);
@@ -33,7 +33,7 @@ pub(crate) fn snark_wrapper_full_test() {
 
 #[test]
 pub(crate) fn snark_wrapper_setup_test() {
-    let worker = crate::BellmanWorker::new_with_cpus(4);
+    let worker = crate::BellmanWorker::new();
 
     let compression_vk = deserialize_from_file(COMPRESSION_VK_PATH);
     let crs_mons = Crs::<crate::Bn256, CrsForMonomialForm>::crs_42(
