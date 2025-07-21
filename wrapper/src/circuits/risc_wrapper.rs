@@ -59,6 +59,7 @@ const NUM_RISC_WRAPPER_PUBLIC_INPUTS: usize = 4;
 pub struct RiscWrapperWitness {
     pub final_registers_state: [u32; NUM_REGISTERS * 3],
     pub proof: RiscProof,
+    #[cfg(feature = "wrap_with_blake")]
     pub blake_proof: RiscProof,
 }
 
@@ -94,7 +95,6 @@ impl RiscWrapperWitness {
         } = full_proof;
 
         assert!(base_layer_proofs.len() == 1);
-        // assert!(delegation_proofs.is_empty());
         assert!(register_final_values.len() == NUM_REGISTERS);
         // assert_eq!(end_params, binary_commitment.end_params);
 
@@ -123,14 +123,20 @@ impl RiscWrapperWitness {
 
 
         let mut dp_iter = delegation_proofs.iter();
-        let blake_proofs = dp_iter.next().unwrap();
-        assert!(dp_iter.next().is_none(), "Expected only one delegation proof");
-        assert!(blake_proofs.1.len() == 1, "Expected only one blake proof");
-        let blake_proof = blake_proofs.1.into_iter().next().unwrap().clone();
+        
+        #[cfg(feature = "wrap_with_blake")]
+        let blake_proof = {
+            let blake_proofs = dp_iter.next().unwrap();
+            assert!(blake_proofs.1.len() == 1, "Expected only one blake proof");
+            blake_proofs.1.into_iter().next().unwrap().clone()
+        };
+
+        assert!(dp_iter.next().is_none(), "Too many delegation proofs");
 
         Self {
             final_registers_state: final_registers_state.try_into().unwrap(),
             proof: base_proof,
+            #[cfg(feature = "wrap_with_blake")]
             blake_proof,
         }
     }
@@ -146,20 +152,41 @@ impl<F: SmallField, V: CircuitLeafInclusionVerifier<F>> CircuitBuilder<F>
     for RiscWrapperCircuit<F, V>
 {
     fn geometry() -> CSGeometry {
-        CSGeometry {
+        #[cfg(feature="wrap_final_machine")]
+        let result = CSGeometry {
+            num_columns_under_copy_permutation: 51,
+            num_witness_columns: 0,
+            num_constant_columns: 4,
+            max_allowed_constraint_degree: 4,
+        };
+
+        #[cfg(feature="wrap_with_blake")]
+        let result = CSGeometry {
             num_columns_under_copy_permutation: 104,
             num_witness_columns: 0,
             num_constant_columns: 4,
             max_allowed_constraint_degree: 4,
-        }
+        };
+
+        result
     }
 
     fn lookup_parameters() -> LookupParameters {
-        LookupParameters::UseSpecializedColumnsWithTableIdAsConstant {
+        #[cfg(feature="wrap_final_machine")]
+        let result = LookupParameters::UseSpecializedColumnsWithTableIdAsConstant {
+            width: 3,
+            num_repetitions: 21,
+            share_table_id: true,
+        };
+
+        #[cfg(feature="wrap_with_blake")]
+        let result = LookupParameters::UseSpecializedColumnsWithTableIdAsConstant {
             width: 3,
             num_repetitions: 47,
             share_table_id: true,
-        }
+        };
+
+        result
     }
 
     fn configure_builder<
@@ -233,6 +260,7 @@ impl<F: SmallField, V: CircuitLeafInclusionVerifier<F>> RiscWrapperCircuit<F, V>
         if verify_inner_proof {
             if let Some(witness) = &witness {
                 verify_risc_proof::<V::OutOfCircuitImpl>(&witness.proof);
+                #[cfg(feature = "wrap_with_blake")]
                 crate::blake2_inner_verifier::verify_blake_proof::<V::OutOfCircuitImpl>(&witness.blake_proof);
             } else {
                 panic!("Proof is required for verification");
@@ -248,6 +276,9 @@ impl<F: SmallField, V: CircuitLeafInclusionVerifier<F>> RiscWrapperCircuit<F, V>
 
     pub fn size_hint(&self) -> (Option<usize>, Option<usize>) {
         let trace_len = 1 << 20;
+        #[cfg(feature = "wrap_final_machine")]
+        let max_variables = 1 << 26;
+        #[cfg(feature = "wrap_with_blake")]
         let max_variables = 1 << 27;
         (Some(trace_len), Some(max_variables))
     }
@@ -315,16 +346,18 @@ impl<F: SmallField, V: CircuitLeafInclusionVerifier<F>> RiscWrapperCircuit<F, V>
         let (proof_state, proof_input) =
             crate::wrapper_inner_verifier::verify(cs, skeleton, queries);
 
-            let final_registers_state =
-            <[UInt32<F>; NUM_REGISTERS * 3]>::allocate(cs, final_registers_state_witness);
-
+        #[cfg(feature = "wrap_with_blake")]
         let (skeleton, queries) = if let Some(witness) = &self.witness {
             crate::blake2_inner_verifier::prepare_blake_proof_for_wrapper::<_, _, V>(cs, &witness.blake_proof)
         } else {
             crate::blake2_inner_verifier::placeholders::<_, _, V>(cs)
         };
 
-        let blake_state = crate::blake2_inner_verifier::verify(cs, skeleton, queries);
+        #[cfg(feature = "wrap_with_blake")]
+        let blake_state = Some(crate::blake2_inner_verifier::verify(cs, skeleton, queries));
+
+        #[cfg(feature = "wrap_final_machine")]
+        let blake_state = None;
 
         check_proof_state(
             cs,
@@ -456,7 +489,7 @@ pub(crate) fn check_proof_state<F: SmallField, CS: ConstraintSystem<F>>(
         NUM_AUX_BOUNDARY_VALUES,
     >,
     public_input: &WrappedProofPublicInputs<F, NUM_STATE_ELEMENTS>,
-    blake_state: &WrappedBlakeProofOutput<F>,
+    blake_state: &Option<WrappedBlakeProofOutput<F>>,
     binary_commitment: &BinaryCommitment,
 ) {
     let mut transcript = Blake2sWrappedBufferingTranscript::new(cs);
@@ -506,21 +539,28 @@ pub(crate) fn check_proof_state<F: SmallField, CS: ConstraintSystem<F>>(
 
     // Now delegation circuit
 
-    let mut buffer = [UInt32::zero(cs); BLAKE2S_BLOCK_SIZE_U32_WORDS];
-    buffer[0] = blake_state.delegation_type;
-    transcript.absorb(cs, &buffer);
-
-    for cap in blake_state.memory_caps.iter() {
-        for chunk in cap.cap.iter() {
-            transcript.absorb(cs, chunk);
+    if let Some(blake_state) = blake_state {
+        let mut buffer = [UInt32::zero(cs); BLAKE2S_BLOCK_SIZE_U32_WORDS];
+        buffer[0] = blake_state.delegation_type;
+        transcript.absorb(cs, &buffer);
+    
+        for cap in blake_state.memory_caps.iter() {
+            for chunk in cap.cap.iter() {
+                transcript.absorb(cs, chunk);
+            }
         }
-    }
-
-    memory_grand_product_accumulator =
-        memory_grand_product_accumulator.mul(cs, &blake_state.memory_grand_product_accumulator);
-    if NUM_DELEGATION_CHALLENGES > 0 {
+    
+        memory_grand_product_accumulator =
+            memory_grand_product_accumulator.mul(cs, &blake_state.memory_grand_product_accumulator);
         delegation_set_accumulator =
             delegation_set_accumulator.sub(cs, &blake_state.delegation_argument_accumulator[0]);
+
+        blake_state.memory_challenges.enforce_equal(cs, &proof_state.memory_challenges);
+        for (l, r) in blake_state.delegation_challenges.iter().zip(
+            proof_state.delegation_challenges.iter()
+        ) {
+            l.enforce_equal(cs, r);
+        }
     }
 
     let memory_seed = transcript.finalize_reset(cs);
@@ -575,7 +615,7 @@ pub(crate) fn check_proof_state<F: SmallField, CS: ConstraintSystem<F>>(
     for i in 0..8 {
         let end_params_word = UInt32::from_le_bytes(cs, end_params_output.0[i].inner);
         let expected_word = UInt32::allocate_constant(cs, binary_commitment.end_params[i]);
-        // Num::enforce_equal(cs, &expected_word.into_num(), &end_params_word.into_num());
+        Num::enforce_equal(cs, &expected_word.into_num(), &end_params_word.into_num());
     }
 
     // we require that 8 registers (18 - 25) are some hash output in nature, that encodes our
@@ -585,7 +625,7 @@ pub(crate) fn check_proof_state<F: SmallField, CS: ConstraintSystem<F>>(
         let aux_register_idx = (i + 18) * 3;
         let aux_register = final_registers_state[aux_register_idx];
         let expected_word = UInt32::allocate_constant(cs, binary_commitment.aux_params[i]);
-        // Num::enforce_equal(cs, &expected_word.into_num(), &aux_register.into_num());
+        Num::enforce_equal(cs, &expected_word.into_num(), &aux_register.into_num());
     }
 }
 

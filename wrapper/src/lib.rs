@@ -12,9 +12,9 @@ pub mod wrapper_utils;
 #[cfg(test)]
 mod tests;
 
-#[cfg(feature="final_machine")]
+#[cfg(feature="wrap_final_machine")]
 pub use final_risc_verifier as risc_verifier;
-#[cfg(not(feature="final_machine"))]
+#[cfg(feature="wrap_with_blake")]
 pub use reduced_risc_verifier as risc_verifier;
 
 use boojum::algebraic_props::round_function::AbsorptionModeOverwrite;

@@ -66,7 +66,7 @@ fn all_layers_setup_test() {
 // cargo run -p cli --release prove --bin examples/hashed_fibonacci/app.bin --input-file examples/hashed_fibonacci/input.txt --output-dir /tmp/ --until final-proof
 // And then copy /tmp/final_program_proof testing_data/risc_final_machine_proof
 
-#[cfg(feature = "final_machine")]
+#[cfg(feature = "wrap_final_machine")]
 mod path_constants {
     pub(crate) const RISC_PROOF_PATH: &str = "testing_data/risc_final_machine_proof";
     pub(crate) const RISC_WRAPPER_PROOF_PATH: &str = "testing_data/final_machine_mode_risc_wrapper_proof";
@@ -77,7 +77,7 @@ mod path_constants {
     pub(crate) const SNARK_WRAPPER_VK_PATH: &str = "testing_data/final_machine_mode_snark_wrapper_vk";
 }
 
-#[cfg(not(feature = "final_machine"))]
+#[cfg(feature = "wrap_with_blake")]
 mod path_constants {
     pub(crate) const RISC_PROOF_PATH: &str = "testing_data/risc_proof";
     pub(crate) const RISC_WRAPPER_PROOF_PATH: &str = "testing_data/risc_wrapper_proof";

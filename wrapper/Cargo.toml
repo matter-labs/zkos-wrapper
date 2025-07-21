@@ -34,4 +34,6 @@ rand.workspace = true
 hex = "0.4.3"
 
 [features]
-final_machine = []
+default = ["wrap_final_machine"]
+wrap_final_machine = []
+wrap_with_blake = []
