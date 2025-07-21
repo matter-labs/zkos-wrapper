@@ -8,7 +8,7 @@
 
 use clap::{Parser, Subcommand};
 
-use zkos_wrapper::generate_vk;
+use zkos_wrapper::{generate_and_save_risc_wrapper_vk, generate_vk};
 
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
@@ -120,22 +120,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 output_dir,
                 trusted_setup_file,
                 universal_verifier,
-                false,
             )?;
-        },
+        }
         Commands::GenerateRiscWrapperVk {
             input_binary,
             output_dir,
             universal_verifier,
         } => {
             println!("=== Phase 0: Generating the RiscWrapper verification key");
-            generate_vk(
-                input_binary,
-                output_dir,
-                None,
-                universal_verifier,
-                true,
-            )?;
+            generate_and_save_risc_wrapper_vk(input_binary, output_dir, universal_verifier)?;
         }
     }
     Ok(())
