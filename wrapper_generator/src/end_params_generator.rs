@@ -20,13 +20,9 @@ pub fn generate_params_and_register_values(
     [u32; BLAKE2S_DIGEST_SIZE_U32_WORDS],
     [u32; BLAKE2S_DIGEST_SIZE_U32_WORDS],
 ) {
-    let end_params =
-        generate_params_for_binary_and_machine(last_machine.0, last_machine.1);
+    let end_params = generate_params_for_binary_and_machine(last_machine.0, last_machine.1);
 
-    let aux_registers_values = compute_commitment_for_chain_of_programs(
-        machines_chain,
-        &worker,
-    );
+    let aux_registers_values = compute_commitment_for_chain_of_programs(machines_chain, &worker);
     (end_params, aux_registers_values)
 }
 
@@ -73,11 +69,8 @@ pub fn generate_constants(
     last_machine: (&[u8], MachineType),
     worker: &Worker,
 ) -> TokenStream {
-    let (end_params, aux_registers_values) = generate_params_and_register_values(
-        machines_chain,
-        last_machine,
-        worker,
-    );
+    let (end_params, aux_registers_values) =
+        generate_params_and_register_values(machines_chain, last_machine, worker);
 
     let [
         end_params_0,

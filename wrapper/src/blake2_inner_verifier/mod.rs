@@ -29,9 +29,9 @@ use crate::wrapper_utils::verifier_traits::*;
 use skeleton::*;
 
 use crate::risc_verifier;
-use risc_verifier::prover::prover_stages::Proof as RiscProof;
 use crate::set_iterator_from_proof;
 use risc_verifier::prover::nd_source_std::ThreadLocalBasedSource;
+use risc_verifier::prover::prover_stages::Proof as RiscProof;
 pub fn prepare_blake_proof_for_wrapper<
     F: SmallField,
     CS: ConstraintSystem<F>,
@@ -46,9 +46,7 @@ pub fn prepare_blake_proof_for_wrapper<
     set_iterator_from_proof(proof, false);
 
     let skeleton = unsafe {
-        WrappedProofSkeletonInstance::from_non_determinism_source::<_, ThreadLocalBasedSource>(
-            cs,
-        )
+        WrappedProofSkeletonInstance::from_non_determinism_source::<_, ThreadLocalBasedSource>(cs)
     };
 
     let mut leaf_inclusion_verifier = V::new(cs);
@@ -64,16 +62,12 @@ pub fn prepare_blake_proof_for_wrapper<
     (skeleton, queries)
 }
 
-pub fn placeholders<
-    F: SmallField,
-    CS: ConstraintSystem<F>,
-    V: CircuitLeafInclusionVerifier<F>,
->(
+pub fn placeholders<F: SmallField, CS: ConstraintSystem<F>, V: CircuitLeafInclusionVerifier<F>>(
     cs: &mut CS,
 ) -> (
     WrappedProofSkeletonInstance<F>,
     [WrappedQueryValuesInstance<F>; NUM_QUERIES],
-){
+) {
     // allocate from placeholder
     let skeleton_witness = WrappedProofSkeletonInstance::<F>::placeholder_witness();
     let skeleton = WrappedProofSkeletonInstance::allocate(cs, skeleton_witness);
@@ -91,9 +85,9 @@ pub fn placeholders<
     (skeleton, queries)
 }
 
-use blake_verifier::*;
 use crate::blake2_inner_verifier::prover::definitions::LeafInclusionVerifier;
 use crate::blake2_inner_verifier::verifier_common::ProofOutput;
+use blake_verifier::*;
 
 #[allow(invalid_value)]
 pub(crate) fn verify_blake_proof<V: LeafInclusionVerifier>(
@@ -513,7 +507,7 @@ pub fn verify<F: SmallField, CS: ConstraintSystem<F>>(
                 }
             };
 
-        let aux_boundary_values = 
+        let aux_boundary_values =
         // if skeleton.aux_boundary_values.len() > 0 {
         //     skeleton.aux_boundary_values[0]
         // } else {

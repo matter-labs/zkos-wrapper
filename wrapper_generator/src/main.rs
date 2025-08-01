@@ -76,7 +76,7 @@ struct Cli {
     #[arg(long, default_value = "../wrapper/src/blake2_inner_verifier/imports")]
     blake_output_dir: String,
     #[arg(long, default_value = "false")]
-    use_universal_binaries: bool
+    use_universal_binaries: bool,
 }
 
 fn main() {
@@ -91,8 +91,11 @@ fn main() {
     );
 
     let (verifier, inline_verifier) = generate_verifier_files(&compiled_circuit);
-    std::fs::write(Path::new(&output_dir).join("circuit_layout_for_final_machine.rs"), verifier)
-        .expect(&format!("Failed to write to {}", output_dir));
+    std::fs::write(
+        Path::new(&output_dir).join("circuit_layout_for_final_machine.rs"),
+        verifier,
+    )
+    .expect(&format!("Failed to write to {}", output_dir));
     std::fs::write(
         Path::new(&output_dir).join("circuit_quotient_for_final_machine.rs"),
         inline_verifier,
@@ -114,10 +117,14 @@ fn main() {
     )
     .expect(&format!("Failed to write to {}", output_dir));
 
-    let blake_compiled_circuit = setups::blake2_with_compression::get_delegation_circuit().compiled_circuit;
+    let blake_compiled_circuit =
+        setups::blake2_with_compression::get_delegation_circuit().compiled_circuit;
     let (verifier, inline_verifier) = generate_verifier_files(&blake_compiled_circuit);
-    std::fs::write(Path::new(&blake_output_dir).join("circuit_layout.rs"), verifier)
-        .expect(&format!("Failed to write to {}", blake_output_dir));
+    std::fs::write(
+        Path::new(&blake_output_dir).join("circuit_layout.rs"),
+        verifier,
+    )
+    .expect(&format!("Failed to write to {}", blake_output_dir));
     std::fs::write(
         Path::new(&blake_output_dir).join("circuit_quotient.rs"),
         inline_verifier,
@@ -142,7 +149,7 @@ fn main() {
         &generate_constants(
             &machines_chain,
             (
-                binaries[2],
+                execution_utils::RECURSION_LAYER_VERIFIER,
                 MachineType::ReducedLog23,
             ),
             &worker,
@@ -167,10 +174,7 @@ fn main() {
     let end_params_constants = format_rust_code(
         &generate_constants(
             &machines_chain,
-            (
-                binaries[4],
-                MachineType::ReducedFinal,
-            ),
+            (binaries[4], MachineType::ReducedFinal),
             &worker,
         )
         .to_string(),

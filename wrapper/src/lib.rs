@@ -3,18 +3,18 @@
 #![allow(incomplete_features)]
 #![feature(generic_const_exprs)]
 
+mod blake2_inner_verifier;
 pub mod circuits;
 pub mod transcript;
 mod wrapper_inner_verifier;
-mod blake2_inner_verifier;
 pub mod wrapper_utils;
 
 #[cfg(test)]
 mod tests;
 
-#[cfg(feature="wrap_final_machine")]
+#[cfg(feature = "wrap_final_machine")]
 pub use final_risc_verifier as risc_verifier;
-#[cfg(feature="wrap_with_blake")]
+#[cfg(feature = "wrap_with_reduced_log_23")]
 pub use reduced_risc_verifier as risc_verifier;
 
 use boojum::algebraic_props::round_function::AbsorptionModeOverwrite;
@@ -102,8 +102,9 @@ pub type SnarkWrapperTranscript =
 
 pub use execution_utils::ProgramProof;
 use execution_utils::{
-    final_recursion_layer_verifier_vk, recursion_layer_no_delegation_verifier_vk,
-    recursion_layer_verifier_vk, universal_circuit_no_delegation_verifier_vk,
+    base_layer_verifier_vk, final_recursion_layer_verifier_vk,
+    recursion_layer_no_delegation_verifier_vk, recursion_layer_verifier_vk,
+    recursion_log_23_layer_verifier_vk, universal_circuit_no_delegation_verifier_vk,
     universal_circuit_verifier_vk,
 };
 //CircuitAlgebraicSpongeBasedTranscript<GoldilocksField, 8, 12, 4, R>,
@@ -490,53 +491,53 @@ fn deserialize_from_file<T: serde::de::DeserializeOwned>(filename: &str) -> T {
     serde_json::from_reader(src).unwrap()
 }
 
-pub fn create_binary_commitment(
-    binary_path: String,
-    expected_end_params: &[u32; 8],
-) -> BinaryCommitment {
-    let bin = std::fs::read(binary_path).unwrap();
+// pub fn create_binary_commitment(
+//     binary_path: String,
+//     expected_end_params: &[u32; 8],
+// ) -> BinaryCommitment {
+//     let bin = std::fs::read(binary_path).unwrap();
 
-    let worker = risc_verifier::prover::worker::Worker::new();
+//     let worker = risc_verifier::prover::worker::Worker::new();
 
-    let expected_final_pc = execution_utils::find_binary_exit_point(&bin);
-    let binary: Vec<u32> = execution_utils::get_padded_binary(&bin);
+//     let expected_final_pc = execution_utils::find_binary_exit_point(&bin);
+//     let binary: Vec<u32> = execution_utils::get_padded_binary(&bin);
 
-    let base_params = execution_utils::compute_end_parameters(
-        expected_final_pc,
-        &setups::get_main_riscv_circuit_setup::<Global, Global>(&binary, &worker),
-    );
+//     let base_params = execution_utils::compute_end_parameters(
+//         expected_final_pc,
+//         &setups::get_main_riscv_circuit_setup::<Global, Global>(&binary, &worker),
+//     );
 
-    // Check which verifier was used.
-    if universal_circuit_no_delegation_verifier_vk().params == *expected_end_params {
-        let layers = vec![
-            [0u32; 8],
-            base_params,
-            universal_circuit_verifier_vk().params,
-            universal_circuit_no_delegation_verifier_vk().params,
-        ];
-        BinaryCommitment {
-            end_params: universal_circuit_no_delegation_verifier_vk().params,
-            aux_params: execution_utils::compute_chain_encoding(layers),
-        }
-    } else if final_recursion_layer_verifier_vk().params == *expected_end_params {
-        let layers = vec![
-            [0u32; 8],
-            base_params,
-            recursion_layer_verifier_vk().params,
-            recursion_layer_no_delegation_verifier_vk().params,
-            final_recursion_layer_verifier_vk().params,
-        ];
-        BinaryCommitment {
-            end_params: final_recursion_layer_verifier_vk().params,
-            aux_params: execution_utils::compute_chain_encoding(layers),
-        }
-    } else {
-        panic!(
-            "Cannot find a verifier for the proof end parameters: {:?}",
-            expected_end_params
-        );
-    }
-}
+//     // Check which verifier was used.
+//     if universal_circuit_no_delegation_verifier_vk().params == *expected_end_params {
+//         let layers = vec![
+//             [0u32; 8],
+//             base_params,
+//             universal_circuit_verifier_vk().params,
+//             universal_circuit_no_delegation_verifier_vk().params,
+//         ];
+//         BinaryCommitment {
+//             end_params: universal_circuit_no_delegation_verifier_vk().params,
+//             aux_params: execution_utils::compute_chain_encoding(layers),
+//         }
+//     } else if final_recursion_layer_verifier_vk().params == *expected_end_params {
+//         let layers = vec![
+//             [0u32; 8],
+//             base_params,
+//             recursion_layer_verifier_vk().params,
+//             recursion_layer_no_delegation_verifier_vk().params,
+//             final_recursion_layer_verifier_vk().params,
+//         ];
+//         BinaryCommitment {
+//             end_params: final_recursion_layer_verifier_vk().params,
+//             aux_params: execution_utils::compute_chain_encoding(layers),
+//         }
+//     } else {
+//         panic!(
+//             "Cannot find a verifier for the proof end parameters: {:?}",
+//             expected_end_params
+//         );
+//     }
+// }
 
 pub fn prove_risc_wrapper_with_snark(
     risc_wrapper_proof: RiscWrapperProof,
@@ -608,15 +609,16 @@ pub fn prove_risc_wrapper_with_snark(
 
 pub fn prove_fri_risc_wrapper(
     program_proof: ProgramProof,
-    input_binary: Option<String>,
 ) -> Result<(RiscWrapperProof, RiscWrapperVK), Box<dyn std::error::Error>> {
     println!("=== Phase 1: Creating the Risc wrapper proof");
 
     let worker = boojum::worker::Worker::new();
 
-    let binary_commitment = match input_binary {
-        Some(binary_path) => create_binary_commitment(binary_path, &program_proof.end_params),
-        None => BinaryCommitment::from_default_binary(),
+    let binary_commitment = BinaryCommitment {
+        end_params: program_proof.end_params,
+        aux_params: program_proof
+            .recursion_chain_hash
+            .expect("Recursion chain hash is missing only in base layer"),
     };
     let risc_wrapper_witness =
         RiscWrapperWitness::from_full_proof(program_proof, &binary_commitment);
@@ -653,14 +655,12 @@ pub fn prove_fri_risc_wrapper(
 
 pub fn prove(
     input: String,
-    input_binary: Option<String>,
     output_dir: String,
     trusted_setup_file: Option<String>,
     risc_wrapper_only: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let program_proof: crate::ProgramProof = deserialize_from_file(&input);
-    let (risc_wrapper_proof, risc_wrapper_vk) =
-        prove_fri_risc_wrapper(program_proof, input_binary).unwrap();
+    let (risc_wrapper_proof, risc_wrapper_vk) = prove_fri_risc_wrapper(program_proof).unwrap();
 
     if risc_wrapper_only {
         serialize_to_file(
@@ -714,13 +714,75 @@ fn generate_risk_wrapper_vk(
     universal_verifier: bool,
     boojum_worker: &Worker,
 ) -> Result<RiscWrapperVK, Box<dyn std::error::Error>> {
-    let verifier_params = if universal_verifier {
-        universal_circuit_no_delegation_verifier_vk().params
+    // let verifier_params = if universal_verifier {
+    //     universal_circuit_no_delegation_verifier_vk().params
+    // } else {
+    //     final_recursion_layer_verifier_vk().params
+    // };
+
+    // let binary_commitment = create_binary_commitment(input_binary, &verifier_params);
+
+    let bin = std::fs::read(input_binary).unwrap();
+
+    let worker = risc_verifier::prover::worker::Worker::new();
+
+    let expected_final_pc = execution_utils::find_binary_exit_point(&bin);
+    let binary: Vec<u32> = execution_utils::get_padded_binary(&bin);
+
+    let base_params = execution_utils::compute_end_parameters(
+        expected_final_pc,
+        &setups::get_main_riscv_circuit_setup::<Global, Global>(&binary, &worker),
+    );
+
+    #[cfg(feature = "wrap_final_machine")]
+    let binary_commitment = if universal_verifier {
+        let layers = vec![
+            [0u32; 8],
+            base_params,
+            universal_circuit_verifier_vk().params,
+            universal_circuit_no_delegation_verifier_vk().params,
+        ];
+        BinaryCommitment {
+            end_params: universal_circuit_no_delegation_verifier_vk().params,
+            aux_params: execution_utils::compute_chain_encoding(layers),
+        }
     } else {
-        final_recursion_layer_verifier_vk().params
+        let layers = vec![
+            [0u32; 8],
+            base_params,
+            base_layer_verifier_vk().params,
+            recursion_layer_verifier_vk().params,
+            recursion_layer_no_delegation_verifier_vk().params,
+        ];
+        BinaryCommitment {
+            end_params: final_recursion_layer_verifier_vk().params,
+            aux_params: execution_utils::compute_chain_encoding(layers),
+        }
     };
 
-    let binary_commitment = create_binary_commitment(input_binary, &verifier_params);
+    #[cfg(feature = "wrap_with_reduced_log_23")]
+    let binary_commitment = if universal_verifier {
+        let layers = vec![
+            [0u32; 8],
+            base_params,
+            universal_circuit_verifier_vk().params,
+        ];
+        BinaryCommitment {
+            end_params: recursion_log_23_layer_verifier_vk().params,
+            aux_params: execution_utils::compute_chain_encoding(layers),
+        }
+    } else {
+        let layers = vec![
+            [0u32; 8],
+            base_params,
+            base_layer_verifier_vk().params,
+            recursion_layer_verifier_vk().params,
+        ];
+        BinaryCommitment {
+            end_params: recursion_log_23_layer_verifier_vk().params,
+            aux_params: execution_utils::compute_chain_encoding(layers),
+        }
+    };
 
     let (_, _, _, risc_wrapper_vk, _, _, _) =
         get_risc_wrapper_setup(boojum_worker, binary_commitment.clone());

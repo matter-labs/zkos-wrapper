@@ -715,7 +715,6 @@ pub(crate) fn transform_delegation_ram_memory_accumulators(
         }
     }
 
-
     {
         // now we can continue to accumulate
         for (access_idx, register_access_columns) in memory_layout

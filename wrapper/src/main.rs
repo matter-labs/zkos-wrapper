@@ -5,7 +5,6 @@
 // - wrapping boojum 2.0 proof into boojum
 // - doing the compression
 // - wrapping the proof into SNARK.
-
 use clap::{Parser, Subcommand};
 
 use zkos_wrapper::{generate_and_save_risc_wrapper_vk, generate_vk};
@@ -24,11 +23,6 @@ enum Commands {
         #[arg(short, long)]
         input: String,
 
-        // Binary used to generate the proof.
-        // If not specified, take the default binary (fibonacci hasher).
-        #[arg(long)]
-        input_binary: Option<String>,
-
         #[arg(short, long)]
         output_dir: String,
 
@@ -41,11 +35,6 @@ enum Commands {
     ProveRiscWrapper {
         #[arg(short, long)]
         input: String,
-
-        // Binary used to generate the proof.
-        // If not specified, take the default binary (fibonacci hasher).
-        #[arg(long)]
-        input_binary: Option<String>,
 
         #[arg(short, long)]
         output_dir: String,
@@ -93,20 +82,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     match cli.command {
         Commands::ProveFull {
             input,
-            input_binary,
             output_dir,
             trusted_setup_file,
         } => {
             println!("=== Phase 0: Proving");
-            zkos_wrapper::prove(input, input_binary, output_dir, trusted_setup_file, false)?;
+            zkos_wrapper::prove(input, output_dir, trusted_setup_file, false)?;
         }
-        Commands::ProveRiscWrapper {
-            input,
-            input_binary,
-            output_dir,
-        } => {
+        Commands::ProveRiscWrapper { input, output_dir } => {
             println!("=== Phase 0: Proving RiscWrapper");
-            zkos_wrapper::prove(input, input_binary, output_dir, None, true)?;
+            zkos_wrapper::prove(input, output_dir, None, true)?;
         }
         Commands::GenerateSnarkVk {
             input_binary,

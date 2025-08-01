@@ -1,3 +1,4 @@
+use crate::risc_verifier;
 use crate::transcript::*;
 use crate::wrapper_inner_verifier::skeleton::*;
 use crate::wrapper_utils::verifier_traits::CircuitBlake2sForEverythingVerifier;
@@ -28,7 +29,6 @@ use boojum::{
         u32::UInt32,
     },
 };
-use crate::risc_verifier;
 use risc_verifier::prover::prover_stages::Proof as RiscProof;
 use std::alloc::Global;
 
@@ -69,15 +69,19 @@ fn all_layers_setup_test() {
 #[cfg(feature = "wrap_final_machine")]
 mod path_constants {
     pub(crate) const RISC_PROOF_PATH: &str = "testing_data/risc_final_machine_proof";
-    pub(crate) const RISC_WRAPPER_PROOF_PATH: &str = "testing_data/final_machine_mode_risc_wrapper_proof";
+    pub(crate) const RISC_WRAPPER_PROOF_PATH: &str =
+        "testing_data/final_machine_mode_risc_wrapper_proof";
     pub(crate) const RISC_WRAPPER_VK_PATH: &str = "testing_data/final_machine_mode_risc_wrapper_vk";
-    pub(crate) const COMPRESSION_PROOF_PATH: &str = "testing_data/final_machine_mode_compression_proof";
+    pub(crate) const COMPRESSION_PROOF_PATH: &str =
+        "testing_data/final_machine_mode_compression_proof";
     pub(crate) const COMPRESSION_VK_PATH: &str = "testing_data/final_machine_mode_compression_vk";
-    pub(crate) const SNARK_WRAPPER_PROOF_PATH: &str = "testing_data/final_machine_mode_snark_wrapper_proof";
-    pub(crate) const SNARK_WRAPPER_VK_PATH: &str = "testing_data/final_machine_mode_snark_wrapper_vk";
+    pub(crate) const SNARK_WRAPPER_PROOF_PATH: &str =
+        "testing_data/final_machine_mode_snark_wrapper_proof";
+    pub(crate) const SNARK_WRAPPER_VK_PATH: &str =
+        "testing_data/final_machine_mode_snark_wrapper_vk";
 }
 
-#[cfg(feature = "wrap_with_blake")]
+#[cfg(feature = "wrap_with_reduced_log_23")]
 mod path_constants {
     pub(crate) const RISC_PROOF_PATH: &str = "testing_data/risc_proof";
     pub(crate) const RISC_WRAPPER_PROOF_PATH: &str = "testing_data/risc_wrapper_proof";

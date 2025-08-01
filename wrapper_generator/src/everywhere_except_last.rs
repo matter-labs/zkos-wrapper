@@ -1183,7 +1183,7 @@ pub(crate) fn transform_delegation_ram_conventions(
     let bound = memory_layout.register_and_indirect_accesses.len();
     for i in 0..bound {
         let access = &memory_layout.register_and_indirect_accesses[i];
-        use prover::cs::definitions::{RegisterAccessColumns, IndirectAccessColumns};
+        use prover::cs::definitions::{IndirectAccessColumns, RegisterAccessColumns};
         match access.register_access {
             RegisterAccessColumns::ReadAccess {
                 read_timestamp,
