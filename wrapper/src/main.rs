@@ -7,7 +7,7 @@
 // - wrapping the proof into SNARK.
 use clap::{Parser, Subcommand};
 
-use zkos_wrapper::{generate_and_save_risc_wrapper_vk, generate_vk};
+use zkos_wrapper::{generate_and_save_risc_wrapper_vk, generate_vk, verification_hash};
 
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
@@ -84,6 +84,12 @@ enum Commands {
         #[arg(long, default_value_t = true)]
         universal_verifier: bool,
     },
+    /// Get the hash of the verification key.
+    GetVkHash {
+        /// Path for VK to calculate the hash.
+        #[arg(short, long)]
+        vk_path: String,
+    },
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -128,6 +134,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         } => {
             println!("=== Phase 0: Generating the RiscWrapper verification key");
             generate_and_save_risc_wrapper_vk(input_binary, output_dir, universal_verifier)?;
+        }
+        Commands::GetVkHash {
+            vk_path
+        } => {
+            verification_hash(vk_path);
         }
     }
     Ok(())
