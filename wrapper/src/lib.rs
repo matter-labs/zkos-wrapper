@@ -761,3 +761,9 @@ pub fn generate_vk(
 
     Ok(verification_key)
 }
+
+pub fn verification_hash(vk_path: String) {
+    let vk = deserialize_from_file(&vk_path);
+    let vk_hash = calculate_verification_key_hash(vk);
+    println!("VK hash: {:?}", vk_hash);
+}
