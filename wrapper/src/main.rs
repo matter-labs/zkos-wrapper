@@ -66,7 +66,7 @@ enum Commands {
 
         /// If true, then create VK for universal verifier program.
         /// If false then for the separate verifiers.
-        #[arg(long)]
+        #[arg(long, default_value_t = true)]
         universal_verifier: bool,
     },
     /// Generate verification key for the RiscWrapper proof.
@@ -81,7 +81,7 @@ enum Commands {
 
         /// If true, then create VK for universal verifier program.
         /// If false then for the separate verifiers.
-        #[arg(long)]
+        #[arg(long, default_value_t = true)]
         universal_verifier: bool,
     },
     /// Get the hash of the verification key.
