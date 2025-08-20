@@ -1,4 +1,4 @@
-use boojum::{
+use shivini::boojum::{
     cs::{
         CSGeometry, GateConfigurationHolder, LookupParameters, StaticToolboxHolder,
         cs_builder::{CsBuilder, CsBuilderImpl},
@@ -189,7 +189,7 @@ impl CompressionCircuit {
         assert_eq!(public_inputs.len(), fixed_parameters.num_public_inputs());
 
         for el in public_inputs.into_iter() {
-            use boojum::cs::gates::PublicInputGate;
+            use shivini::boojum::cs::gates::PublicInputGate;
             let gate = PublicInputGate::new(el.get_variable());
             gate.add_to_cs(cs);
         }

@@ -229,7 +229,7 @@ impl<F: SmallField> MersenneComplex<F> {
         let tmp3 = Num::allocate_without_value(cs);
         let reduce1 = Num::allocate_without_value(cs);
         let reduce2 = Num::allocate_without_value(cs);
-        boojum::gadgets::u8::range_check_u8_pair(
+        shivini::boojum::gadgets::u8::range_check_u8_pair(
             cs,
             &[reduce1.get_variable(), reduce2.get_variable()],
         ); // 6th constraint
@@ -529,18 +529,18 @@ mod tests {
     use std::alloc::Global;
 
     use super::*;
-    use boojum::cs::*;
+    use shivini::boojum::cs::*;
 
-    use boojum::cs::gates::*;
-    use boojum::cs::traits::gate::GatePlacementStrategy;
-    use boojum::dag::CircuitResolverOpts;
-    use boojum::field::goldilocks::GoldilocksField;
-    use boojum::gadgets::tables::range_check_16_bits::{
+    use shivini::boojum::cs::gates::*;
+    use shivini::boojum::cs::traits::gate::GatePlacementStrategy;
+    use shivini::boojum::dag::CircuitResolverOpts;
+    use shivini::boojum::field::goldilocks::GoldilocksField;
+    use shivini::boojum::gadgets::tables::range_check_16_bits::{
         create_range_check_15_bits_table, create_range_check_16_bits_table, RangeCheck15BitsTable,
         RangeCheck16BitsTable,
     };
-    use boojum::gadgets::traits::witnessable::WitnessHookable;
-    use boojum::worker::Worker;
+    use shivini::boojum::gadgets::traits::witnessable::WitnessHookable;
+    use shivini::boojum::worker::Worker;
 
     type F = GoldilocksField;
 
@@ -553,15 +553,15 @@ mod tests {
             max_allowed_constraint_degree: 4,
         };
 
-        use boojum::config::DevCSConfig;
-        use boojum::cs::cs_builder_reference::*;
+        use shivini::boojum::config::DevCSConfig;
+        use shivini::boojum::cs::cs_builder_reference::*;
         let builder_impl =
             CsReferenceImplementationBuilder::<F, F, DevCSConfig>::new(geometry, 1 << 18);
-        use boojum::cs::cs_builder::new_builder;
+        use shivini::boojum::cs::cs_builder::new_builder;
         let builder = new_builder::<_, F>(builder_impl);
 
         let builder = builder.allow_lookup(
-            boojum::cs::LookupParameters::UseSpecializedColumnsWithTableIdAsConstant {
+            shivini::boojum::cs::LookupParameters::UseSpecializedColumnsWithTableIdAsConstant {
                 width: 1,
                 num_repetitions: 10,
                 share_table_id: true,

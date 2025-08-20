@@ -1,17 +1,11 @@
 cargo-features = ["edition2024"]
 
 [package]
-name = "zkos-wrapper"
+name = "blake_inner_verifier"
 version = "0.1.0"
 edition = "2024"
 license = "MIT OR Apache-2.0"
 
-[lib]
-path = "src/lib.rs"
-
-[[bin]]
-name = "wrapper"
-path = "src/main.rs"
 
 [dependencies]
 bellman.workspace = true
@@ -33,8 +27,3 @@ shivini = "=0.154.5"
 [dev-dependencies]
 rand.workspace = true
 hex = "0.4.3"
-
-[features]
-default = ["wrap_with_reduced_log_23"]
-wrap_final_machine = []
-wrap_with_reduced_log_23 = []

@@ -4,7 +4,7 @@ resolver = "2"
 members = [
     "circuit_mersenne_field",
     "wrapper",
-    "wrapper_generator"
+    "wrapper_generator",
 ]
 
 
@@ -23,7 +23,7 @@ categories = ["cryptography"]
 
 circuit_mersenne_field = { path = "circuit_mersenne_field"}
 
-boojum = { git = "https://github.com/matter-labs/zksync-crypto.git", package="boojum", branch = "main"}
+#boojum = { git = "https://github.com/matter-labs/zksync-crypto.git", package="boojum", branch = "main"}
 bellman = { git = "https://github.com/matter-labs/zksync-crypto.git", package="zksync_bellman", branch = "main" }
 rescue_poseidon = { git = "https://github.com/matter-labs/zksync-crypto.git", package="rescue_poseidon", branch = "main" }
 snark_wrapper = { git = "https://github.com/matter-labs/zksync-crypto.git", package="snark_wrapper", branch = "main" }
@@ -39,7 +39,7 @@ reduced_risc_verifier = {git="https://github.com/matter-labs/zksync-airbender.gi
 blake_verifier = {git="https://github.com/matter-labs/zksync-airbender.git", package="blake2_with_compression_verifier", features=["proof_utils"], branch = "oh_log_23_reduced_machine"}
 execution_utils = {git="https://github.com/matter-labs/zksync-airbender.git", package="execution_utils", branch = "oh_log_23_reduced_machine"}
 setups = {git="https://github.com/matter-labs/zksync-airbender.git", package="setups", branch = "oh_log_23_reduced_machine"}
-mersenne_field = {git="https://github.com/matter-labs/zksync-airbender.git", package="field", branch = "oh_log_23_reduced_machine"}
+mersenne_field = {git="https://github.com/matter-labs/zksync-airbender.git", package="field", branch = "oh_log_23_reduced_machine", features=["no_inline"]}
 zkos_verifier_generator = {git="https://github.com/matter-labs/zksync-airbender.git", package="verifier_generator", branch = "oh_log_23_reduced_machine"}
 prover = {git="https://github.com/matter-labs/zksync-airbender.git", package="prover", branch = "oh_log_23_reduced_machine"}
 
@@ -58,5 +58,19 @@ serde = { version = "1", default-features = false, features = ["derive", "alloc"
 clap = { version = "4.5.21", features = ["derive"] }
 sha3 = "*"
 rand = "0.8"
+shivini = "=0.154.5"
 
 
+[profile.release]
+# This is needed for zksync-airbender crates to compile in a reasonable time for x86-64-unknown-linux-gnu
+overflow-checks = true
+opt-level = 1
+lto = false
+codegen-units = 8
+debug = 0
+incremental = true
+panic = "abort"
+
+[patch.crates-io]
+boojum = { git = "https://github.com/matter-labs/zksync-crypto.git", package="boojum", branch = "main"}
+circuit_definitions = { path = "../zksync-protocol/crates/circuit_definitions", package = "circuit_definitions"}

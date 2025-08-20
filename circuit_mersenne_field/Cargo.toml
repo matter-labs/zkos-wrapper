@@ -5,6 +5,6 @@ edition = "2021"
 license  = "MIT OR Apache-2.0"
 
 [dependencies]
-boojum.workspace = true
+shivini.workspace = true
 mersenne_field.workspace = true
 rand.workspace = true

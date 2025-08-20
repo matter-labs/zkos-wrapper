@@ -1309,9 +1309,9 @@ impl<F: SmallField> MersenneField<F> {
 }
 
 fn range_check_32_bits<F: SmallField, CS: ConstraintSystem<F>>(cs: &mut CS, variable: Variable) {
-    use boojum::gadgets::impls::limbs_decompose::decompose_into_limbs;
-    use boojum::gadgets::non_native_field::implementations::get_16_bits_range_check_table;
-    use boojum::gadgets::u8::get_8_by_8_range_check_table;
+    use shivini::boojum::gadgets::impls::limbs_decompose::decompose_into_limbs;
+    use shivini::boojum::gadgets::non_native_field::implementations::get_16_bits_range_check_table;
+    use shivini::boojum::gadgets::u8::get_8_by_8_range_check_table;
 
     if let Some(table_id) = get_16_bits_range_check_table(&*cs) {
         let limbs =
@@ -1341,8 +1341,8 @@ fn range_check_32_bits<F: SmallField, CS: ConstraintSystem<F>>(cs: &mut CS, vari
 }
 
 fn range_check_31_bits<F: SmallField, CS: ConstraintSystem<F>>(cs: &mut CS, variable: Variable) {
-    use boojum::gadgets::impls::limbs_decompose::decompose_into_limbs;
-    use boojum::gadgets::non_native_field::implementations::get_16_bits_range_check_table;
+    use shivini::boojum::gadgets::impls::limbs_decompose::decompose_into_limbs;
+    use shivini::boojum::gadgets::non_native_field::implementations::get_16_bits_range_check_table;
 
     if let (Some(table_id_16), Some(table_id_15)) = (
         get_16_bits_range_check_table(&*cs),
@@ -1374,7 +1374,7 @@ fn range_check_31_bits<F: SmallField, CS: ConstraintSystem<F>>(cs: &mut CS, vari
 pub fn get_16_bits_range_check_table<F: SmallField, CS: ConstraintSystem<F>>(
     cs: &CS,
 ) -> Option<u32> {
-    use boojum::gadgets::tables::range_check_16_bits::RangeCheck16BitsTable;
+    use shivini::boojum::gadgets::tables::range_check_16_bits::RangeCheck16BitsTable;
     match cs.get_lookup_params().lookup_width() {
         1 => cs.get_table_id_for_marker::<RangeCheck16BitsTable<1>>(),
         3 => cs.get_table_id_for_marker::<RangeCheck16BitsTable<3>>(),
@@ -1385,7 +1385,7 @@ pub fn get_16_bits_range_check_table<F: SmallField, CS: ConstraintSystem<F>>(
 pub fn get_15_bits_range_check_table<F: SmallField, CS: ConstraintSystem<F>>(
     cs: &CS,
 ) -> Option<u32> {
-    use boojum::gadgets::tables::range_check_16_bits::RangeCheck15BitsTable;
+    use shivini::boojum::gadgets::tables::range_check_16_bits::RangeCheck15BitsTable;
     match cs.get_lookup_params().lookup_width() {
         1 => cs.get_table_id_for_marker::<RangeCheck15BitsTable<1>>(),
         3 => cs.get_table_id_for_marker::<RangeCheck15BitsTable<3>>(),
@@ -1566,18 +1566,18 @@ mod tests {
     use std::alloc::Global;
 
     use super::*;
-    use boojum::cs::*;
+    use shivini::boojum::cs::*;
 
-    use boojum::cs::gates::*;
-    use boojum::cs::traits::gate::GatePlacementStrategy;
-    use boojum::dag::CircuitResolverOpts;
-    use boojum::field::goldilocks::GoldilocksField;
-    use boojum::gadgets::tables::range_check_16_bits::{
+    use shivini::boojum::cs::gates::*;
+    use shivini::boojum::cs::traits::gate::GatePlacementStrategy;
+    use shivini::boojum::dag::CircuitResolverOpts;
+    use shivini::boojum::field::goldilocks::GoldilocksField;
+    use shivini::boojum::gadgets::tables::range_check_16_bits::{
         create_range_check_15_bits_table, create_range_check_16_bits_table, RangeCheck15BitsTable,
         RangeCheck16BitsTable,
     };
-    use boojum::gadgets::traits::witnessable::WitnessHookable;
-    use boojum::worker::Worker;
+    use shivini::boojum::gadgets::traits::witnessable::WitnessHookable;
+    use shivini::boojum::worker::Worker;
 
     type F = GoldilocksField;
 
@@ -1590,15 +1590,15 @@ mod tests {
             max_allowed_constraint_degree: 4,
         };
 
-        use boojum::config::DevCSConfig;
-        use boojum::cs::cs_builder_reference::*;
+        use shivini::boojum::config::DevCSConfig;
+        use shivini::boojum::cs::cs_builder_reference::*;
         let builder_impl =
             CsReferenceImplementationBuilder::<F, F, DevCSConfig>::new(geometry, 1 << 18);
-        use boojum::cs::cs_builder::new_builder;
+        use shivini::boojum::cs::cs_builder::new_builder;
         let builder = new_builder::<_, F>(builder_impl);
 
         let builder = builder.allow_lookup(
-            boojum::cs::LookupParameters::UseSpecializedColumnsWithTableIdAsConstant {
+            shivini::boojum::cs::LookupParameters::UseSpecializedColumnsWithTableIdAsConstant {
                 width: 3,
                 num_repetitions: 10,
                 share_table_id: true,

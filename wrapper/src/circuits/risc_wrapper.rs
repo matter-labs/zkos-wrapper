@@ -1,4 +1,7 @@
-use boojum::{
+use circuit_mersenne_field::{
+    MersenneField, MersenneQuartic, extension_trait::CircuitFieldExpression,
+};
+use shivini::boojum::{
     cs::{
         CSGeometry, GateConfigurationHolder, LookupParameters, StaticToolboxHolder,
         cs_builder::{CsBuilder, CsBuilderImpl},
@@ -21,9 +24,6 @@ use boojum::{
         u16::UInt16,
         u32::UInt32,
     },
-};
-use circuit_mersenne_field::{
-    MersenneField, MersenneQuartic, extension_trait::CircuitFieldExpression,
 };
 use std::mem::MaybeUninit;
 
@@ -48,11 +48,11 @@ use risc_verifier::verifier_common::{
     transcript::Blake2sBufferingTranscript,
 };
 
-use boojum::gadgets::tables::RangeCheck15BitsTable;
-use boojum::gadgets::tables::RangeCheck16BitsTable;
-use boojum::gadgets::tables::create_range_check_15_bits_table;
-use boojum::gadgets::tables::create_range_check_16_bits_table;
 use risc_verifier::prover::prover_stages::Proof as RiscProof;
+use shivini::boojum::gadgets::tables::RangeCheck15BitsTable;
+use shivini::boojum::gadgets::tables::RangeCheck16BitsTable;
+use shivini::boojum::gadgets::tables::create_range_check_15_bits_table;
+use shivini::boojum::gadgets::tables::create_range_check_16_bits_table;
 
 const NUM_RISC_WRAPPER_PUBLIC_INPUTS: usize = 4;
 
@@ -391,7 +391,7 @@ impl<F: SmallField, V: CircuitLeafInclusionVerifier<F>> RiscWrapperCircuit<F, V>
                 lc.push((el.get_variable(), F::SHIFTS[idx * 8]));
             }
             let as_num = Num::linear_combination(cs, &lc);
-            use boojum::cs::gates::PublicInputGate;
+            use shivini::boojum::cs::gates::PublicInputGate;
             let gate = PublicInputGate::new(as_num.get_variable());
             gate.add_to_cs(cs);
         }

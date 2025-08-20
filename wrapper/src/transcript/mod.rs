@@ -1,10 +1,10 @@
-use boojum::cs::traits::cs::ConstraintSystem;
-use boojum::field::SmallField;
-use boojum::gadgets::blake2s::mixing_function::Word;
-use boojum::gadgets::traits::allocatable::CSAllocatable;
-use boojum::gadgets::u8::UInt8;
-use boojum::gadgets::u16::UInt16;
-use boojum::gadgets::u32::UInt32;
+use shivini::boojum::cs::traits::cs::ConstraintSystem;
+use shivini::boojum::field::SmallField;
+use shivini::boojum::gadgets::blake2s::mixing_function::Word;
+use shivini::boojum::gadgets::traits::allocatable::CSAllocatable;
+use shivini::boojum::gadgets::u8::UInt8;
+use shivini::boojum::gadgets::u16::UInt16;
+use shivini::boojum::gadgets::u32::UInt32;
 
 use crate::risc_verifier::blake2s_u32::*;
 

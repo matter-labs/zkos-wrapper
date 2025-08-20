@@ -1,11 +1,11 @@
 use super::*;
 
-use boojum::cs::gates::ConstantAllocatableCS;
-use boojum::gadgets::blake2s::{
+use shivini::boojum::cs::gates::ConstantAllocatableCS;
+use shivini::boojum::gadgets::blake2s::{
     IV, SIGMAS, mixing_function::Word, mixing_function::mixing_function_g,
     round_function::Blake2sControl,
 };
-use boojum::gadgets::u8::UInt8;
+use shivini::boojum::gadgets::u8::UInt8;
 use std::mem::MaybeUninit;
 
 use crate::risc_verifier::blake2s_u32::{
@@ -152,7 +152,7 @@ pub fn blake2s_reduced_round_function<F: SmallField, CS: ConstraintSystem<F>>(
     //    v[14] := v[14] ^ 0xFF..FF   // Invert all bits.
     // END IF.
 
-    use boojum::gadgets::blake2s::mixing_function::xor_many;
+    use shivini::boojum::gadgets::blake2s::mixing_function::xor_many;
 
     match control {
         Blake2sControl::FixedLength {
