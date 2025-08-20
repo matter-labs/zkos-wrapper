@@ -7,7 +7,8 @@ mod blake2_inner_verifier;
 pub mod circuits;
 pub mod transcript;
 mod wrapper_inner_verifier;
-pub mod wrapper_utils;
+//pub mod wrapper_utils;
+pub use wrapper_utils;
 
 #[cfg(test)]
 mod tests;
@@ -185,7 +186,7 @@ pub fn prove_risc_wrapper(
     witness_hints: &DenseWitnessCopyHint,
     worker: &Worker,
     binary_commitment: BinaryCommitment,
-) -> RiscWrapperProof {
+) -> (RiscWrapperProof, RiscWrapperVK) {
     println!("======== STARTING GPU ===========");
     let verify_inner_proof = true;
     let circuit = RiscWrapper::new(
@@ -256,7 +257,7 @@ pub fn prove_risc_wrapper(
     )
     .unwrap();
 
-    proof2.into()
+    (proof2.into(), gpu_vk)
 }
 
 pub fn verify_risc_wrapper_proof(proof: &RiscWrapperProof, vk: &RiscWrapperVK) -> bool {
@@ -681,7 +682,7 @@ pub fn prove_fri_risc_wrapper(
         witness_hints,
     ) = get_risc_wrapper_setup(&worker, binary_commitment.clone());
 
-    let risc_wrapper_proof = prove_risc_wrapper(
+    let (risc_wrapper_proof, risc_wrapper_vk) = prove_risc_wrapper(
         risc_wrapper_witness,
         &finalization_hint,
         &setup_base,
@@ -693,13 +694,10 @@ pub fn prove_fri_risc_wrapper(
         &worker,
         binary_commitment,
     );
-    //let is_valid = verify_risc_wrapper_proof(&risc_wrapper_proof, &risc_wrapper_vk);
-    //if !is_valid {
-    //    return Err("Risc wrapper proof is not valid".into());
-    // }
-
-    // FIXME.
-    let risc_wrapper_vk = Default::default();
+    let is_valid = verify_risc_wrapper_proof(&risc_wrapper_proof, &risc_wrapper_vk);
+    if !is_valid {
+        return Err("Risc wrapper proof is not valid".into());
+    }
 
     Ok((risc_wrapper_proof, risc_wrapper_vk))
 }

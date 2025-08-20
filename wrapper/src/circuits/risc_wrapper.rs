@@ -161,7 +161,7 @@ impl<F: SmallField, V: CircuitLeafInclusionVerifier<F>> CircuitBuilder<F>
 
         #[cfg(feature = "wrap_with_reduced_log_23")]
         let result = CSGeometry {
-            num_columns_under_copy_permutation: 104,
+            num_columns_under_copy_permutation: 124,
             num_witness_columns: 0,
             num_constant_columns: 4,
             max_allowed_constraint_degree: 4,
@@ -220,10 +220,10 @@ impl<F: SmallField, V: CircuitLeafInclusionVerifier<F>> CircuitBuilder<F>
         let builder =
             NopGate::configure_builder(builder, GatePlacementStrategy::UseGeneralPurposeColumns);
 
-        let builder = ReductionGate::<F, 2>::configure_builder(
+        /*let builder = ReductionGate::<F, 2>::configure_builder(
             builder,
             GatePlacementStrategy::UseGeneralPurposeColumns,
-        );
+        );*/
         let builder = ZeroCheckGate::configure_builder(
             builder,
             GatePlacementStrategy::UseGeneralPurposeColumns,
@@ -241,10 +241,10 @@ impl<F: SmallField, V: CircuitLeafInclusionVerifier<F>> CircuitBuilder<F>
             builder,
             GatePlacementStrategy::UseGeneralPurposeColumns,
         );
-        let builder = U32AddCarryAsChunkGate::configure_builder(
+        /*let builder = U32AddCarryAsChunkGate::configure_builder(
             builder,
             GatePlacementStrategy::UseGeneralPurposeColumns,
-        );
+        );*/
 
         builder
     }
