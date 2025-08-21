@@ -22,7 +22,8 @@ use risc_verifier::verifier_common::non_determinism_source::NonDeterminismSource
 
 use crate::wrapper_utils::prover_structs::*;
 
-pub(crate) mod imports;
+//pub(crate) mod imports;
+pub use wrapper_my_verifier::imports;
 pub mod skeleton;
 
 pub use crate::transcript::*;

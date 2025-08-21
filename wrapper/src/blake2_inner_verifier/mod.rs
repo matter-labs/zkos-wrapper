@@ -21,7 +21,7 @@ use blake_verifier::verifier_common::non_determinism_source::NonDeterminismSourc
 
 use crate::wrapper_utils::prover_structs::*;
 
-pub(crate) mod imports;
+//pub(crate) mod imports;
 pub mod skeleton;
 
 pub use crate::transcript::*;
@@ -540,7 +540,7 @@ pub fn verify<F: SmallField, CS: ConstraintSystem<F>>(
         delegation_argument_interpolant_linear_coeff =
             delegation_argument_interpolant_linear_coeff.negated(cs);
 
-        use imports::evaluate_quotient;
+        use blake_inner_verifier::imports::evaluate_quotient;
         let quotient_recomputed_value = unsafe {
             evaluate_quotient(
                 cs,
@@ -946,7 +946,7 @@ fn accumulate_over_row_for_consistency_check<F: SmallField, CS: ConstraintSystem
     tau_in_domain_by_half: MersenneComplex<F>,
     tau_in_domain_by_half_inversed: MersenneComplex<F>,
 ) -> MersenneQuartic<F> {
-    use imports::VERIFIER_COMPILED_LAYOUT;
+    use blake_inner_verifier::imports::VERIFIER_COMPILED_LAYOUT;
 
     // now we can do consistency check
     // quotient is just a single value

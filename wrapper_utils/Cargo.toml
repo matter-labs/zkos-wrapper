@@ -1,7 +1,7 @@
 cargo-features = ["edition2024"]
 
 [package]
-name = "blake_inner_verifier"
+name = "wrapper_utils"
 version = "0.1.0"
 edition = "2024"
 license = "MIT OR Apache-2.0"
@@ -21,8 +21,6 @@ serde_json.workspace = true
 serde.workspace = true
 clap.workspace = true
 sha3.workspace = true
-
-wrapper_utils.workspace = true
 
 shivini = "=0.154.5"
 
