@@ -46,7 +46,9 @@ pub use shivini::boojum::worker::Worker as BoojumWorker;
 use shivini::boojum::worker::*;
 use shivini::cs::{GpuSetup, gpu_setup_and_vk_from_base_setup_vk_params_and_hints};
 use shivini::gpu_proof_config::GpuProofConfig;
-use shivini::{ProverContext, gpu_proof_config, gpu_prove_from_external_witness_data};
+use shivini::{
+    ProverContext, ProverContextConfig, gpu_proof_config, gpu_prove_from_external_witness_data,
+};
 use std::alloc::Global;
 use std::path::Path;
 use wrapper_utils::verifier_traits::CircuitBlake2sForEverythingVerifier;
@@ -66,6 +68,10 @@ pub type CircuitRiscWrapperTranscript =
 pub type CircuitRiscWrapperTreeHasher = CircuitGoldilocksPoseidon2Sponge;
 
 pub type RiscWrapperCircuitBuilder = CircuitBuilderProxy<GL, RiscWrapper>;
+
+pub use shivini::circuit_definitions::snark_wrapper;
+pub use shivini::circuit_definitions::snark_wrapper::franklin_crypto::bellman;
+pub use shivini::circuit_definitions::snark_wrapper::rescue_poseidon;
 
 pub use rescue_poseidon::franklin_crypto::bellman::pairing::bn256::{Bn256, Fr};
 use rescue_poseidon::poseidon2::Poseidon2Sponge;
@@ -226,8 +232,6 @@ pub fn prove_risc_wrapper(
         worker,
     );*/
 
-    let prover_context = ProverContext::create().unwrap();
-
     let gpu_proof_config = GpuProofConfig::from_assembly(&cs);
 
     let external_witness_data = cs.witness.unwrap();
@@ -364,6 +368,105 @@ pub fn prove_compression(
         (),
         worker,
     )
+}
+
+pub fn prove_compression_with_gpu(
+    risc_wrapper_proof: RiscWrapperProof,
+    risc_wrapper_vk: RiscWrapperVK,
+    worker: &Worker,
+) -> (CompressionProof, CompressionVK) {
+    let verify_inner_proof: bool = false;
+    let circuit = CompressionCircuit::new(None, risc_wrapper_vk.clone(), verify_inner_proof);
+
+    let geometry = CompressionCircuit::geometry();
+    let (max_trace_len, num_vars) = circuit.size_hint();
+
+    let builder_impl = CsReferenceImplementationBuilder::<GL, GL, SetupCSConfig>::new(
+        geometry,
+        max_trace_len.unwrap(),
+    );
+    let builder = new_builder::<_, GL>(builder_impl);
+
+    let builder = CompressionCircuit::configure_builder(builder);
+    let mut cs = builder.build(num_vars.unwrap());
+    circuit.synthesize_into_cs(&mut cs);
+    let (_, finalization_hint) = cs.pad_and_shrink();
+
+    let ProofConfig {
+        fri_lde_factor,
+        merkle_tree_cap_size,
+        ..
+    } = RiscWrapper::get_proof_config();
+    let cs = cs.into_assembly::<std::alloc::Global>();
+
+    let (setup_base, vk_params, vars_hint, witness_hints) =
+        cs.get_light_setup(worker, fri_lde_factor, merkle_tree_cap_size);
+
+    let verify_inner_proof = true;
+    let circuit = CompressionCircuit::new(
+        Some(risc_wrapper_proof),
+        risc_wrapper_vk,
+        verify_inner_proof,
+    );
+
+    let geometry = CompressionCircuit::geometry();
+    let (max_trace_len, num_vars) = circuit.size_hint();
+
+    let builder_impl = CsReferenceImplementationBuilder::<GL, GL, ProvingCSConfig>::new(
+        geometry,
+        max_trace_len.unwrap(),
+    );
+    let builder = new_builder::<_, GL>(builder_impl);
+
+    let builder = CompressionCircuit::configure_builder(builder);
+    let mut cs = builder.build(num_vars.unwrap());
+    circuit.synthesize_into_cs(&mut cs);
+    cs.pad_and_shrink_using_hint(&finalization_hint);
+    let cs = cs.into_assembly::<std::alloc::Global>();
+
+    let gpu_proof_config = GpuProofConfig::from_assembly(&cs);
+
+    let external_witness_data = cs.witness.unwrap();
+
+    let proof_config = CompressionCircuit::get_proof_config();
+
+    /*cs.prove_from_precomputations::<GLExt2, CompressionTranscript, CompressionTreeHasher, NoPow>(
+        proof_config,
+        &setup_base,
+        &setup,
+        &setup_tree,
+        vk,
+        &vars_hint,
+        &witness_hints,
+        (),
+        worker,
+    )*/
+
+    let (gpu_setup, gpu_vk) =
+        gpu_setup_and_vk_from_base_setup_vk_params_and_hints::<CompressionTreeHasher, _>(
+            setup_base.clone(),
+            vk_params.clone(),
+            vars_hint.clone(),
+            witness_hints.clone(),
+            &worker,
+        )
+        .unwrap();
+
+    type Transcript = CompressionTranscript;
+    type Hasher = CompressionTreeHasher;
+
+    let proof2 = gpu_prove_from_external_witness_data::<Transcript, Hasher, NoPow, Global>(
+        &gpu_proof_config,      // normally taken from 'verifier' - but I don't have any.
+        &external_witness_data, // witness vector (I have it as struct, not bytes)
+        proof_config,           // LDE factors and other stuff.
+        &gpu_setup,
+        &gpu_vk, // vk should be fine
+        (),      // empty shoudl be ok
+        worker,  // ok
+    )
+    .unwrap();
+
+    (proof2.into(), gpu_vk)
 }
 
 pub fn verify_compression_proof(proof: &CompressionProof, vk: &CompressionVK) -> bool {
@@ -596,7 +699,7 @@ pub fn prove_risc_wrapper_with_snark(
     let worker = shivini::boojum::worker::Worker::new();
     println!("=== Phase 2: Creating compression proof");
 
-    let (
+    /*let (
         finalization_hint,
         setup_base,
         setup,
@@ -616,7 +719,11 @@ pub fn prove_risc_wrapper_with_snark(
         &vars_hint,
         &witness_hints,
         &worker,
-    );
+    );*/
+
+    let (compression_proof, compression_vk) =
+        prove_compression_with_gpu(risc_wrapper_proof, risc_wrapper_vk, &worker);
+
     let is_valid = verify_compression_proof(&compression_proof, &compression_vk);
 
     if !is_valid {
@@ -708,6 +815,13 @@ pub fn prove(
     trusted_setup_file: Option<String>,
     risc_wrapper_only: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
+    //let prover_context = ProverContext::create().unwrap();
+
+    // 1<<17 was taken from proof compression file.
+    let config = ProverContextConfig::default().with_smallest_supported_domain_size(1 << 17);
+
+    let prover_context = ProverContext::create_with_config(config).unwrap();
+
     let program_proof: crate::ProgramProof = deserialize_from_file(&input);
     let (risc_wrapper_proof, risc_wrapper_vk) = prove_fri_risc_wrapper(program_proof).unwrap();
 

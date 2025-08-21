@@ -14,9 +14,9 @@ name = "wrapper"
 path = "src/main.rs"
 
 [dependencies]
-bellman.workspace = true
-rescue_poseidon.workspace = true
-snark_wrapper.workspace = true
+#bellman.workspace = true
+#rescue_poseidon.workspace = true
+#snark_wrapper.workspace = true
 reduced_risc_verifier.workspace = true
 final_risc_verifier.workspace = true
 blake_verifier.workspace = true
@@ -27,6 +27,10 @@ serde_json.workspace = true
 serde.workspace = true
 clap.workspace = true
 sha3.workspace = true
+
+blake_inner_verifier.workspace = true
+wrapper_utils.workspace = true
+wrapper_my_verifier.workspace = true
 
 shivini = "=0.154.5"
 
