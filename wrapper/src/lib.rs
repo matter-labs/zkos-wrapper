@@ -19,6 +19,7 @@ use boojum::algebraic_props::sponge::GoldilocksPoseidon2Sponge;
 use boojum::config::{DevCSConfig, ProvingCSConfig, SetupCSConfig};
 use boojum::cs::cs_builder::new_builder;
 use boojum::cs::cs_builder_reference::CsReferenceImplementationBuilder;
+use boojum::cs::implementations::fast_serialization::MemcopySerializable;
 use boojum::cs::implementations::hints::DenseVariablesCopyHint;
 use boojum::cs::implementations::hints::DenseWitnessCopyHint;
 use boojum::cs::implementations::polynomial_storage::SetupBaseStorage;
@@ -540,6 +541,7 @@ pub fn prove_risc_wrapper_with_snark(
     risc_wrapper_proof: RiscWrapperProof,
     risc_wrapper_vk: RiscWrapperVK,
     trusted_setup_file: Option<String>,
+    precomputation_dir: Option<String>,
 ) -> Result<(SnarkWrapperProof, SnarkWrapperVK), Box<dyn std::error::Error>> {
     let worker = boojum::worker::Worker::new();
     println!("=== Phase 2: Creating compression proof");
@@ -578,8 +580,27 @@ pub fn prove_risc_wrapper_with_snark(
         println!("Using GPU for SNARK proof generation");
         let crs_file =
             trusted_setup_file.expect("Trusted setup must be set for GPU (and it must be compat");
-        let (precomputations, vk) =
-            crate::gpu::snark::gpu_create_snark_setup_data(compression_vk.clone(), &crs_file);
+
+        let (precomputations, vk) = if let Some(precomputation_dir) = precomputation_dir {
+            println!("Loading existing precomputations");
+            let output_file = Path::new(&precomputation_dir).join("snark_preprocessing.bin");
+            let file = std::fs::File::open(output_file).unwrap();
+            let precomputations =
+                proof_compression::serialization::PlonkSnarkVerifierCircuitDeviceSetupWrapper::read_from_buffer(file).unwrap();
+
+            let vk = deserialize_from_file(
+                &Path::new(&precomputation_dir)
+                    .join("snark_vk_expected.json")
+                    .as_os_str()
+                    .to_str()
+                    .unwrap(),
+            );
+
+            (precomputations, vk)
+        } else {
+            crate::gpu::snark::gpu_create_snark_setup_data(compression_vk.clone(), &crs_file)
+        };
+
         let proof = crate::gpu::snark::gpu_snark_prove(
             precomputations,
             &vk,
@@ -674,6 +695,7 @@ pub fn prove(
     output_dir: String,
     trusted_setup_file: Option<String>,
     risc_wrapper_only: bool,
+    precomputation_dir: Option<String>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let program_proof: crate::ProgramProof = deserialize_from_file(&input);
     let (risc_wrapper_proof, risc_wrapper_vk) =
@@ -695,6 +717,7 @@ pub fn prove(
         risc_wrapper_proof,
         risc_wrapper_vk,
         trusted_setup_file.clone(),
+        precomputation_dir,
     )
     .unwrap();
 
@@ -717,7 +740,7 @@ pub fn generate_and_save_risc_wrapper_vk(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let boojum_worker = BoojumWorker::new();
     let risc_wrapper_vk =
-        generate_risk_wrapper_vk(input_binary, universal_verifier, &boojum_worker)?;
+        generate_risk_wrapper_vk(Some(input_binary), universal_verifier, &boojum_worker)?;
 
     serialize_to_file(
         &risc_wrapper_vk,
@@ -727,7 +750,7 @@ pub fn generate_and_save_risc_wrapper_vk(
 }
 
 fn generate_risk_wrapper_vk(
-    input_binary: String,
+    input_binary: Option<String>,
     universal_verifier: bool,
     boojum_worker: &Worker,
 ) -> Result<RiscWrapperVK, Box<dyn std::error::Error>> {
@@ -737,15 +760,17 @@ fn generate_risk_wrapper_vk(
         final_recursion_layer_verifier_vk().params
     };
 
-    let binary_commitment = create_binary_commitment(input_binary, &verifier_params);
-
+    let binary_commitment = match input_binary {
+        Some(binary_path) => create_binary_commitment(binary_path, &verifier_params),
+        None => BinaryCommitment::from_default_binary(),
+    };
     let (_, _, _, risc_wrapper_vk, _, _, _) =
         get_risc_wrapper_setup(boojum_worker, binary_commitment.clone());
     Ok(risc_wrapper_vk)
 }
 
 pub fn generate_vk(
-    input_binary: String,
+    input_binary: Option<String>,
     output_dir: String,
     trusted_setup_file: Option<String>,
     universal_verifier: bool,
@@ -768,8 +793,13 @@ pub fn generate_vk(
         println!("Using GPU for SNARK key generation");
         let crs_file =
             trusted_setup_file.expect("Trusted setup must be set for GPU (and it must be compat");
-        let (_, snark_wrapper_vk) =
+        let (preprocessing, snark_wrapper_vk) =
             crate::gpu::snark::gpu_create_snark_setup_data(compression_vk.clone(), &crs_file);
+
+        let output_file = Path::new(&output_dir).join("snark_preprocessing.bin");
+        let file = std::fs::File::create(output_file).unwrap();
+        preprocessing.write_into_buffer(file).unwrap();
+
         snark_wrapper_vk
     };
     #[cfg(not(feature = "gpu"))]
