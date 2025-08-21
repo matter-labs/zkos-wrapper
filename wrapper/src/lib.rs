@@ -783,25 +783,35 @@ pub fn prove_risc_wrapper_with_snark(
 
     println!("=== Phase 3: Creating SNARK proof");
 
-    let crs_mons = match trusted_setup_file {
+    /*let crs_mons = match trusted_setup_file {
         Some(ref crs_file_str) => get_trusted_setup(crs_file_str),
         None => Crs::<Bn256, CrsForMonomialForm>::crs_42(
             1 << L1_VERIFIER_DOMAIN_SIZE_LOG,
             &BellmanWorker::new(),
         ),
-    };
+    };*/
 
-    let mut dst_raw_compact_crs = Vec::new();
+    // requires compat key from wget https://storage.googleapis.com/matterlabs-setup-keys-us/setup-keys/setup_compact.key
+
+    let reader = std::fs::File::open("crs/setup_compact.key").unwrap();
+
+    let crs_mons =
+        <PlonkSnarkWrapper as SnarkWrapperProofSystem>::load_compact_raw_crs(reader).unwrap();
+
+    /*let mut dst_raw_compact_crs = Vec::new();
     println!("Writing CRS into compact form");
 
     write_crs_into_raw_compact_form(&crs_mons, &mut dst_raw_compact_crs).unwrap();
-    println!("Finished writing CRS into compact form");
+    println!(
+        "Finished writing CRS into compact form: {}",
+        dst_raw_compact_crs.len()
+    );
 
     let crs_mons = <PlonkSnarkWrapper as SnarkWrapperProofSystem>::load_compact_raw_crs(Box::new(
         Cursor::new(dst_raw_compact_crs.clone()),
     ))
     .unwrap();
-    println!("Finished reading CRS into compact form");
+    println!("Finished reading CRS into compact form");*/
 
     let finalization_hint = PlonkSnarkWrapper::load_finalization_hint().unwrap();
 
@@ -885,10 +895,15 @@ pub fn prove_risc_wrapper_with_snark(
 
     let snark_wrapper_vk = vk.clone();
 
-    let crs_mons = <PlonkSnarkWrapper as SnarkWrapperProofSystem>::load_compact_raw_crs(Box::new(
+    let reader = std::fs::File::open("crs/setup_compact.key").unwrap();
+
+    let crs_mons =
+        <PlonkSnarkWrapper as SnarkWrapperProofSystem>::load_compact_raw_crs(reader).unwrap();
+
+    /*let crs_mons = <PlonkSnarkWrapper as SnarkWrapperProofSystem>::load_compact_raw_crs(Box::new(
         Cursor::new(dst_raw_compact_crs),
     ))
-    .unwrap();
+    .unwrap();*/
 
     let setup_data_cache: SnarkWrapperSetupData<PlonkSnarkWrapper> = SnarkWrapperSetupData {
         precomputation,

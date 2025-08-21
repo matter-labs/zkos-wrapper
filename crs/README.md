@@ -7,3 +7,10 @@ curl https://storage.googleapis.com/matterlabs-setup-keys-us/setup-keys/setup_2\
 ```
 
 We don't include it in github, as it is around 1GB in size.
+
+
+GPU requires compact key from:
+
+```
+wget https://storage.googleapis.com/matterlabs-setup-keys-us/setup-keys/setup_compact.key
+```
