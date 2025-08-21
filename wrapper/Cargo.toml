@@ -33,6 +33,9 @@ wrapper_utils.workspace = true
 wrapper_my_verifier.workspace = true
 
 shivini = "=0.154.5"
+proof-compression.workspace = true
+byteorder = "1"
+
 
 [dev-dependencies]
 rand.workspace = true

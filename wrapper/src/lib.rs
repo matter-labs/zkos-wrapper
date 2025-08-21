@@ -7,6 +7,9 @@ mod blake2_inner_verifier;
 pub mod circuits;
 pub mod transcript;
 mod wrapper_inner_verifier;
+use proof_compression::{
+    PlonkSnarkWrapper, ProofSystemDefinition, SnarkWrapperSetupData, SnarkWrapperStep,
+};
 //pub mod wrapper_utils;
 pub use wrapper_utils;
 
@@ -50,6 +53,7 @@ use shivini::{
     ProverContext, ProverContextConfig, gpu_proof_config, gpu_prove_from_external_witness_data,
 };
 use std::alloc::Global;
+use std::io::Cursor;
 use std::path::Path;
 use wrapper_utils::verifier_traits::CircuitBlake2sForEverythingVerifier;
 
@@ -691,13 +695,49 @@ fn deserialize_from_file<T: serde::de::DeserializeOwned>(filename: &str) -> T {
 //     }
 // }
 
+pub(crate) fn write_crs_into_raw_compact_form<W: std::io::Write>(
+    original_crs: &Crs<bellman::bn256::Bn256, CrsForMonomialForm>,
+    mut dst_raw_compact_crs: W,
+) -> std::io::Result<()> {
+    use bellman::CurveAffine;
+    use bellman::{PrimeField, PrimeFieldRepr};
+    use byteorder::{BigEndian, WriteBytesExt};
+    let num_points = original_crs.g1_bases.len();
+    dst_raw_compact_crs.write_u32::<BigEndian>(num_points as u32)?;
+    for g1_base in original_crs.g1_bases.iter() {
+        let (x, y) = g1_base.as_xy();
+        x.into_raw_repr().write_le(&mut dst_raw_compact_crs)?;
+        y.into_raw_repr().write_le(&mut dst_raw_compact_crs)?;
+    }
+    assert_eq!(original_crs.g2_monomial_bases.len(), 2);
+    for g2_base in original_crs.g2_monomial_bases.iter() {
+        let (x, y) = g2_base.as_xy();
+        x.c0.into_raw_repr().write_le(&mut dst_raw_compact_crs)?;
+        x.c1.into_raw_repr().write_le(&mut dst_raw_compact_crs)?;
+        y.c0.into_raw_repr().write_le(&mut dst_raw_compact_crs)?;
+        y.c1.into_raw_repr().write_le(&mut dst_raw_compact_crs)?;
+    }
+
+    Ok(())
+}
+
 pub fn prove_risc_wrapper_with_snark(
     risc_wrapper_proof: RiscWrapperProof,
     risc_wrapper_vk: RiscWrapperVK,
     trusted_setup_file: Option<String>,
-) -> Result<(SnarkWrapperProof, SnarkWrapperVK), Box<dyn std::error::Error>> {
+) -> Result<
+    (
+        <PlonkSnarkWrapper as ProofSystemDefinition>::Proof,
+        <PlonkSnarkWrapper as ProofSystemDefinition>::VK,
+    ),
+    Box<dyn std::error::Error>,
+> {
     let worker = shivini::boojum::worker::Worker::new();
     println!("=== Phase 2: Creating compression proof");
+
+    let config = ProverContextConfig::default().with_smallest_supported_domain_size(1 << 15);
+
+    let prover_context = ProverContext::create_with_config(config).unwrap();
 
     /*let (
         finalization_hint,
@@ -730,6 +770,8 @@ pub fn prove_risc_wrapper_with_snark(
         return Err("Compression proof is not valid".into());
     }
 
+    drop(prover_context);
+
     println!("=== Phase 3: Creating SNARK proof");
 
     let crs_mons = match trusted_setup_file {
@@ -740,7 +782,54 @@ pub fn prove_risc_wrapper_with_snark(
         ),
     };
 
-    {
+    let mut dst_raw_compact_crs = Vec::new();
+    println!("Writing CRS into compact form");
+
+    write_crs_into_raw_compact_form(&crs_mons, &mut dst_raw_compact_crs).unwrap();
+    println!("Finished writing CRS into compact form");
+
+    let crs_mons =
+        PlonkSnarkWrapper::load_compact_raw_crs(Box::new(Cursor::new(dst_raw_compact_crs.clone())))
+            .unwrap();
+    println!("Finished reading CRS into compact form");
+
+    let finalization_hint = PlonkSnarkWrapper::load_finalization_hint().unwrap();
+
+    let (precomputation, vk) = PlonkSnarkWrapper::precompute_plonk_snark_wrapper_circuit(
+        compression_vk.clone(),
+        finalization_hint,
+        crs_mons,
+    )
+    .unwrap();
+
+    println!("Precomputations ready");
+
+    let snark_wrapper_vk = vk.clone();
+
+    let crs_mons =
+        PlonkSnarkWrapper::load_compact_raw_crs(Box::new(Cursor::new(dst_raw_compact_crs)))
+            .unwrap();
+
+    let setup_data_cache = SnarkWrapperSetupData {
+        precomputation,
+        vk,
+        finalization_hint,
+        previous_vk: compression_vk,
+        crs: crs_mons,
+    };
+
+    let snark_wrapper_proof =
+        PlonkSnarkWrapper::prove_plonk_snark_wrapper_step(compression_proof, setup_data_cache)
+            .expect("Failed to prove Plonk snark wrapper step");
+
+    /*let is_valid = verify_snark_wrapper_proof(&snark_wrapper_proof, &snark_wrapper_vk);
+
+    if !is_valid {
+        return Err("Snark wrapper proof is not valid".into());
+    }*/
+    Ok((snark_wrapper_proof, snark_wrapper_vk))
+
+    /*{
         let worker = BellmanWorker::new();
 
         let (snark_setup, snark_wrapper_vk) =
@@ -760,7 +849,7 @@ pub fn prove_risc_wrapper_with_snark(
             return Err("Snark wrapper proof is not valid".into());
         }
         Ok((snark_wrapper_proof, snark_wrapper_vk))
-    }
+    }*/
 }
 
 pub fn prove_fri_risc_wrapper(
@@ -818,7 +907,7 @@ pub fn prove(
     //let prover_context = ProverContext::create().unwrap();
 
     // 1<<17 was taken from proof compression file.
-    let config = ProverContextConfig::default().with_smallest_supported_domain_size(1 << 17);
+    let config = ProverContextConfig::default().with_smallest_supported_domain_size(1 << 15);
 
     let prover_context = ProverContext::create_with_config(config).unwrap();
 
@@ -836,6 +925,8 @@ pub fn prove(
         );
         return Ok(());
     }
+
+    drop(prover_context);
 
     let (snark_wrapper_proof, snark_wrapper_vk) = prove_risc_wrapper_with_snark(
         risc_wrapper_proof,
