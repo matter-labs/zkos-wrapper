@@ -35,7 +35,7 @@ wrapper_my_verifier.workspace = true
 shivini = "=0.154.5"
 proof-compression.workspace = true
 byteorder = "1"
-
+zksync-gpu-prover.workspace = true
 
 [dev-dependencies]
 rand.workspace = true

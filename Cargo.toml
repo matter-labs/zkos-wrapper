@@ -66,7 +66,7 @@ sha3 = "*"
 rand = "0.8"
 shivini = "=0.154.5"
 proof-compression = "=0.154.5"
-
+zksync-gpu-prover = "=0.154.5"
 
 
 [profile.release]
@@ -85,3 +85,4 @@ circuit_definitions = { path = "../zksync-protocol/crates/circuit_definitions", 
 #boojum-cuda = { path = "../zksync-crypto-gpu/crates/boojum-cuda", package="boojum-cuda" }
 
 proof-compression = { path = "../zksync-crypto-gpu/crates/proof-compression"}
+zksync-gpu-prover = { path = "../zksync-crypto-gpu/crates/gpu-prover"}

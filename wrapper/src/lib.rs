@@ -8,10 +8,15 @@ pub mod circuits;
 pub mod transcript;
 mod wrapper_inner_verifier;
 use proof_compression::{
-    PlonkSnarkWrapper, ProofSystemDefinition, SnarkWrapperSetupData, SnarkWrapperStep,
+    PlonkSnarkWrapper, ProofSystemDefinition, SnarkWrapperProofSystem, SnarkWrapperSetupData,
+    SnarkWrapperStep, hardcoded_canonical_g2_bases,
 };
 //pub mod wrapper_utils;
 pub use wrapper_utils;
+
+use proof_compression::serialization::{
+    GenericWrapper, PlonkSnarkVerifierCircuitDeviceSetupWrapper,
+};
 
 #[cfg(test)]
 mod tests;
@@ -56,6 +61,10 @@ use std::alloc::Global;
 use std::io::Cursor;
 use std::path::Path;
 use wrapper_utils::verifier_traits::CircuitBlake2sForEverythingVerifier;
+use zksync_gpu_prover::AsyncSetup;
+use zksync_gpu_prover::bellman::plonk::better_better_cs::cs::{
+    Assembly, SynthesisModeGenerateSetup, SynthesisModeProve,
+};
 
 pub type GL = shivini::boojum::field::goldilocks::GoldilocksField;
 pub type GLExt2 = shivini::boojum::field::goldilocks::GoldilocksExt2;
@@ -788,39 +797,174 @@ pub fn prove_risc_wrapper_with_snark(
     write_crs_into_raw_compact_form(&crs_mons, &mut dst_raw_compact_crs).unwrap();
     println!("Finished writing CRS into compact form");
 
-    let crs_mons =
-        PlonkSnarkWrapper::load_compact_raw_crs(Box::new(Cursor::new(dst_raw_compact_crs.clone())))
-            .unwrap();
+    let crs_mons = <PlonkSnarkWrapper as SnarkWrapperProofSystem>::load_compact_raw_crs(Box::new(
+        Cursor::new(dst_raw_compact_crs.clone()),
+    ))
+    .unwrap();
     println!("Finished reading CRS into compact form");
 
     let finalization_hint = PlonkSnarkWrapper::load_finalization_hint().unwrap();
 
-    let (precomputation, vk) = PlonkSnarkWrapper::precompute_plonk_snark_wrapper_circuit(
+    /*let (precomputation, vk) = PlonkSnarkWrapper::precompute_plonk_snark_wrapper_circuit(
         compression_vk.clone(),
         finalization_hint,
         crs_mons,
     )
-    .unwrap();
+    .unwrap();*/
+
+    type PlonkAssembly<CSConfig> = Assembly<
+        Bn256,
+        PlonkCsWidth4WithNextStepAndCustomGatesParams,
+        SelectorOptimizedWidth4MainGateWithDNext,
+        CSConfig,
+        zksync_gpu_prover::cuda_bindings::CudaAllocator,
+    >;
+
+    let (precomputation, vk) = {
+        // reimplementing stuff in precompute_plonk_wrapper_circuit (as we have different compression circuit).
+        let fixed_parameters = compression_vk.fixed_parameters.clone();
+        let wrapper_function = SnarkWrapperFunction;
+        let wrapper_circuit = SnarkWrapperCircuit {
+            witness: None,
+            vk: compression_vk.clone(),
+            fixed_parameters,
+            transcript_params: (),
+            wrapper_function,
+        };
+        /*let mut assembly = SetupAssembly::<
+            Bn256,
+            PlonkCsWidth4WithNextStepAndCustomGatesParams,
+            SelectorOptimizedWidth4MainGateWithDNext,
+        >::new();*/
+
+        let mut setup_assembly = PlonkAssembly::<SynthesisModeGenerateSetup>::new();
+
+        wrapper_circuit
+            .synthesize(&mut setup_assembly)
+            .expect("must work");
+
+        let hardcoded_finalization_hint = L1_VERIFIER_DOMAIN_SIZE_LOG;
+
+        // TODO: synthesize vs synthesize for setup
+        //wrapper_circuit.synthesize(&mut assembly).unwrap();
+        // It used finalization hint instead (fine - it is 24 for plonk, and 23 for fflonk).
+        setup_assembly.finalize_to_size_log_2(hardcoded_finalization_hint);
+        assert!(setup_assembly.is_satisfied());
+
+        // now gpu part.
+        let mut ctx = PlonkSnarkWrapper::init_context(&crs_mons)?.into_inner();
+
+        let worker = bellman::worker::Worker::new();
+        let mut precomputation = zksync_gpu_prover::AsyncSetup::<
+            <PlonkSnarkWrapper as ProofSystemDefinition>::Allocator,
+        >::allocate(1 << hardcoded_finalization_hint);
+        precomputation
+            .generate_from_assembly(&worker, &setup_assembly, &mut ctx)
+            .unwrap();
+
+        let hardcoded_g2_bases = hardcoded_canonical_g2_bases();
+        let mut dummy_crs = Crs::<bellman::bn256::Bn256, CrsForMonomialForm>::dummy_crs(1);
+        dummy_crs.g2_monomial_bases = std::sync::Arc::new(hardcoded_g2_bases.to_vec());
+        let vk = zksync_gpu_prover::compute_vk_from_assembly::<
+            _,
+            _,
+            PlonkCsWidth4WithNextStepAndCustomGatesParams,
+            SynthesisModeGenerateSetup,
+        >(&mut ctx, &setup_assembly, &dummy_crs)
+        .unwrap();
+
+        ctx.free_all_slots();
+
+        (
+            PlonkSnarkVerifierCircuitDeviceSetupWrapper::from_inner(precomputation),
+            vk,
+        )
+    };
 
     println!("Precomputations ready");
 
     let snark_wrapper_vk = vk.clone();
 
-    let crs_mons =
-        PlonkSnarkWrapper::load_compact_raw_crs(Box::new(Cursor::new(dst_raw_compact_crs)))
-            .unwrap();
+    let crs_mons = <PlonkSnarkWrapper as SnarkWrapperProofSystem>::load_compact_raw_crs(Box::new(
+        Cursor::new(dst_raw_compact_crs),
+    ))
+    .unwrap();
 
-    let setup_data_cache = SnarkWrapperSetupData {
+    let setup_data_cache: SnarkWrapperSetupData<PlonkSnarkWrapper> = SnarkWrapperSetupData {
         precomputation,
         vk,
         finalization_hint,
-        previous_vk: compression_vk,
+        previous_vk: compression_vk.clone(),
         crs: crs_mons,
     };
 
-    let snark_wrapper_proof =
-        PlonkSnarkWrapper::prove_plonk_snark_wrapper_step(compression_proof, setup_data_cache)
-            .expect("Failed to prove Plonk snark wrapper step");
+    /*let snark_wrapper_proof =
+    PlonkSnarkWrapper::prove_plonk_snark_wrapper_step(compression_proof, setup_data_cache)
+        .expect("Failed to prove Plonk snark wrapper step");*/
+
+    let snark_wrapper_proof = {
+        let input_proof = compression_proof;
+        // Recreate stuff from prove_plonk_snark_wrapper_step
+
+        let input_vk = setup_data_cache.previous_vk;
+        let mut ctx = PlonkSnarkWrapper::init_context(&setup_data_cache.crs)?.into_inner();
+        let finalization_hint = setup_data_cache.finalization_hint;
+        let fixed_parameters = input_vk.fixed_parameters.clone();
+
+        let wrapper_function = SnarkWrapperFunction;
+        let circuit = SnarkWrapperCircuit {
+            witness: Some(input_proof),
+            vk: compression_vk.clone(),
+            fixed_parameters,
+            transcript_params: (),
+            wrapper_function,
+        };
+
+        //let circuit = Self::build_circuit(input_vk.clone(), Some(input_proof));
+
+        let mut proving_assembly = PlonkAssembly::<SynthesisModeProve>::new();
+
+        circuit
+            .synthesize(&mut proving_assembly)
+            .expect("must work");
+
+        //let mut proving_assembly =
+        //<Self as SnarkWrapperProofSystem>::synthesize_for_proving(circuit);
+        let vk = setup_data_cache.vk;
+        let mut precomputation: AsyncSetup = setup_data_cache.precomputation.into_inner();
+
+        assert!(proving_assembly.is_satisfied());
+        assert!(finalization_hint.is_power_of_two());
+        proving_assembly.finalize_to_size_log_2(finalization_hint.trailing_zeros() as usize);
+        let domain_size = proving_assembly.n() + 1;
+        assert!(domain_size.is_power_of_two());
+        assert!(domain_size == finalization_hint.clone());
+
+        let worker = bellman::worker::Worker::new();
+        let start = std::time::Instant::now();
+        let proof = zksync_gpu_prover::create_proof::<
+            _,
+            _,
+            <PlonkSnarkWrapper as ProofSystemDefinition>::Transcript,
+            _,
+        >(
+            &proving_assembly,
+            &mut ctx,
+            &worker,
+            &mut precomputation,
+            None,
+        )
+        .unwrap();
+
+        println!("plonk proving takes {} s", start.elapsed().as_secs());
+        ctx.free_all_slots();
+
+        let result = <PlonkSnarkWrapper as ProofSystemDefinition>::verify(&proof, &vk);
+        if !result {
+            println!("*** WARNING - SNARK FAILED TO VERIFY ****");
+        }
+        proof
+    };
 
     /*let is_valid = verify_snark_wrapper_proof(&snark_wrapper_proof, &snark_wrapper_vk);
 
