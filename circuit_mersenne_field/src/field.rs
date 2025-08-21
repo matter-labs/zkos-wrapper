@@ -1315,7 +1315,7 @@ fn range_check_32_bits<F: SmallField, CS: ConstraintSystem<F>>(cs: &mut CS, vari
 
     if let Some(table_id) = get_16_bits_range_check_table(&*cs) {
         let limbs =
-            decompose_into_limbs::<F, CS, 2>(cs, F::from_u64_unchecked(1u64 << 16), variable);
+            decompose_into_limbs::<F, CS, 4>(cs, F::from_u64_unchecked(1u64 << 16), variable);
 
         let zero = cs.allocate_constant(F::ZERO);
         match cs.get_lookup_params().lookup_width() {
@@ -1349,7 +1349,7 @@ fn range_check_31_bits<F: SmallField, CS: ConstraintSystem<F>>(cs: &mut CS, vari
         get_15_bits_range_check_table(&*cs),
     ) {
         let limbs =
-            decompose_into_limbs::<F, CS, 2>(cs, F::from_u64_unchecked(1u64 << 16), variable);
+            decompose_into_limbs::<F, CS, 4>(cs, F::from_u64_unchecked(1u64 << 16), variable);
 
         let zero = cs.allocate_constant(F::ZERO);
         match cs.get_lookup_params().lookup_width() {

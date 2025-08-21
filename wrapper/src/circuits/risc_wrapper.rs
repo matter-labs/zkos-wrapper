@@ -184,10 +184,10 @@ impl<F: SmallField, V: CircuitLeafInclusionVerifier<F>> CircuitBuilder<F>
         let builder =
             NopGate::configure_builder(builder, GatePlacementStrategy::UseGeneralPurposeColumns);
 
-        let builder = ReductionGate::<F, 2>::configure_builder(
+        /*let builder = ReductionGate::<F, 2>::configure_builder(
             builder,
             GatePlacementStrategy::UseGeneralPurposeColumns,
-        );
+        );*/
         let builder = ZeroCheckGate::configure_builder(
             builder,
             GatePlacementStrategy::UseGeneralPurposeColumns,
@@ -205,10 +205,10 @@ impl<F: SmallField, V: CircuitLeafInclusionVerifier<F>> CircuitBuilder<F>
             builder,
             GatePlacementStrategy::UseGeneralPurposeColumns,
         );
-        let builder = U32AddCarryAsChunkGate::configure_builder(
+        /*let builder = U32AddCarryAsChunkGate::configure_builder(
             builder,
             GatePlacementStrategy::UseGeneralPurposeColumns,
-        );
+        );*/
 
         builder
     }
