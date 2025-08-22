@@ -45,62 +45,59 @@ pub fn gpu_create_snark_setup_data(
         zksync_gpu_prover::cuda_bindings::CudaAllocator,
     >;
 
-    let (precomputation, vk) = {
-        // reimplementing stuff in precompute_plonk_wrapper_circuit (as we have different compression circuit).
-        let fixed_parameters = compression_vk.fixed_parameters.clone();
-        let wrapper_function = SnarkWrapperFunction;
-        let wrapper_circuit = SnarkWrapperCircuit {
-            witness: None,
-            vk: compression_vk.clone(),
-            fixed_parameters,
-            transcript_params: (),
-            wrapper_function,
-        };
+    // reimplementing stuff in precompute_plonk_wrapper_circuit (as we have different compression circuit).
+    let fixed_parameters = compression_vk.fixed_parameters.clone();
+    let wrapper_function = SnarkWrapperFunction;
+    let wrapper_circuit = SnarkWrapperCircuit {
+        witness: None,
+        vk: compression_vk.clone(),
+        fixed_parameters,
+        transcript_params: (),
+        wrapper_function,
+    };
 
-        let mut setup_assembly = PlonkAssembly::<SynthesisModeGenerateSetup>::new();
+    let mut setup_assembly = PlonkAssembly::<SynthesisModeGenerateSetup>::new();
 
-        wrapper_circuit
-            .synthesize(&mut setup_assembly)
-            .expect("must work");
+    wrapper_circuit
+        .synthesize(&mut setup_assembly)
+        .expect("must work");
 
-        let hardcoded_finalization_hint = L1_VERIFIER_DOMAIN_SIZE_LOG;
+    let hardcoded_finalization_hint = L1_VERIFIER_DOMAIN_SIZE_LOG;
 
-        // It used finalization hint instead (fine - it is 24 for plonk, and 23 for fflonk).
-        setup_assembly.finalize_to_size_log_2(hardcoded_finalization_hint);
-        assert!(setup_assembly.is_satisfied());
+    // It used finalization hint instead (fine - it is 24 for plonk, and 23 for fflonk).
+    setup_assembly.finalize_to_size_log_2(hardcoded_finalization_hint);
+    assert!(setup_assembly.is_satisfied());
 
-        // now gpu part.
-        let mut ctx = PlonkSnarkWrapper::init_context(&crs_mons)
-            .unwrap()
-            .into_inner();
+    // now gpu part.
+    let mut ctx = PlonkSnarkWrapper::init_context(&crs_mons)
+        .unwrap()
+        .into_inner();
 
-        let worker = zksync_gpu_prover::bellman::worker::Worker::new();
-        let mut precomputation = zksync_gpu_prover::AsyncSetup::<
-            <PlonkSnarkWrapper as ProofSystemDefinition>::Allocator,
-        >::allocate(1 << hardcoded_finalization_hint);
-        precomputation
-            .generate_from_assembly(&worker, &setup_assembly, &mut ctx)
-            .unwrap();
-
-        let hardcoded_g2_bases = hardcoded_canonical_g2_bases();
-        let mut dummy_crs = Crs::<bellman::bn256::Bn256, CrsForMonomialForm>::dummy_crs(1);
-        dummy_crs.g2_monomial_bases = std::sync::Arc::new(hardcoded_g2_bases.to_vec());
-        let vk = zksync_gpu_prover::compute_vk_from_assembly::<
-            _,
-            _,
-            PlonkCsWidth4WithNextStepAndCustomGatesParams,
-            SynthesisModeGenerateSetup,
-        >(&mut ctx, &setup_assembly, &dummy_crs)
+    let worker = zksync_gpu_prover::bellman::worker::Worker::new();
+    let mut precomputation = zksync_gpu_prover::AsyncSetup::<
+        <PlonkSnarkWrapper as ProofSystemDefinition>::Allocator,
+    >::allocate(1 << hardcoded_finalization_hint);
+    precomputation
+        .generate_from_assembly(&worker, &setup_assembly, &mut ctx)
         .unwrap();
 
-        ctx.free_all_slots();
+    let hardcoded_g2_bases = hardcoded_canonical_g2_bases();
+    let mut dummy_crs = Crs::<bellman::bn256::Bn256, CrsForMonomialForm>::dummy_crs(1);
+    dummy_crs.g2_monomial_bases = std::sync::Arc::new(hardcoded_g2_bases.to_vec());
+    let vk = zksync_gpu_prover::compute_vk_from_assembly::<
+        _,
+        _,
+        PlonkCsWidth4WithNextStepAndCustomGatesParams,
+        SynthesisModeGenerateSetup,
+    >(&mut ctx, &setup_assembly, &dummy_crs)
+    .unwrap();
 
-        (
-            PlonkSnarkVerifierCircuitDeviceSetupWrapper::from_inner(precomputation),
-            vk,
-        )
-    };
-    (precomputation, vk)
+    ctx.free_all_slots();
+
+    (
+        PlonkSnarkVerifierCircuitDeviceSetupWrapper::from_inner(precomputation),
+        vk,
+    )
 }
 
 /// Computes the SnarkProof for a given compression proof.
@@ -117,81 +114,74 @@ pub fn gpu_snark_prove(
     let crs_mons =
         <PlonkSnarkWrapper as SnarkWrapperProofSystem>::load_compact_raw_crs(reader).unwrap();
 
-    let snark_wrapper_proof = {
-        let input_proof = compression_proof;
-        // Recreate stuff from prove_plonk_snark_wrapper_step
+    let input_proof = compression_proof;
+    // Recreate stuff from prove_plonk_snark_wrapper_step
 
-        let input_vk = compression_vk.clone();
-        let mut ctx = PlonkSnarkWrapper::init_context(&crs_mons)
-            .unwrap()
-            .into_inner();
-        let fixed_parameters = input_vk.fixed_parameters.clone();
+    let input_vk = compression_vk.clone();
+    let mut ctx = PlonkSnarkWrapper::init_context(&crs_mons)
+        .unwrap()
+        .into_inner();
+    let fixed_parameters = input_vk.fixed_parameters.clone();
 
-        let wrapper_function = SnarkWrapperFunction;
-        let circuit = SnarkWrapperCircuit {
-            witness: Some(input_proof),
-            vk: compression_vk.clone(),
-            fixed_parameters,
-            transcript_params: (),
-            wrapper_function,
-        };
-        type PlonkAssembly<CSConfig> = Assembly<
-            Bn256,
-            PlonkCsWidth4WithNextStepAndCustomGatesParams,
-            SelectorOptimizedWidth4MainGateWithDNext,
-            CSConfig,
-            zksync_gpu_prover::cuda_bindings::CudaAllocator,
-        >;
-
-        //let circuit = Self::build_circuit(input_vk.clone(), Some(input_proof));
-
-        let mut proving_assembly = PlonkAssembly::<SynthesisModeProve>::new();
-
-        circuit
-            .synthesize(&mut proving_assembly)
-            .expect("must work");
-
-        //let mut proving_assembly =
-        //<Self as SnarkWrapperProofSystem>::synthesize_for_proving(circuit);
-        let mut precomputation: AsyncSetup = precomputation.into_inner();
-
-        assert!(proving_assembly.is_satisfied());
-        assert!(finalization_hint.is_power_of_two());
-        proving_assembly.finalize_to_size_log_2(finalization_hint.trailing_zeros() as usize);
-        let domain_size = proving_assembly.n() + 1;
-        assert!(domain_size.is_power_of_two());
-        assert!(domain_size == finalization_hint.clone());
-
-        let worker = zksync_gpu_prover::bellman::worker::Worker::new();
-        let start = std::time::Instant::now();
-        let proof = zksync_gpu_prover::create_proof::<
-            _,
-            _,
-            <PlonkSnarkWrapper as ProofSystemDefinition>::Transcript,
-            _,
-        >(
-            &proving_assembly,
-            &mut ctx,
-            &worker,
-            &mut precomputation,
-            None,
-        )
-        .unwrap();
-
-        println!("plonk proving takes {} s", start.elapsed().as_secs());
-        ctx.free_all_slots();
-
-        let result = zksync_gpu_prover::bellman::plonk::better_better_cs::verifier::verify::<
-            _,
-            _,
-            <PlonkSnarkWrapper as ProofSystemDefinition>::Transcript,
-        >(snark_wrapper_vk, &proof, None)
-        .unwrap();
-
-        if !result {
-            panic!("*** WARNING - SNARK FAILED TO VERIFY ****");
-        }
-        proof
+    let wrapper_function = SnarkWrapperFunction;
+    let circuit = SnarkWrapperCircuit {
+        witness: Some(input_proof),
+        vk: compression_vk.clone(),
+        fixed_parameters,
+        transcript_params: (),
+        wrapper_function,
     };
-    snark_wrapper_proof
+    type PlonkAssembly<CSConfig> = Assembly<
+        Bn256,
+        PlonkCsWidth4WithNextStepAndCustomGatesParams,
+        SelectorOptimizedWidth4MainGateWithDNext,
+        CSConfig,
+        zksync_gpu_prover::cuda_bindings::CudaAllocator,
+    >;
+
+    let mut proving_assembly = PlonkAssembly::<SynthesisModeProve>::new();
+
+    circuit
+        .synthesize(&mut proving_assembly)
+        .expect("must work");
+
+    let mut precomputation: AsyncSetup = precomputation.into_inner();
+
+    assert!(proving_assembly.is_satisfied());
+    assert!(finalization_hint.is_power_of_two());
+    proving_assembly.finalize_to_size_log_2(finalization_hint.trailing_zeros() as usize);
+    let domain_size = proving_assembly.n() + 1;
+    assert!(domain_size.is_power_of_two());
+    assert!(domain_size == finalization_hint.clone());
+
+    let worker = zksync_gpu_prover::bellman::worker::Worker::new();
+    let start = std::time::Instant::now();
+    let proof = zksync_gpu_prover::create_proof::<
+        _,
+        _,
+        <PlonkSnarkWrapper as ProofSystemDefinition>::Transcript,
+        _,
+    >(
+        &proving_assembly,
+        &mut ctx,
+        &worker,
+        &mut precomputation,
+        None,
+    )
+    .unwrap();
+
+    println!("plonk proving takes {} s", start.elapsed().as_secs());
+    ctx.free_all_slots();
+
+    let result = zksync_gpu_prover::bellman::plonk::better_better_cs::verifier::verify::<
+        _,
+        _,
+        <PlonkSnarkWrapper as ProofSystemDefinition>::Transcript,
+    >(snark_wrapper_vk, &proof, None)
+    .unwrap();
+
+    if !result {
+        panic!("*** WARNING - SNARK FAILED TO VERIFY ****");
+    }
+    proof
 }

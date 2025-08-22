@@ -39,6 +39,7 @@ pub fn get_risc_wrapper_setup(
 ) {
     let start = std::time::Instant::now();
 
+    // Currently the GPU context is initialized here, but it should be done at a higher level.
     let config = ProverContextConfig::default().with_smallest_supported_domain_size(1 << 15);
     let _prover_context = ProverContext::create_with_config(config).unwrap();
 
@@ -67,19 +68,8 @@ pub fn get_risc_wrapper_setup(
     } = RiscWrapper::get_proof_config();
     let cs = cs.into_assembly::<std::alloc::Global>();
 
-    // TODO: for gpu we don't need full setup (light setup is enough)
-
     let (setup_base, vk_params, vars_hint, witness_hints) =
         cs.get_light_setup(worker, fri_lde_factor, merkle_tree_cap_size);
-
-    println!("======== STARTING GPU ===========");
-
-    /*let verifier_builder = RiscWrapperCircuitBuilder::dyn_verifier_builder();
-    let verifier = verifier_builder.create_verifier();
-
-    let gpu_proof_config = GpuProofConfig::from_verifier(&verifier);*/
-
-    //let gpu_proof_config = GpuProofConfig::from_assembly(&cs);
 
     let (gpu_setup, gpu_vk) =
         gpu_setup_and_vk_from_base_setup_vk_params_and_hints::<RiscWrapperTreeHasher, _>(
@@ -109,7 +99,7 @@ pub fn prove_risc_wrapper(
 ) -> RiscWrapperProof {
     let start = std::time::Instant::now();
 
-    // TODO: this should be somehow done on higher level.
+    // Currently the GPU context is initialized here, but it should be done at a higher level.
     let config = ProverContextConfig::default().with_smallest_supported_domain_size(1 << 15);
     let _prover_context = ProverContext::create_with_config(config).unwrap();
 
@@ -140,25 +130,19 @@ pub fn prove_risc_wrapper(
 
     let external_witness_data = cs.witness.unwrap();
 
-    // WitnessVectorGeneratorPayload is the input - it has circuit wrapper + finaliation hint.
-    // to get this witness data, we do 'synthesize_vector'.
-    // this calls circuit -> sytnehsis - > synthesis inner.
-    // and this does stuff + into assembly.
-    // we return WitnessVectorGeneratorExecutionOutput - circuit + tiwness vec.
-
     let proof_config = RiscWrapper::get_proof_config();
 
     type Transcript = GoldilocksPoisedon2Transcript;
     type Hasher = GoldilocksPoseidon2Sponge<AbsorptionModeOverwrite>;
 
     let proof = gpu_prove_from_external_witness_data::<Transcript, Hasher, NoPow, Global>(
-        &gpu_proof_config,      // normally taken from 'verifier' - but I don't have any.
-        &external_witness_data, // witness vector (I have it as struct, not bytes)
-        proof_config,           // LDE factors and other stuff.
+        &gpu_proof_config,
+        &external_witness_data,
+        proof_config,
         &gpu_setup,
-        &gpu_vk, // vk should be fine
-        (),      // empty shoudl be ok
-        worker,  // ok
+        &gpu_vk,
+        (),
+        worker,
     )
     .unwrap();
 

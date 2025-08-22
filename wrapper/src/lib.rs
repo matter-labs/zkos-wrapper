@@ -19,6 +19,7 @@ use boojum::algebraic_props::sponge::GoldilocksPoseidon2Sponge;
 use boojum::config::{DevCSConfig, ProvingCSConfig, SetupCSConfig};
 use boojum::cs::cs_builder::new_builder;
 use boojum::cs::cs_builder_reference::CsReferenceImplementationBuilder;
+#[cfg(feature = "gpu")]
 use boojum::cs::implementations::fast_serialization::MemcopySerializable;
 use boojum::cs::implementations::hints::DenseVariablesCopyHint;
 use boojum::cs::implementations::hints::DenseWitnessCopyHint;
@@ -612,6 +613,7 @@ pub fn prove_risc_wrapper_with_snark(
     }
     #[cfg(not(feature = "gpu"))]
     {
+        let _ = precomputation_dir;
         let crs_mons = match trusted_setup_file {
             Some(ref crs_file_str) => get_trusted_setup(crs_file_str),
             None => Crs::<Bn256, CrsForMonomialForm>::crs_42(
