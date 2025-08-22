@@ -36,6 +36,7 @@ pub fn get_compression_setup(
     let start = std::time::Instant::now();
 
     // Currently the GPU context is initialized here, but it should be done at a higher level.
+    // For compression circuit, we actually have to set the domain size lower.
     let config = ProverContextConfig::default().with_smallest_supported_domain_size(1 << 15);
     let _prover_context = ProverContext::create_with_config(config).unwrap();
 
@@ -53,6 +54,7 @@ pub fn get_compression_setup(
 
     let builder = CompressionCircuit::configure_builder(builder);
     let mut cs = builder.build(num_vars.unwrap());
+    // compression circuit doesn't have any tables.
     circuit.synthesize_into_cs(&mut cs);
     let (_, finalization_hint) = cs.pad_and_shrink();
 
@@ -95,6 +97,7 @@ pub fn prove_compression(
     let start = std::time::Instant::now();
 
     // Currently the GPU context is initialized here, but it should be done at a higher level.
+    // For compression circuit, we actually have to set the domain size lower.
     let config = ProverContextConfig::default().with_smallest_supported_domain_size(1 << 15);
     let _prover_context = ProverContext::create_with_config(config).unwrap();
 
@@ -116,6 +119,7 @@ pub fn prove_compression(
 
     let builder = CompressionCircuit::configure_builder(builder);
     let mut cs = builder.build(num_vars.unwrap());
+    // compression circuit doesn't have any tables.
     circuit.synthesize_into_cs(&mut cs);
     cs.pad_and_shrink_using_hint(finalization_hint);
     let cs = cs.into_assembly::<std::alloc::Global>();

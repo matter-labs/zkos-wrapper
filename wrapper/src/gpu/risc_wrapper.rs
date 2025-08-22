@@ -1,30 +1,26 @@
 use std::alloc::Global;
 
 use boojum::{
-    algebraic_props::{round_function::AbsorptionModeOverwrite, sponge::GoldilocksPoseidon2Sponge},
     config::{ProvingCSConfig, SetupCSConfig},
     cs::{
         cs_builder::new_builder,
         cs_builder_reference::CsReferenceImplementationBuilder,
-        implementations::{
-            pow::NoPow, prover::ProofConfig, setup::FinalizationHintsForProver,
-            transcript::GoldilocksPoisedon2Transcript,
-        },
+        implementations::{pow::NoPow, prover::ProofConfig, setup::FinalizationHintsForProver},
         traits::circuit::CircuitBuilder,
     },
     field::goldilocks::GoldilocksField,
     worker::Worker,
 };
 use shivini::{
-    ProverContext, ProverContextConfig,
+    ProverContext,
     cs::{GpuSetup, gpu_setup_and_vk_from_base_setup_vk_params_and_hints},
     gpu_proof_config::GpuProofConfig,
     gpu_prove_from_external_witness_data,
 };
 
 use crate::{
-    BinaryCommitment, RiscWrapper, RiscWrapperProof, RiscWrapperTreeHasher, RiscWrapperVK,
-    RiscWrapperWitness,
+    BinaryCommitment, RiscWrapper, RiscWrapperProof, RiscWrapperTranscript, RiscWrapperTreeHasher,
+    RiscWrapperVK, RiscWrapperWitness,
 };
 
 type GL = GoldilocksField;
@@ -40,8 +36,7 @@ pub fn get_risc_wrapper_setup(
     let start = std::time::Instant::now();
 
     // Currently the GPU context is initialized here, but it should be done at a higher level.
-    let config = ProverContextConfig::default().with_smallest_supported_domain_size(1 << 15);
-    let _prover_context = ProverContext::create_with_config(config).unwrap();
+    let _prover_context = ProverContext::create().unwrap();
 
     let verify_inner_proof: bool = false;
     let circuit = RiscWrapper::new(None, verify_inner_proof, binary_commitment);
@@ -100,8 +95,7 @@ pub fn prove_risc_wrapper(
     let start = std::time::Instant::now();
 
     // Currently the GPU context is initialized here, but it should be done at a higher level.
-    let config = ProverContextConfig::default().with_smallest_supported_domain_size(1 << 15);
-    let _prover_context = ProverContext::create_with_config(config).unwrap();
+    let _prover_context = ProverContext::create().unwrap();
 
     let verify_inner_proof = true;
     let circuit = RiscWrapper::new(
@@ -132,10 +126,12 @@ pub fn prove_risc_wrapper(
 
     let proof_config = RiscWrapper::get_proof_config();
 
-    type Transcript = GoldilocksPoisedon2Transcript;
-    type Hasher = GoldilocksPoseidon2Sponge<AbsorptionModeOverwrite>;
-
-    let proof = gpu_prove_from_external_witness_data::<Transcript, Hasher, NoPow, Global>(
+    let proof = gpu_prove_from_external_witness_data::<
+        RiscWrapperTranscript,
+        RiscWrapperTreeHasher,
+        NoPow,
+        Global,
+    >(
         &gpu_proof_config,
         &external_witness_data,
         proof_config,
