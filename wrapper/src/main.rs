@@ -7,7 +7,7 @@
 // - wrapping the proof into SNARK.
 use clap::{Parser, Subcommand};
 
-use zkos_wrapper::{generate_and_save_risc_wrapper_vk, generate_vk};
+use zkos_wrapper::{generate_and_save_risc_wrapper_vk, generate_vk, verification_hash};
 
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
@@ -30,6 +30,9 @@ enum Commands {
         /// If missing - will use the 'fake' trusted setup.
         #[arg(long)]
         trusted_setup_file: Option<String>,
+
+        #[arg(long)]
+        precomputation_dir: Option<String>,
     },
     /// Take the riscV final proof, and create a RiscWrapper proof.
     ProveRiscWrapper {
@@ -44,7 +47,7 @@ enum Commands {
         // Binary used to generate the proof.
         // If not specified, take the default binary (fibonacci hasher).
         #[arg(long)]
-        input_binary: String,
+        input_binary: Option<String>,
 
         #[arg(short, long)]
         output_dir: String,
@@ -56,7 +59,7 @@ enum Commands {
 
         /// If true, then create VK for universal verifier program.
         /// If false then for the separate verifiers.
-        #[arg(long)]
+        #[arg(long, default_value_t = true)]
         universal_verifier: bool,
     },
     /// Generate verification key for the RiscWrapper proof.
@@ -71,8 +74,14 @@ enum Commands {
 
         /// If true, then create VK for universal verifier program.
         /// If false then for the separate verifiers.
-        #[arg(long)]
+        #[arg(long, default_value_t = true)]
         universal_verifier: bool,
+    },
+    /// Get the hash of the verification key.
+    GetVkHash {
+        /// Path for VK to calculate the hash.
+        #[arg(short, long)]
+        vk_path: String,
     },
 }
 
@@ -84,13 +93,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             input,
             output_dir,
             trusted_setup_file,
+            precomputation_dir,
         } => {
             println!("=== Phase 0: Proving");
-            zkos_wrapper::prove(input, output_dir, trusted_setup_file, false)?;
+            zkos_wrapper::prove(
+                input,
+                output_dir,
+                trusted_setup_file,
+                false,
+                precomputation_dir,
+            )?;
         }
         Commands::ProveRiscWrapper { input, output_dir } => {
             println!("=== Phase 0: Proving RiscWrapper");
-            zkos_wrapper::prove(input, output_dir, None, true)?;
+            zkos_wrapper::prove(input, output_dir, None, true, None)?;
         }
         Commands::GenerateSnarkVk {
             input_binary,
@@ -113,6 +129,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         } => {
             println!("=== Phase 0: Generating the RiscWrapper verification key");
             generate_and_save_risc_wrapper_vk(input_binary, output_dir, universal_verifier)?;
+        }
+        Commands::GetVkHash { vk_path } => {
+            verification_hash(vk_path);
         }
     }
     Ok(())

@@ -1314,8 +1314,9 @@ fn range_check_32_bits<F: SmallField, CS: ConstraintSystem<F>>(cs: &mut CS, vari
     use boojum::gadgets::u8::get_8_by_8_range_check_table;
 
     if let Some(table_id) = get_16_bits_range_check_table(&*cs) {
+        // We are decomposing to 4 limbs. In practice 2 would be enough, but GPU doesn't support reduction gate with 2.
         let limbs =
-            decompose_into_limbs::<F, CS, 2>(cs, F::from_u64_unchecked(1u64 << 16), variable);
+            decompose_into_limbs::<F, CS, 4>(cs, F::from_u64_unchecked(1u64 << 16), variable);
 
         let zero = cs.allocate_constant(F::ZERO);
         match cs.get_lookup_params().lookup_width() {
@@ -1348,8 +1349,10 @@ fn range_check_31_bits<F: SmallField, CS: ConstraintSystem<F>>(cs: &mut CS, vari
         get_16_bits_range_check_table(&*cs),
         get_15_bits_range_check_table(&*cs),
     ) {
+        // We are decomposing to 4 limbs. In practice 2 would be enough, but GPU doesn't support reduction gate with 2.
+
         let limbs =
-            decompose_into_limbs::<F, CS, 2>(cs, F::from_u64_unchecked(1u64 << 16), variable);
+            decompose_into_limbs::<F, CS, 4>(cs, F::from_u64_unchecked(1u64 << 16), variable);
 
         let zero = cs.allocate_constant(F::ZERO);
         match cs.get_lookup_params().lookup_width() {

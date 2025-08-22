@@ -23,10 +23,10 @@ categories = ["cryptography"]
 
 circuit_mersenne_field = { path = "circuit_mersenne_field"}
 
-boojum = { git = "https://github.com/matter-labs/zksync-crypto.git", package="boojum", branch = "main"}
-bellman = { git = "https://github.com/matter-labs/zksync-crypto.git", package="zksync_bellman", branch = "main" }
-rescue_poseidon = { git = "https://github.com/matter-labs/zksync-crypto.git", package="rescue_poseidon", branch = "main" }
-snark_wrapper = { git = "https://github.com/matter-labs/zksync-crypto.git", package="snark_wrapper", branch = "main" }
+boojum = { version = "=0.32.2", features = ["log_tracing"] }
+bellman = { package = "zksync_bellman", version = "=0.32.2"}
+rescue_poseidon = "=0.32.2"
+snark_wrapper = "=0.32.2"
 
 # boojum = { path = "../zksync-crypto/crates/boojum"}
 # bellman = { path = "../zksync-crypto/crates/bellman", package="zksync_bellman"}
@@ -59,4 +59,7 @@ clap = { version = "4.5.21", features = ["derive"] }
 sha3 = "*"
 rand = "0.8"
 
-
+# Used for GPU proving.
+shivini = "=0.154.7"
+proof-compression = "=0.154.7"
+zksync-gpu-prover = "=0.154.7"
