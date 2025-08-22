@@ -71,9 +71,9 @@ fn format_rust_code(code: &str) -> Result<String, String> {
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
 struct Cli {
-    #[arg(long, default_value = "../wrapper/src/wrapper_inner_verifier/imports")]
+    #[arg(long, default_value = "wrapper/src/wrapper_inner_verifier/imports")]
     output_dir: String,
-    #[arg(long, default_value = "../wrapper/src/blake2_inner_verifier/imports")]
+    #[arg(long, default_value = "wrapper/src/blake2_inner_verifier/imports")]
     blake_output_dir: String,
     #[arg(long, default_value = "false")]
     use_universal_binaries: bool,

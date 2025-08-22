@@ -82,13 +82,13 @@ impl BinaryCommitment {
 impl RiscWrapperWitness {
     pub fn from_full_proof(
         full_proof: execution_utils::ProgramProof,
-        binary_commitment: &BinaryCommitment,
+        _binary_commitment: &BinaryCommitment,
     ) -> Self {
         let execution_utils::ProgramProof {
             base_layer_proofs,
             delegation_proofs,
             register_final_values,
-            end_params,
+            end_params: _,
             recursion_chain_preimage,
             recursion_chain_hash,
         } = full_proof;
@@ -160,7 +160,7 @@ impl<F: SmallField, V: CircuitLeafInclusionVerifier<F>> CircuitBuilder<F>
 
         #[cfg(feature = "wrap_with_reduced_log_23")]
         let result = CSGeometry {
-            num_columns_under_copy_permutation: 104,
+            num_columns_under_copy_permutation: 124,
             num_witness_columns: 0,
             num_constant_columns: 4,
             max_allowed_constraint_degree: 4,

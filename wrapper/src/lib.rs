@@ -22,7 +22,7 @@ pub use reduced_risc_verifier as risc_verifier;
 
 use boojum::algebraic_props::round_function::AbsorptionModeOverwrite;
 use boojum::algebraic_props::sponge::GoldilocksPoseidon2Sponge;
-use boojum::config::{DevCSConfig, ProvingCSConfig, SetupCSConfig};
+use boojum::config::{ProvingCSConfig, SetupCSConfig};
 use boojum::cs::cs_builder::new_builder;
 use boojum::cs::cs_builder_reference::CsReferenceImplementationBuilder;
 #[cfg(feature = "gpu")]
@@ -107,9 +107,7 @@ pub type SnarkWrapperTranscript =
 
 pub use execution_utils::ProgramProof;
 use execution_utils::{
-    base_layer_verifier_vk, final_recursion_layer_verifier_vk,
-    recursion_layer_no_delegation_verifier_vk, recursion_layer_verifier_vk,
-    recursion_log_23_layer_verifier_vk, universal_circuit_no_delegation_verifier_vk,
+    base_layer_verifier_vk, recursion_layer_verifier_vk, recursion_log_23_layer_verifier_vk,
     universal_circuit_verifier_vk,
 };
 
