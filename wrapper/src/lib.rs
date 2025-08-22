@@ -547,27 +547,46 @@ pub fn prove_risc_wrapper_with_snark(
     let worker = boojum::worker::Worker::new();
     println!("=== Phase 2: Creating compression proof");
 
-    let (
-        finalization_hint,
-        setup_base,
-        setup,
-        compression_vk,
-        setup_tree,
-        vars_hint,
-        witness_hints,
-    ) = get_compression_setup(risc_wrapper_vk.clone(), &worker);
-    let compression_proof = prove_compression(
-        risc_wrapper_proof,
-        risc_wrapper_vk,
-        &finalization_hint,
-        &setup_base,
-        &setup,
-        &compression_vk,
-        &setup_tree,
-        &vars_hint,
-        &witness_hints,
-        &worker,
-    );
+    #[cfg(feature = "gpu")]
+    let (compression_proof, compression_vk) = {
+        let (setup, compression_vk, finalization) =
+            gpu::compression::get_compression_setup(&worker, risc_wrapper_vk.clone());
+        let compression_proof = gpu::compression::prove_compression(
+            risc_wrapper_proof,
+            risc_wrapper_vk.clone(),
+            &finalization,
+            &setup,
+            &compression_vk,
+            &worker,
+        );
+        (compression_proof, compression_vk)
+    };
+    #[cfg(not(feature = "gpu"))]
+    let (compression_proof, compression_vk) = {
+        let (
+            finalization_hint,
+            setup_base,
+            setup,
+            compression_vk,
+            setup_tree,
+            vars_hint,
+            witness_hints,
+        ) = get_compression_setup(risc_wrapper_vk.clone(), &worker);
+        let compression_proof = prove_compression(
+            risc_wrapper_proof,
+            risc_wrapper_vk,
+            &finalization_hint,
+            &setup_base,
+            &setup,
+            &compression_vk,
+            &setup_tree,
+            &vars_hint,
+            &witness_hints,
+            &worker,
+        );
+        (compression_proof, compression_vk)
+    };
+
     let is_valid = verify_compression_proof(&compression_proof, &compression_vk);
 
     if !is_valid {
