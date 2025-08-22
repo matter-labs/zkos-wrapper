@@ -809,7 +809,7 @@ fn generate_risk_wrapper_vk(
 
     // let binary_commitment = create_binary_commitment(input_binary, &verifier_params);
 
-    let bin = std::fs::read(input_binary).unwrap();
+    let bin = std::fs::read(input_binary.unwrap()).unwrap();
 
     let worker = risc_verifier::prover::worker::Worker::new();
 
