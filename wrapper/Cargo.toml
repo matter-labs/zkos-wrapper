@@ -27,6 +27,19 @@ serde.workspace = true
 clap.workspace = true
 sha3.workspace = true
 
+
+shivini = { workspace = true, optional = true } 
+proof-compression = {workspace = true, optional = true}
+zksync-gpu-prover = {workspace = true, optional = true}
+
 [dev-dependencies]
 rand.workspace = true
 hex = "0.4.3"
+
+
+[features]
+
+gpu = ["shivini", "proof-compression", "zksync-gpu-prover"]
+
+#default = ["gpu"]
+default = []

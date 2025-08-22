@@ -40,3 +40,35 @@ If you need to regenerate the wrapper, due to changes in the last airbender recu
 ```bash
 cargo run --bin wrapper_generator --release
 ```
+
+
+## GPU
+
+To use gpu, you must:
+* compile with gpu feature flag
+* install BELLMAN_CUDA (and set BELLMAN_CUDA_DIR=)
+* download the compact CRS file (4GB) (https://storage.googleapis.com/matterlabs-setup-keys-us/setup-keys/setup_compact.key)
+
+
+For example, you can snark-wrap the airbender risk program proof:
+
+```shell
+time CUDA_VISIBLE_DEVICES=0 RUST_BACKTRACE=1 RUST_MIN_STACK=267108864 cargo run --bin wrapper --release --features gpu  prove-full --input wrapper/testing_data/risc_proof --trusted-setup-file crs/setup_compact.key  --output-dir /tmp/snark_output
+```
+
+You can also pre-generate VKs & computations, that will later speed up your proving:
+
+```shell
+CUDA_VISIBLE_DEVICES=0 RUST_BACKTRACE=1 RUST_MIN_STACK=267108864 cargo run --bin wrapper --release  generate-snark-vk  --trusted-setup-file crs/setup_compact.key --output-dir /tmp/precomputations
+```
+
+Precomputations take around 7GB.
+
+And then you use them by setting `precomputation-dir` flag:
+
+```shell
+time CUDA_VISIBLE_DEVICES=0 RUST_BACKTRACE=1 RUST_MIN_STACK=267108864 cargo run --bin wrapper --release --features gpu  prove-full --input wrapper/testing_data/risc_proof --trusted-setup-file crs/setup_compact.key  --precomputation-dir /tmp/preprocessing --output-dir /tmp/snark_output
+```
+
+
+

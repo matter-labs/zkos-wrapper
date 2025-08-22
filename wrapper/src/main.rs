@@ -35,6 +35,9 @@ enum Commands {
         /// If missing - will use the 'fake' trusted setup.
         #[arg(long)]
         trusted_setup_file: Option<String>,
+
+        #[arg(long)]
+        precomputation_dir: Option<String>,
     },
     /// Take the riscV final proof, and create a RiscWrapper proof.
     ProveRiscWrapper {
@@ -54,7 +57,7 @@ enum Commands {
         // Binary used to generate the proof.
         // If not specified, take the default binary (fibonacci hasher).
         #[arg(long)]
-        input_binary: String,
+        input_binary: Option<String>,
 
         #[arg(short, long)]
         output_dir: String,
@@ -101,9 +104,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             input_binary,
             output_dir,
             trusted_setup_file,
+            precomputation_dir,
         } => {
             println!("=== Phase 0: Proving");
-            zkos_wrapper::prove(input, input_binary, output_dir, trusted_setup_file, false)?;
+            zkos_wrapper::prove(
+                input,
+                input_binary,
+                output_dir,
+                trusted_setup_file,
+                false,
+                precomputation_dir,
+            )?;
         }
         Commands::ProveRiscWrapper {
             input,
@@ -111,7 +122,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             output_dir,
         } => {
             println!("=== Phase 0: Proving RiscWrapper");
-            zkos_wrapper::prove(input, input_binary, output_dir, None, true)?;
+            zkos_wrapper::prove(input, input_binary, output_dir, None, true, None)?;
         }
         Commands::GenerateSnarkVk {
             input_binary,
@@ -135,9 +146,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             println!("=== Phase 0: Generating the RiscWrapper verification key");
             generate_and_save_risc_wrapper_vk(input_binary, output_dir, universal_verifier)?;
         }
-        Commands::GetVkHash {
-            vk_path
-        } => {
+        Commands::GetVkHash { vk_path } => {
             verification_hash(vk_path);
         }
     }
