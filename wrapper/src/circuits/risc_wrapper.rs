@@ -4,8 +4,7 @@ use boojum::{
         cs_builder::{CsBuilder, CsBuilderImpl},
         gates::{
             ConstantsAllocatorGate, FmaGateInBaseFieldWithoutConstant, NopGate, PublicInputGate,
-            ReductionGate, SelectionGate, U32AddCarryAsChunkGate, U32TriAddCarryAsChunkGate,
-            UIntXAddGate, ZeroCheckGate,
+            ReductionGate, SelectionGate, U32TriAddCarryAsChunkGate, UIntXAddGate, ZeroCheckGate,
         },
         implementations::prover::ProofConfig,
         traits::{circuit::CircuitBuilder, cs::ConstraintSystem, gate::GatePlacementStrategy},
@@ -184,6 +183,7 @@ impl<F: SmallField, V: CircuitLeafInclusionVerifier<F>> CircuitBuilder<F>
         let builder =
             NopGate::configure_builder(builder, GatePlacementStrategy::UseGeneralPurposeColumns);
 
+        // This gate is not supported by GPU. If we added support for it, then we should also set the limbs2 in range_check_32_bits in field.rs
         /*let builder = ReductionGate::<F, 2>::configure_builder(
             builder,
             GatePlacementStrategy::UseGeneralPurposeColumns,
@@ -205,6 +205,7 @@ impl<F: SmallField, V: CircuitLeafInclusionVerifier<F>> CircuitBuilder<F>
             builder,
             GatePlacementStrategy::UseGeneralPurposeColumns,
         );
+        // This gate is not supported by GPU.
         /*let builder = U32AddCarryAsChunkGate::configure_builder(
             builder,
             GatePlacementStrategy::UseGeneralPurposeColumns,
