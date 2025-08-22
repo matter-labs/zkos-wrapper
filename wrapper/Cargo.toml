@@ -41,5 +41,5 @@ hex = "0.4.3"
 
 gpu = ["shivini", "proof-compression", "zksync-gpu-prover"]
 
-default = ["gpu"]
-#default = []
+#default = ["gpu"]
+default = []
