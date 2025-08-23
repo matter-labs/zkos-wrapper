@@ -47,6 +47,13 @@ mod snark_wrapper_tests;
 fn all_layers_full_test() {
     println!("Testing Risc wrapper");
     risc_wrapper_tests::risc_wrapper_full_test();
+    // These tests may use a lot of memory, so we can try to free up some space afterwards.
+    // It is especially important on CI machines.
+    #[cfg(target_os = "linux")]
+    unsafe {
+        libc::malloc_trim(0);
+    }
+
     println!("Testing compression");
     compression_tests::compression_full_test();
     println!("Testing Snark wrapper");

@@ -37,6 +37,7 @@ zksync-gpu-prover = {workspace = true, optional = true}
 [dev-dependencies]
 rand.workspace = true
 hex = "0.4.3"
+libc = "0.2.175"
 
 [features]
 
