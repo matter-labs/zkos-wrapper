@@ -75,7 +75,7 @@ struct Cli {
     output_dir: String,
     #[arg(long, default_value = "wrapper/src/blake2_inner_verifier/imports")]
     blake_output_dir: String,
-    #[arg(long, default_value = "false")]
+    #[arg(long, default_value = "true")]
     use_universal_binaries: bool,
 }
 
@@ -148,10 +148,7 @@ fn main() {
     let end_params_constants = format_rust_code(
         &generate_constants(
             &machines_chain,
-            (
-                execution_utils::RECURSION_LAYER_VERIFIER,
-                MachineType::ReducedLog23,
-            ),
+            (binaries[2], MachineType::ReducedLog23),
             &worker,
         )
         .to_string(),
