@@ -82,20 +82,20 @@ impl BinaryCommitment {
 impl RiscWrapperWitness {
     pub fn from_full_proof(
         full_proof: execution_utils::ProgramProof,
-        _binary_commitment: &BinaryCommitment,
+        binary_commitment: &BinaryCommitment,
     ) -> Self {
         let execution_utils::ProgramProof {
             base_layer_proofs,
             delegation_proofs,
             register_final_values,
-            end_params: _,
+            end_params,
             recursion_chain_preimage,
             recursion_chain_hash,
         } = full_proof;
 
         assert!(base_layer_proofs.len() == 1);
         assert!(register_final_values.len() == NUM_REGISTERS);
-        // assert_eq!(end_params, binary_commitment.end_params);
+        assert_eq!(end_params, binary_commitment.end_params);
 
         assert!(recursion_chain_preimage.is_some());
         let mut result_hasher = Blake2sBufferingTranscript::new();
@@ -106,7 +106,7 @@ impl RiscWrapperWitness {
             recursion_chain_hash.unwrap(),
             result_hasher.finalize_reset().0
         );
-        // assert_eq!(recursion_chain_hash.unwrap(), binary_commitment.aux_params);
+        assert_eq!(recursion_chain_hash.unwrap(), binary_commitment.aux_params);
 
         let final_registers_state: Vec<_> = register_final_values
             .into_iter()

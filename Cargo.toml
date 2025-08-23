@@ -68,3 +68,6 @@ zksync-gpu-prover = "=0.154.7"
 opt-level = 1
 codegen-units = 256
 overflow-checks = true
+
+[profile.release]
+lto = false
