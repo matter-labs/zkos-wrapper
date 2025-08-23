@@ -71,3 +71,5 @@ overflow-checks = true
 
 [profile.release]
 lto = false
+# This is needed for zksync-airbender crates to compile in a reasonable time for x86-64-unknown-linux-gnu
+overflow-checks = true
