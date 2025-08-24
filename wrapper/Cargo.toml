@@ -18,7 +18,9 @@ boojum.workspace = true
 bellman.workspace = true
 rescue_poseidon.workspace = true
 snark_wrapper.workspace = true
-risc_verifier.workspace = true
+reduced_risc_verifier.workspace = true
+final_risc_verifier.workspace = true
+blake_verifier.workspace = true
 execution_utils.workspace = true
 setups.workspace = true
 circuit_mersenne_field.workspace = true
@@ -35,11 +37,11 @@ zksync-gpu-prover = {workspace = true, optional = true}
 [dev-dependencies]
 rand.workspace = true
 hex = "0.4.3"
-
+libc = "0.2.175"
 
 [features]
 
+default = ["wrap_with_reduced_log_23"]
+wrap_final_machine = []
+wrap_with_reduced_log_23 = []
 gpu = ["shivini", "proof-compression", "zksync-gpu-prover"]
-
-#default = ["gpu"]
-default = []

@@ -1,3 +1,4 @@
+use crate::risc_verifier;
 use crate::transcript::*;
 use crate::wrapper_inner_verifier::skeleton::*;
 use crate::wrapper_utils::verifier_traits::CircuitBlake2sForEverythingVerifier;
@@ -46,6 +47,13 @@ mod snark_wrapper_tests;
 fn all_layers_full_test() {
     println!("Testing Risc wrapper");
     risc_wrapper_tests::risc_wrapper_full_test();
+    // These tests may use a lot of memory, so we can try to free up some space afterwards.
+    // It is especially important on CI machines.
+    #[cfg(target_os = "linux")]
+    unsafe {
+        libc::malloc_trim(0);
+    }
+
     println!("Testing compression");
     compression_tests::compression_full_test();
     println!("Testing Snark wrapper");
@@ -63,14 +71,35 @@ fn all_layers_setup_test() {
 // please run (from the zksync-airbender - and make sure to match the current dependency):
 // Make sure that you have a machine with >140GB of RAM for this step:
 // cargo run -p cli --release prove --bin examples/hashed_fibonacci/app.bin --input-file examples/hashed_fibonacci/input.txt --output-dir /tmp/ --until final-proof
-// And then copy /tmp/final_program_proof testing_data/risc_proof
-const RISC_PROOF_PATH: &str = "testing_data/risc_proof";
-const RISC_WRAPPER_PROOF_PATH: &str = "testing_data/risc_wrapper_proof";
-const RISC_WRAPPER_VK_PATH: &str = "testing_data/risc_wrapper_vk";
-const COMPRESSION_PROOF_PATH: &str = "testing_data/compression_proof";
-const COMPRESSION_VK_PATH: &str = "testing_data/compression_vk";
-const SNARK_WRAPPER_PROOF_PATH: &str = "testing_data/snark_wrapper_proof";
-const SNARK_WRAPPER_VK_PATH: &str = "testing_data/snark_wrapper_vk";
+// And then copy /tmp/final_program_proof testing_data/risc_final_machine_proof
+
+#[cfg(feature = "wrap_final_machine")]
+mod path_constants {
+    pub(crate) const RISC_PROOF_PATH: &str = "testing_data/risc_final_machine_proof";
+    pub(crate) const RISC_WRAPPER_PROOF_PATH: &str =
+        "testing_data/final_machine_mode_risc_wrapper_proof";
+    pub(crate) const RISC_WRAPPER_VK_PATH: &str = "testing_data/final_machine_mode_risc_wrapper_vk";
+    pub(crate) const COMPRESSION_PROOF_PATH: &str =
+        "testing_data/final_machine_mode_compression_proof";
+    pub(crate) const COMPRESSION_VK_PATH: &str = "testing_data/final_machine_mode_compression_vk";
+    pub(crate) const SNARK_WRAPPER_PROOF_PATH: &str =
+        "testing_data/final_machine_mode_snark_wrapper_proof";
+    pub(crate) const SNARK_WRAPPER_VK_PATH: &str =
+        "testing_data/final_machine_mode_snark_wrapper_vk";
+}
+
+#[cfg(feature = "wrap_with_reduced_log_23")]
+mod path_constants {
+    pub(crate) const RISC_PROOF_PATH: &str = "testing_data/risc_proof";
+    pub(crate) const RISC_WRAPPER_PROOF_PATH: &str = "testing_data/risc_wrapper_proof";
+    pub(crate) const RISC_WRAPPER_VK_PATH: &str = "testing_data/risc_wrapper_vk";
+    pub(crate) const COMPRESSION_PROOF_PATH: &str = "testing_data/compression_proof";
+    pub(crate) const COMPRESSION_VK_PATH: &str = "testing_data/compression_vk";
+    pub(crate) const SNARK_WRAPPER_PROOF_PATH: &str = "testing_data/snark_wrapper_proof";
+    pub(crate) const SNARK_WRAPPER_VK_PATH: &str = "testing_data/snark_wrapper_vk";
+}
+
+use path_constants::*;
 
 fn deserialize_from_file<T: serde::de::DeserializeOwned>(filename: &str) -> T {
     let src = std::fs::File::open(filename).unwrap();

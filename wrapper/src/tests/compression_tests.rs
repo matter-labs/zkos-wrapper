@@ -2,7 +2,7 @@ use super::*;
 
 #[test]
 pub(crate) fn compression_full_test() {
-    let worker = boojum::worker::Worker::new_with_num_threads(4);
+    let worker = boojum::worker::Worker::new();
 
     let risc_wrapper_proof = deserialize_from_file(RISC_WRAPPER_PROOF_PATH);
     let risc_wrapper_vk: crate::RiscWrapperVK = deserialize_from_file(RISC_WRAPPER_VK_PATH);
@@ -40,7 +40,7 @@ pub(crate) fn compression_full_test() {
 
 #[test]
 pub(crate) fn compression_setup_test() {
-    let worker = boojum::worker::Worker::new_with_num_threads(4);
+    let worker = boojum::worker::Worker::new();
 
     let risc_wrapper_vk = deserialize_from_file(RISC_WRAPPER_VK_PATH);
 

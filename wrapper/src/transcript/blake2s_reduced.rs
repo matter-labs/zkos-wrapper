@@ -8,7 +8,7 @@ use boojum::gadgets::blake2s::{
 use boojum::gadgets::u8::UInt8;
 use std::mem::MaybeUninit;
 
-use risc_verifier::blake2s_u32::{
+use crate::risc_verifier::blake2s_u32::{
     BLAKE2S_BLOCK_SIZE_U32_WORDS, BLAKE2S_DIGEST_SIZE_U32_WORDS,
     BLAKE2S_EXTENDED_STATE_WIDTH_IN_U32_WORDS, BLAKE2S_STATE_WIDTH_IN_U32_WORDS, CONFIGURED_IV,
 };
