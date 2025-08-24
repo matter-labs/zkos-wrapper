@@ -799,14 +799,6 @@ fn generate_risk_wrapper_vk(
     universal_verifier: bool,
     boojum_worker: &Worker,
 ) -> Result<RiscWrapperVK, Box<dyn std::error::Error>> {
-    // let verifier_params = if universal_verifier {
-    //     universal_circuit_no_delegation_verifier_vk().params
-    // } else {
-    //     final_recursion_layer_verifier_vk().params
-    // };
-
-    // let binary_commitment = create_binary_commitment(input_binary, &verifier_params);
-
     let bin = std::fs::read(input_binary.unwrap()).unwrap();
 
     let worker = risc_verifier::prover::worker::Worker::new();
@@ -847,13 +839,15 @@ fn generate_risk_wrapper_vk(
 
     #[cfg(feature = "wrap_with_reduced_log_23")]
     let binary_commitment = if universal_verifier {
+        use execution_utils::universal_circuit_log_23_verifier_vk;
+
         let layers = vec![
             [0u32; 8],
             base_params,
             universal_circuit_verifier_vk().params,
         ];
         BinaryCommitment {
-            end_params: recursion_log_23_layer_verifier_vk().params,
+            end_params: universal_circuit_log_23_verifier_vk().params,
             aux_params: execution_utils::compute_chain_encoding(layers),
         }
     } else {
