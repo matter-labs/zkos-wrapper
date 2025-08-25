@@ -108,7 +108,7 @@ pub type SnarkWrapperTranscript =
 pub use execution_utils::ProgramProof;
 use execution_utils::{
     base_layer_verifier_vk, recursion_layer_verifier_vk, recursion_log_23_layer_verifier_vk,
-    universal_circuit_verifier_vk,
+    universal_circuit_log_23_verifier_vk, universal_circuit_verifier_vk,
 };
 
 //CircuitAlgebraicSpongeBasedTranscript<GoldilocksField, 8, 12, 4, R>,
@@ -598,11 +598,22 @@ pub fn prove_risc_wrapper_with_snark(
         return Err("Compression proof is not valid".into());
     }
 
+    serialize_to_file(
+        &compression_vk,
+        &Path::new("/tmp/po8").join("compression_vk.json"),
+    );
+    serialize_to_file(
+        &compression_proof,
+        &Path::new("/tmp/po8").join("compression_proof.json"),
+    );
+
     println!("=== Phase 3: Creating SNARK proof");
 
     #[cfg(feature = "gpu")]
     {
         println!("Using GPU for SNARK proof generation");
+        let now = std::time::Instant::now();
+
         let crs_file =
             trusted_setup_file.expect("Trusted setup must be set for GPU (and it must be compat");
 
@@ -625,6 +636,7 @@ pub fn prove_risc_wrapper_with_snark(
         } else {
             crate::gpu::snark::gpu_create_snark_setup_data(compression_vk.clone(), &crs_file)
         };
+        println!("Phase 3 precomputations took {:?}", now.elapsed());
 
         let proof = crate::gpu::snark::gpu_snark_prove(
             precomputations,
@@ -633,6 +645,7 @@ pub fn prove_risc_wrapper_with_snark(
             compression_vk,
             &crs_file,
         );
+        println!("Phase 3 took {:?}", now.elapsed());
         Ok((proof, vk))
     }
     #[cfg(not(feature = "gpu"))]
@@ -688,8 +701,11 @@ pub fn prove_fri_risc_wrapper(
 
     #[cfg(feature = "gpu")]
     let (risc_wrapper_proof, risc_wrapper_vk) = {
+        let now = std::time::Instant::now();
+
         let (setup, risc_wrapper_vk, finalization_hint) =
             crate::gpu::risc_wrapper::get_risc_wrapper_setup(&worker, binary_commitment.clone());
+        println!("Phase 1 precomputations took {:?}", now.elapsed());
         let risc_wrapper_proof = crate::gpu::risc_wrapper::prove_risc_wrapper(
             risc_wrapper_witness,
             &finalization_hint,
@@ -698,6 +714,7 @@ pub fn prove_fri_risc_wrapper(
             &worker,
             binary_commitment,
         );
+        println!("Phase 1 took {:?}", now.elapsed());
         (risc_wrapper_proof, risc_wrapper_vk)
     };
 
@@ -746,17 +763,17 @@ pub fn prove(
     let program_proof: crate::ProgramProof = deserialize_from_file(&input);
     let (risc_wrapper_proof, risc_wrapper_vk) = prove_fri_risc_wrapper(program_proof).unwrap();
 
-    if risc_wrapper_only {
-        serialize_to_file(
-            &risc_wrapper_vk,
-            &Path::new(&output_dir.clone()).join("risc_wrapper_vk.json"),
-        );
-        serialize_to_file(
-            &risc_wrapper_proof,
-            &Path::new(&output_dir.clone()).join("risc_wrapper_proof.json"),
-        );
-        return Ok(());
-    }
+    //if risc_wrapper_only {
+    serialize_to_file(
+        &risc_wrapper_vk,
+        &Path::new(&output_dir.clone()).join("risc_wrapper_vk.json"),
+    );
+    serialize_to_file(
+        &risc_wrapper_proof,
+        &Path::new(&output_dir.clone()).join("risc_wrapper_proof.json"),
+    );
+    //return Ok(());
+    //}
 
     let (snark_wrapper_proof, snark_wrapper_vk) = prove_risc_wrapper_with_snark(
         risc_wrapper_proof,
@@ -853,7 +870,7 @@ fn generate_risk_wrapper_vk(
             universal_circuit_verifier_vk().params,
         ];
         BinaryCommitment {
-            end_params: recursion_log_23_layer_verifier_vk().params,
+            end_params: universal_circuit_log_23_verifier_vk().params,
             aux_params: execution_utils::compute_chain_encoding(layers),
         }
     } else {
@@ -868,6 +885,8 @@ fn generate_risk_wrapper_vk(
             aux_params: execution_utils::compute_chain_encoding(layers),
         }
     };
+
+    println!("Binary commitment is {:?}", binary_commitment);
 
     #[cfg(feature = "gpu")]
     let (_, risc_wrapper_vk, _) =
@@ -944,4 +963,51 @@ pub fn verification_hash(vk_path: String) {
     let vk = deserialize_from_file(&vk_path);
     let vk_hash = calculate_verification_key_hash(vk);
     println!("VK hash: {:?}", vk_hash);
+}
+
+#[cfg(test)]
+mod test {
+    use serde_json::de;
+
+    use super::*;
+
+    #[test]
+    pub fn test_risc_gpu_prove() {
+        println!("Using GPU for SNARK proof generation");
+        let now = std::time::Instant::now();
+
+        let crs_file = "../crs/setup_compact.key";
+        let precomputation_dir = "/tmp/precomputations".to_string();
+
+        let compression_proof = deserialize_from_file("/tmp/po8/compression_proof.json");
+        let compression_vk = deserialize_from_file("/tmp/po8/compression_vk.json");
+
+        let (precomputations, vk) = {
+            println!("Loading existing precomputations");
+            let output_file = Path::new(&precomputation_dir).join("snark_preprocessing.bin");
+            let file = std::fs::File::open(output_file).unwrap();
+            let precomputations =
+                proof_compression::serialization::PlonkSnarkVerifierCircuitDeviceSetupWrapper::read_from_buffer(file).unwrap();
+
+            let vk = deserialize_from_file(
+                &Path::new(&precomputation_dir)
+                    .join("snark_vk_expected.json")
+                    .as_os_str()
+                    .to_str()
+                    .unwrap(),
+            );
+
+            (precomputations, vk)
+        };
+        println!("Phase 3 precomputations took {:?}", now.elapsed());
+
+        let proof = crate::gpu::snark::gpu_snark_prove(
+            precomputations,
+            &vk,
+            compression_proof,
+            compression_vk,
+            &crs_file,
+        );
+        println!("Phase 3 took {:?}", now.elapsed());
+    }
 }

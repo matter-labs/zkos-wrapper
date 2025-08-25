@@ -73,3 +73,22 @@ overflow-checks = true
 lto = false
 # This is needed for zksync-airbender crates to compile in a reasonable time for x86-64-unknown-linux-gnu
 overflow-checks = true
+#opt-level = 1
+codegen-units = 256
+#debug = 0
+incremental = true
+#panic = "abort"
+
+
+[patch.crates-io]
+
+snark_wrapper = {path = "../zksync-crypto/crates/snark-wrapper"}
+#zksync_bellman = {path = "../zksync-crypto/crates/bellman"}
+#boojum = {path = "../zksync-crypto/crates/boojum"}
+#zksync_solidity_vk_codegen = {path = "../zksync-crypto/crates/codegen"}
+#zksync_cs_derive = {path= "../zksync-crypto/crates/cs_derive"}
+#zksync_ff = {path= "../zksync-crypto/crates/ff"}
+#zksync_ff_derive = { path=  "../zksync-crypto/crates/ff_derive"}
+#franklin-crypto = { path = "../zksync-crypto/crates/franklin-crypto"}
+#zksync_pairing = { path= "../zksync-crypto/crates/pairing"}
+#rescue_poseidon = { path= "../zksync-crypto/crates/rescue-poseidon"}

@@ -53,7 +53,6 @@ fn all_layers_full_test() {
     unsafe {
         libc::malloc_trim(0);
     }
-
     println!("Testing compression");
     compression_tests::compression_full_test();
     println!("Testing Snark wrapper");

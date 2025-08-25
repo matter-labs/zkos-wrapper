@@ -108,11 +108,15 @@ pub fn gpu_snark_prove(
     compression_vk: CompressionVK,
     crs_file: &str,
 ) -> SnarkWrapperProof {
+    let now = std::time::Instant::now();
     let reader = std::fs::File::open(crs_file).unwrap();
     let finalization_hint: usize = 1 << 24;
 
     let crs_mons =
         <PlonkSnarkWrapper as SnarkWrapperProofSystem>::load_compact_raw_crs(reader).unwrap();
+
+    println!("Loaded CRS in {:?}", now.elapsed());
+    let now = std::time::Instant::now();
 
     let input_proof = compression_proof;
     // Recreate stuff from prove_plonk_snark_wrapper_step
@@ -141,9 +145,22 @@ pub fn gpu_snark_prove(
 
     let mut proving_assembly = PlonkAssembly::<SynthesisModeProve>::new();
 
+    proving_assembly.aux_assingments.reserve(20799051);
+
+    println!("Before synthesis time {:?}", now.elapsed());
+    let now = std::time::Instant::now();
+
     circuit
         .synthesize(&mut proving_assembly)
         .expect("must work");
+
+    println!(
+        "Sizes: aux_assignments: {}",
+        proving_assembly.aux_assingments.len()
+    );
+
+    println!("Synthesis time {:?}", now.elapsed());
+    let now = std::time::Instant::now();
 
     let mut precomputation: AsyncSetup = precomputation.into_inner();
 
@@ -155,7 +172,10 @@ pub fn gpu_snark_prove(
     assert!(domain_size == finalization_hint.clone());
 
     let worker = zksync_gpu_prover::bellman::worker::Worker::new();
+
+    println!("Before prover took: {:?}", now.elapsed());
     let start = std::time::Instant::now();
+
     let proof = zksync_gpu_prover::create_proof::<
         _,
         _,
@@ -171,7 +191,11 @@ pub fn gpu_snark_prove(
     .unwrap();
 
     println!("plonk proving takes {} s", start.elapsed().as_secs());
+    let now = std::time::Instant::now();
     ctx.free_all_slots();
+    println!("Freeing slots took {:?}", now.elapsed());
+
+    let now = std::time::Instant::now();
 
     let result = zksync_gpu_prover::bellman::plonk::better_better_cs::verifier::verify::<
         _,
@@ -179,6 +203,8 @@ pub fn gpu_snark_prove(
         <PlonkSnarkWrapper as ProofSystemDefinition>::Transcript,
     >(snark_wrapper_vk, &proof, None)
     .unwrap();
+
+    println!("Verification took {:?}", now.elapsed());
 
     if !result {
         panic!("*** WARNING - SNARK FAILED TO VERIFY ****");
