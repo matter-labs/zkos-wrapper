@@ -1365,6 +1365,9 @@ fn range_check_31_bits<F: SmallField, CS: ConstraintSystem<F>>(cs: &mut CS, vari
     }
 }
 
+/// Splits the variable into two limbs of 16 bits each, least significant limb first
+/// It sets the values for output variables and proves the equation input = output[0] + output[1] * 2^16
+/// Note: it does not range check the output limbs, so the caller should do it separately
 fn split_variable_into_two_16_bits_limbs<F: SmallField, CS: ConstraintSystem<F>>(
     cs: &mut CS,
     input: Variable,
