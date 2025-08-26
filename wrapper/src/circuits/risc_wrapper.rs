@@ -26,6 +26,7 @@ use circuit_mersenne_field::{
 };
 use std::mem::MaybeUninit;
 
+use crate::risc_verifier;
 use crate::wrapper_inner_verifier::*;
 use crate::wrapper_inner_verifier::{
     imports::{FINAL_RISC_CIRCUIT_AUX_REGISTERS_VALUES, FINAL_RISC_CIRCUIT_END_PARAMS},
@@ -57,6 +58,8 @@ const NUM_RISC_WRAPPER_PUBLIC_INPUTS: usize = 4;
 pub struct RiscWrapperWitness {
     pub final_registers_state: [u32; NUM_REGISTERS * 3],
     pub proof: RiscProof,
+    #[cfg(feature = "wrap_with_reduced_log_23")]
+    pub blake_proof: RiscProof,
 }
 
 #[derive(Clone, Debug)]
@@ -91,7 +94,6 @@ impl RiscWrapperWitness {
         } = full_proof;
 
         assert!(base_layer_proofs.len() == 1);
-        assert!(delegation_proofs.is_empty());
         assert!(register_final_values.len() == NUM_REGISTERS);
         assert_eq!(end_params, binary_commitment.end_params);
 
@@ -118,9 +120,22 @@ impl RiscWrapperWitness {
 
         let base_proof = base_layer_proofs.into_iter().next().unwrap();
 
+        let mut dp_iter = delegation_proofs.iter();
+
+        #[cfg(feature = "wrap_with_reduced_log_23")]
+        let blake_proof = {
+            let blake_proofs = dp_iter.next().unwrap();
+            assert!(blake_proofs.1.len() == 1, "Expected only one blake proof");
+            blake_proofs.1.into_iter().next().unwrap().clone()
+        };
+
+        assert!(dp_iter.next().is_none(), "Too many delegation proofs");
+
         Self {
             final_registers_state: final_registers_state.try_into().unwrap(),
             proof: base_proof,
+            #[cfg(feature = "wrap_with_reduced_log_23")]
+            blake_proof,
         }
     }
 }
@@ -135,20 +150,41 @@ impl<F: SmallField, V: CircuitLeafInclusionVerifier<F>> CircuitBuilder<F>
     for RiscWrapperCircuit<F, V>
 {
     fn geometry() -> CSGeometry {
-        CSGeometry {
+        #[cfg(feature = "wrap_final_machine")]
+        let result = CSGeometry {
             num_columns_under_copy_permutation: 51,
             num_witness_columns: 0,
             num_constant_columns: 4,
             max_allowed_constraint_degree: 4,
-        }
+        };
+
+        #[cfg(feature = "wrap_with_reduced_log_23")]
+        let result = CSGeometry {
+            num_columns_under_copy_permutation: 124,
+            num_witness_columns: 0,
+            num_constant_columns: 4,
+            max_allowed_constraint_degree: 4,
+        };
+
+        result
     }
 
     fn lookup_parameters() -> LookupParameters {
-        LookupParameters::UseSpecializedColumnsWithTableIdAsConstant {
+        #[cfg(feature = "wrap_final_machine")]
+        let result = LookupParameters::UseSpecializedColumnsWithTableIdAsConstant {
             width: 3,
             num_repetitions: 21,
             share_table_id: true,
-        }
+        };
+
+        #[cfg(feature = "wrap_with_reduced_log_23")]
+        let result = LookupParameters::UseSpecializedColumnsWithTableIdAsConstant {
+            width: 3,
+            num_repetitions: 47,
+            share_table_id: true,
+        };
+
+        result
     }
 
     fn configure_builder<
@@ -224,6 +260,10 @@ impl<F: SmallField, V: CircuitLeafInclusionVerifier<F>> RiscWrapperCircuit<F, V>
         if verify_inner_proof {
             if let Some(witness) = &witness {
                 verify_risc_proof::<V::OutOfCircuitImpl>(&witness.proof);
+                #[cfg(feature = "wrap_with_reduced_log_23")]
+                crate::blake2_inner_verifier::verify_blake_proof::<V::OutOfCircuitImpl>(
+                    &witness.blake_proof,
+                );
             } else {
                 panic!("Proof is required for verification");
             }
@@ -238,7 +278,10 @@ impl<F: SmallField, V: CircuitLeafInclusionVerifier<F>> RiscWrapperCircuit<F, V>
 
     pub fn size_hint(&self) -> (Option<usize>, Option<usize>) {
         let trace_len = 1 << 20;
+        #[cfg(feature = "wrap_final_machine")]
         let max_variables = 1 << 26;
+        #[cfg(feature = "wrap_with_reduced_log_23")]
+        let max_variables = 1 << 27;
         (Some(trace_len), Some(max_variables))
     }
 
@@ -305,11 +348,28 @@ impl<F: SmallField, V: CircuitLeafInclusionVerifier<F>> RiscWrapperCircuit<F, V>
         let (proof_state, proof_input) =
             crate::wrapper_inner_verifier::verify(cs, skeleton, queries);
 
+        #[cfg(feature = "wrap_with_reduced_log_23")]
+        let (skeleton, queries) = if let Some(witness) = &self.witness {
+            crate::blake2_inner_verifier::prepare_blake_proof_for_wrapper::<_, _, V>(
+                cs,
+                &witness.blake_proof,
+            )
+        } else {
+            crate::blake2_inner_verifier::placeholders::<_, _, V>(cs)
+        };
+
+        #[cfg(feature = "wrap_with_reduced_log_23")]
+        let blake_state = Some(crate::blake2_inner_verifier::verify(cs, skeleton, queries));
+
+        #[cfg(feature = "wrap_final_machine")]
+        let blake_state = None;
+
         check_proof_state(
             cs,
             final_registers_state,
             &proof_state,
             &proof_input,
+            &blake_state,
             &self.binary_commitment,
         );
 
@@ -422,6 +482,7 @@ pub(crate) fn set_iterator_from_proof(proof: &RiscProof, shuffle_ram_inits_and_t
     risc_verifier::prover::nd_source_std::set_iterator(it.clone());
 }
 
+use crate::blake2_inner_verifier::WrappedBlakeProofOutput;
 pub(crate) fn check_proof_state<F: SmallField, CS: ConstraintSystem<F>>(
     cs: &mut CS,
     final_registers_state: [UInt32<F>; NUM_REGISTERS * 3],
@@ -433,6 +494,7 @@ pub(crate) fn check_proof_state<F: SmallField, CS: ConstraintSystem<F>>(
         NUM_AUX_BOUNDARY_VALUES,
     >,
     public_input: &WrappedProofPublicInputs<F, NUM_STATE_ELEMENTS>,
+    blake_state: &Option<WrappedBlakeProofOutput<F>>,
     binary_commitment: &BinaryCommitment,
 ) {
     let mut transcript = Blake2sWrappedBufferingTranscript::new(cs);
@@ -478,6 +540,36 @@ pub(crate) fn check_proof_state<F: SmallField, CS: ConstraintSystem<F>>(
     if NUM_DELEGATION_CHALLENGES > 0 {
         delegation_set_accumulator =
             delegation_set_accumulator.add(cs, &proof_state.delegation_argument_accumulator[0]);
+    }
+
+    // Now delegation circuit
+
+    if let Some(blake_state) = blake_state {
+        let mut buffer = [UInt32::zero(cs); BLAKE2S_BLOCK_SIZE_U32_WORDS];
+        buffer[0] = blake_state.delegation_type;
+        transcript.absorb(cs, &buffer);
+
+        for cap in blake_state.memory_caps.iter() {
+            for chunk in cap.cap.iter() {
+                transcript.absorb(cs, chunk);
+            }
+        }
+
+        memory_grand_product_accumulator =
+            memory_grand_product_accumulator.mul(cs, &blake_state.memory_grand_product_accumulator);
+        delegation_set_accumulator =
+            delegation_set_accumulator.sub(cs, &blake_state.delegation_argument_accumulator[0]);
+
+        blake_state
+            .memory_challenges
+            .enforce_equal(cs, &proof_state.memory_challenges);
+        for (l, r) in blake_state
+            .delegation_challenges
+            .iter()
+            .zip(proof_state.delegation_challenges.iter())
+        {
+            l.enforce_equal(cs, r);
+        }
     }
 
     let memory_seed = transcript.finalize_reset(cs);
@@ -644,7 +736,7 @@ pub fn draw_memory_and_delegation_challenges_from_transcript_seed<
                     .next_multiple_of(BLAKE2S_DIGEST_SIZE_U32_WORDS)];
             Blake2sWrappedTranscript::draw_randomness(cs, &mut seed, &mut transcript_challenges);
 
-            let mut it = transcript_challenges.array_chunks::<4>();
+            let mut it = transcript_challenges.as_chunks::<4>().0.iter();
             let memory_argument_linearization_challenges: [MersenneQuartic<F>;
                 NUM_MEM_ARGUMENT_LINEARIZATION_CHALLENGES] = core::array::from_fn(|_| {
                 MersenneQuartic::from_coeffs(
@@ -675,7 +767,7 @@ pub fn draw_memory_and_delegation_challenges_from_transcript_seed<
                 .next_multiple_of(BLAKE2S_DIGEST_SIZE_U32_WORDS)];
             Blake2sWrappedTranscript::draw_randomness(cs, &mut seed, &mut transcript_challenges);
 
-            let mut it = transcript_challenges.array_chunks::<4>();
+            let mut it = transcript_challenges.as_chunks::<4>().0.iter();
             let memory_argument_linearization_challenges: [MersenneQuartic<F>;
                 NUM_MEM_ARGUMENT_LINEARIZATION_CHALLENGES] = core::array::from_fn(|_| {
                 MersenneQuartic::from_coeffs(

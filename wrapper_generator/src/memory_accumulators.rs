@@ -469,7 +469,7 @@ pub(crate) fn transform_shuffle_ram_memory_accumulators(
     streams
 }
 
-pub(crate) fn transform_batch_ram_memory_accumulators(
+pub(crate) fn transform_delegation_ram_memory_accumulators(
     memory_layout: &MemorySubtree,
     stage_2_layout: &LookupAndMemoryArgumentLayout,
     idents: &Idents,
@@ -715,6 +715,464 @@ pub(crate) fn transform_batch_ram_memory_accumulators(
         }
     }
 
+    {
+        // now we can continue to accumulate
+        for (access_idx, register_access_columns) in memory_layout
+            .register_and_indirect_accesses
+            .iter()
+            .enumerate()
+        {
+            let read_value_columns = register_access_columns
+                .register_access
+                .get_read_value_columns();
+            let read_timestamp_columns = register_access_columns
+                .register_access
+                .get_read_timestamp_columns();
+            // memory address low is literal constant
+            let register_index = register_access_columns.register_access.get_register_index();
+            assert!(register_index > 0);
+            assert!(register_index < 32);
+
+            let read_value_low_expr = read_value_expr(
+                ColumnAddress::MemorySubtree(read_value_columns.start()),
+                idents,
+                false,
+            );
+            let read_value_high_expr = read_value_expr(
+                ColumnAddress::MemorySubtree(read_value_columns.start() + 1),
+                idents,
+                false,
+            );
+
+            let read_timestamp_low_expr = read_value_expr(
+                ColumnAddress::MemorySubtree(read_timestamp_columns.start()),
+                idents,
+                false,
+            );
+            let read_timestamp_high_expr = read_value_expr(
+                ColumnAddress::MemorySubtree(read_timestamp_columns.start() + 1),
+                idents,
+                false,
+            );
+
+            let common_part_stream = quote! {
+                let mut address_contribution = #memory_argument_linearization_challenges_ident
+                    [MEM_ARGUMENT_CHALLENGE_POWERS_ADDRESS_LOW_IDX];
+
+                let register_index = MersenneField::allocate_constant(
+                    cs,
+                    Mersenne31Field(#register_index),
+                );
+                address_contribution = address_contribution.mul_by_base(cs, &register_index);
+
+                // is register
+                let one = MersenneField::one(cs);
+                address_contribution = address_contribution.add_base(cs, &one);
+
+                let read_value_low = #read_value_low_expr;
+                let mut read_value_contribution = #memory_argument_linearization_challenges_ident
+                    [MEM_ARGUMENT_CHALLENGE_POWERS_VALUE_LOW_IDX];
+                read_value_contribution = read_value_contribution.mul(cs, &read_value_low);
+
+                let read_value_high = #read_value_high_expr;
+                let mut t = #memory_argument_linearization_challenges_ident
+                    [MEM_ARGUMENT_CHALLENGE_POWERS_VALUE_HIGH_IDX];
+                t = t.mul(cs, &read_value_high);
+                read_value_contribution = read_value_contribution.add(cs, &t);
+
+                let read_timestamp_low = #read_timestamp_low_expr;
+                let mut read_timestamp_contribution =
+                    #memory_argument_linearization_challenges_ident
+                        [MEM_ARGUMENT_CHALLENGE_POWERS_TIMESTAMP_LOW_IDX];
+                read_timestamp_contribution = read_timestamp_contribution
+                    .mul(cs, &read_timestamp_low);
+
+                let read_timestamp_high = #read_timestamp_high_expr;
+                let mut t = #memory_argument_linearization_challenges_ident
+                    [MEM_ARGUMENT_CHALLENGE_POWERS_TIMESTAMP_HIGH_IDX];
+                t = t.mul(cs, &read_timestamp_high);
+                read_timestamp_contribution = read_timestamp_contribution.add(cs, &t);
+
+                // this is "address high"
+                let mut numerator = #memory_argument_gamma_ident;
+                // and other common additive terms
+                numerator = numerator.add(cs, &address_contribution);
+            };
+
+            let previous_contribution_stream = if access_idx == 0
+                && memory_layout.batched_ram_accesses.is_empty()
+            {
+                assert_eq!(i, 0);
+
+                quote! {
+                    let previous = MersenneQuartic::one(cs);
+                }
+            } else {
+                let previous_offset = stage_2_layout
+                    .get_intermediate_polys_for_memory_argument_absolute_poly_idx_for_verifier(i);
+                let previous_accumulator_expr =
+                    read_stage_2_value_expr(previous_offset, idents, false);
+                i += 1;
+
+                quote! {
+                    let previous = #previous_accumulator_expr;
+                }
+            };
+
+            let offset = stage_2_layout
+                .get_intermediate_polys_for_memory_argument_absolute_poly_idx_for_verifier(i);
+            let accumulator_expr = read_stage_2_value_expr(offset, idents, false);
+
+            use prover::cs::definitions::RegisterAccessColumns;
+            match register_access_columns.register_access {
+                RegisterAccessColumns::ReadAccess { .. } => {
+                    let t = quote! {
+                        let #individual_term_ident = {
+                            #common_part_stream
+
+                            #previous_contribution_stream
+
+                            // both read and write set share value
+                            numerator = numerator.add(cs, &read_value_contribution);
+
+                            let mut denom = numerator;
+
+                            numerator = numerator.add(cs, &write_timestamp_contribution);
+                            denom = denom.add(cs, &read_timestamp_contribution);
+
+                            // this * demon - previous * numerator
+                            // or just this * denom - numerator
+                            let mut #individual_term_ident = #accumulator_expr;
+                            #individual_term_ident = #individual_term_ident.mul(cs, &denom);
+                            let mut t = previous;
+                            t = t.mul(cs, &numerator);
+                            #individual_term_ident = #individual_term_ident.sub(cs, &t);
+
+                            #individual_term_ident
+                        };
+                    };
+
+                    streams.push(t);
+                }
+                RegisterAccessColumns::WriteAccess { write_value, .. } => {
+                    let write_value_low_expr = read_value_expr(
+                        ColumnAddress::MemorySubtree(write_value.start()),
+                        idents,
+                        false,
+                    );
+                    let write_value_high_expr = read_value_expr(
+                        ColumnAddress::MemorySubtree(write_value.start() + 1),
+                        idents,
+                        false,
+                    );
+
+                    let t = quote! {
+                        let #individual_term_ident = {
+                            #common_part_stream
+
+                            #previous_contribution_stream
+
+                            let write_value_low = #write_value_low_expr;
+                            let mut write_value_contribution = #memory_argument_linearization_challenges_ident
+                                [MEM_ARGUMENT_CHALLENGE_POWERS_VALUE_LOW_IDX];
+                            write_value_contribution = write_value_contribution.mul(cs, &write_value_low);
+
+                            let write_value_high = #write_value_high_expr;
+                            let mut t = #memory_argument_linearization_challenges_ident
+                                [MEM_ARGUMENT_CHALLENGE_POWERS_VALUE_HIGH_IDX];
+                            t = t.mul(cs, &write_value_high);
+                            write_value_contribution = write_value_contribution.add(cs, &t);
+
+                            let mut denom = numerator;
+
+                            // read and write sets differ in value and timestamp
+
+                            numerator = numerator.add(cs, &write_value_contribution);
+                            denom = denom.add(cs, &read_value_contribution);
+
+                            numerator = numerator.add(cs, &write_timestamp_contribution);
+                            denom = denom.add(cs, &read_timestamp_contribution);
+
+                            // this * demon - previous * numerator
+                            // or just this * denom - numerator
+                            let mut #individual_term_ident = #accumulator_expr;
+                            #individual_term_ident = #individual_term_ident.mul(cs, &denom);
+                            let mut t = previous;
+                            t.mul(cs, &numerator);
+                            #individual_term_ident = #individual_term_ident.sub(cs, &t);
+
+                            #individual_term_ident
+                        };
+                    };
+
+                    streams.push(t);
+                }
+            }
+
+            if register_access_columns.indirect_accesses.len() > 0 {
+                let register_read_value_columns = register_access_columns
+                    .register_access
+                    .get_read_value_columns();
+
+                // NOTE: we can not have a common part here, and will have to copy into separate substreams
+                for (indirect_access_idx, indirect_access) in
+                    register_access_columns.indirect_accesses.iter().enumerate()
+                {
+                    let read_value_columns = indirect_access.get_read_value_columns();
+                    let read_timestamp_columns = indirect_access.get_read_timestamp_columns();
+                    let carry_bit_column =
+                        indirect_access.get_address_derivation_carry_bit_column();
+                    let offset = indirect_access.get_offset();
+                    assert!(offset < 1 << 16);
+                    assert_eq!(offset % 4, 0);
+                    assert_eq!(offset as usize, indirect_access_idx * 4);
+
+                    let register_read_value_low_expr = read_value_expr(
+                        ColumnAddress::MemorySubtree(register_read_value_columns.start()),
+                        idents,
+                        false,
+                    );
+                    let register_read_value_high_expr = read_value_expr(
+                        ColumnAddress::MemorySubtree(register_read_value_columns.start() + 1),
+                        idents,
+                        false,
+                    );
+
+                    let read_value_low_expr = read_value_expr(
+                        ColumnAddress::MemorySubtree(read_value_columns.start()),
+                        idents,
+                        false,
+                    );
+                    let read_value_high_expr = read_value_expr(
+                        ColumnAddress::MemorySubtree(read_value_columns.start() + 1),
+                        idents,
+                        false,
+                    );
+
+                    let read_timestamp_low_expr = read_value_expr(
+                        ColumnAddress::MemorySubtree(read_timestamp_columns.start()),
+                        idents,
+                        false,
+                    );
+                    let read_timestamp_high_expr = read_value_expr(
+                        ColumnAddress::MemorySubtree(read_timestamp_columns.start() + 1),
+                        idents,
+                        false,
+                    );
+
+                    let common_part_stream = if indirect_access_idx == 0
+                        || carry_bit_column.num_elements() == 0
+                    {
+                        quote! {
+                            let mut address_low = #register_read_value_low_expr;
+                            let offset = MersenneField::allocate_constant(cs, Mersenne31Field(#offset));
+                            address_low = address_low.add_base(cs, &offset);
+
+                            let mut address_contribution = #memory_argument_linearization_challenges_ident
+                                [MEM_ARGUMENT_CHALLENGE_POWERS_ADDRESS_LOW_IDX];
+                            address_contribution = address_contribution.mul(cs, &address_low);
+
+                            let address_high = #register_read_value_high_expr;
+                            let mut address_high_contribution = #memory_argument_linearization_challenges_ident
+                                [MEM_ARGUMENT_CHALLENGE_POWERS_ADDRESS_HIGH_IDX];
+                            address_high_contribution = address_high_contribution.mul(cs, &address_high);
+                            address_contribution = address_contribution.add(cs, &address_high_contribution);
+
+                            let read_value_low = #read_value_low_expr;
+                            let mut read_value_contribution = #memory_argument_linearization_challenges_ident
+                                [MEM_ARGUMENT_CHALLENGE_POWERS_VALUE_LOW_IDX];
+                            read_value_contribution = read_value_contribution.mul(cs, &read_value_low);
+
+                            let read_value_high = #read_value_high_expr;
+                            let mut t = #memory_argument_linearization_challenges_ident
+                                [MEM_ARGUMENT_CHALLENGE_POWERS_VALUE_HIGH_IDX];
+                            t = t.mul(cs, &read_value_high);
+                            read_value_contribution = read_value_contribution.add(cs, &t);
+
+                            let read_timestamp_low = #read_timestamp_low_expr;
+                            let mut read_timestamp_contribution =
+                                #memory_argument_linearization_challenges_ident
+                                    [MEM_ARGUMENT_CHALLENGE_POWERS_TIMESTAMP_LOW_IDX];
+                            read_timestamp_contribution = read_timestamp_contribution
+                                .mul(cs, &read_timestamp_low);
+
+                            let read_timestamp_high = #read_timestamp_high_expr;
+                            let mut t = #memory_argument_linearization_challenges_ident
+                                [MEM_ARGUMENT_CHALLENGE_POWERS_TIMESTAMP_HIGH_IDX];
+                            t = t.mul(cs, &read_timestamp_high);
+                            read_timestamp_contribution = read_timestamp_contribution.add(cs, &t);
+
+                            let mut numerator = #memory_argument_gamma_ident;
+                            // and other common additive terms
+                            numerator = numerator.add(cs, &address_contribution);
+                        }
+                    } else {
+                        assert!(carry_bit_column.num_elements() > 0);
+                        let carry_bit_expr = read_value_expr(
+                            ColumnAddress::MemorySubtree(carry_bit_column.start()),
+                            idents,
+                            false,
+                        );
+
+                        quote! {
+                            let mut address_low = #register_read_value_low_expr;
+                            let offset = MersenneField::allocate_constant(cs, Mersenne31Field(#offset));
+                            address_low = address_low.add_base(cs, &offset);
+                            let carry = #carry_bit_expr;
+                            let mut carry_bit_shifted = carry;
+                            let shift = MersenneField::allocate_constant(cs, Mersenne31Field(1u32 << 16));
+                            carry_bit_shifted = carry_bit_shifted.mul_by_base(cs, &shift);
+                            address_low = address_low.sub(cs, &carry_bit_shifted);
+
+                            let mut address_contribution = #memory_argument_linearization_challenges_ident
+                                [MEM_ARGUMENT_CHALLENGE_POWERS_ADDRESS_LOW_IDX];
+                            address_contribution = address_contribution.mul(cs, &address_low);
+
+                            let mut address_high = #register_read_value_high_expr;
+                            address_high = address_high.add(cs, &carry);
+                            let mut address_high_contribution = #memory_argument_linearization_challenges_ident
+                                [MEM_ARGUMENT_CHALLENGE_POWERS_ADDRESS_HIGH_IDX];
+                            address_high_contribution = address_high_contribution.mul(cs, &address_high);
+                            address_contribution = address_contribution.add(cs, &address_high_contribution);
+
+                            let read_value_low = #read_value_low_expr;
+                            let mut read_value_contribution = #memory_argument_linearization_challenges_ident
+                                [MEM_ARGUMENT_CHALLENGE_POWERS_VALUE_LOW_IDX];
+                            read_value_contribution = read_value_contribution.mul(cs, &read_value_low);
+
+                            let read_value_high = #read_value_high_expr;
+                            let mut t = #memory_argument_linearization_challenges_ident
+                                [MEM_ARGUMENT_CHALLENGE_POWERS_VALUE_HIGH_IDX];
+                            t = t.mul(cs, &read_value_high);
+                            read_value_contribution = read_value_contribution.add(cs, &t);
+
+                            let read_timestamp_low = #read_timestamp_low_expr;
+                            let mut read_timestamp_contribution =
+                                #memory_argument_linearization_challenges_ident
+                                    [MEM_ARGUMENT_CHALLENGE_POWERS_TIMESTAMP_LOW_IDX];
+                            read_timestamp_contribution = read_timestamp_contribution
+                                .mul(cs, &read_timestamp_low);
+
+                            let read_timestamp_high = #read_timestamp_high_expr;
+                            let mut t = #memory_argument_linearization_challenges_ident
+                                [MEM_ARGUMENT_CHALLENGE_POWERS_TIMESTAMP_HIGH_IDX];
+                            t = t.mul(cs, &read_timestamp_high);
+                            read_timestamp_contribution = read_timestamp_contribution.add(cs, &t);
+
+                            let mut numerator = #memory_argument_gamma_ident;
+                            // and other common additive terms
+                            numerator = numerator.add(cs, &address_contribution);
+                        }
+                    };
+
+                    let previous_contribution_stream = {
+                        let previous_offset = stage_2_layout
+                            .get_intermediate_polys_for_memory_argument_absolute_poly_idx_for_verifier(i);
+                        let previous_accumulator_expr =
+                            read_stage_2_value_expr(previous_offset, idents, false);
+                        i += 1;
+
+                        quote! {
+                            let previous = #previous_accumulator_expr;
+                        }
+                    };
+
+                    let offset = stage_2_layout
+                        .get_intermediate_polys_for_memory_argument_absolute_poly_idx_for_verifier(
+                            i,
+                        );
+                    let accumulator_expr = read_stage_2_value_expr(offset, idents, false);
+
+                    use prover::cs::definitions::IndirectAccessColumns;
+                    match indirect_access {
+                        IndirectAccessColumns::ReadAccess { .. } => {
+                            let t = quote! {
+                                let #individual_term_ident = {
+                                    #common_part_stream
+
+                                    #previous_contribution_stream
+
+                                    // both read and write set share value
+                                    numerator = numerator.add(cs, &read_value_contribution);
+
+                                    let mut denom = numerator;
+
+                                    numerator = numerator.add(cs, &write_timestamp_contribution);
+                                    denom = denom.add(cs, &read_timestamp_contribution);
+
+                                    // this * demon - previous * numerator
+                                    // or just this * denom - numerator
+                                    let mut #individual_term_ident = #accumulator_expr;
+                                    #individual_term_ident = #individual_term_ident.mul(cs, &denom);
+                                    let mut t = previous;
+                                    t = t.mul(cs, &numerator);
+                                    #individual_term_ident = #individual_term_ident.sub(cs, &t);
+
+                                    #individual_term_ident
+                                };
+                            };
+
+                            streams.push(t);
+                        }
+                        IndirectAccessColumns::WriteAccess { write_value, .. } => {
+                            let write_value_low_expr = read_value_expr(
+                                ColumnAddress::MemorySubtree(write_value.start()),
+                                idents,
+                                false,
+                            );
+                            let write_value_high_expr = read_value_expr(
+                                ColumnAddress::MemorySubtree(write_value.start() + 1),
+                                idents,
+                                false,
+                            );
+
+                            let t = quote! {
+                                let #individual_term_ident = {
+                                    #common_part_stream
+
+                                    #previous_contribution_stream
+
+                                    let write_value_low = #write_value_low_expr;
+                                    let mut write_value_contribution = #memory_argument_linearization_challenges_ident
+                                        [MEM_ARGUMENT_CHALLENGE_POWERS_VALUE_LOW_IDX];
+                                    write_value_contribution = write_value_contribution.mul(cs, &write_value_low);
+
+                                    let write_value_high = #write_value_high_expr;
+                                    let mut t = #memory_argument_linearization_challenges_ident
+                                        [MEM_ARGUMENT_CHALLENGE_POWERS_VALUE_HIGH_IDX];
+                                    t = t.mul(cs, &write_value_high);
+                                    write_value_contribution = write_value_contribution.add(cs, &t);
+
+                                    let mut denom = numerator;
+
+                                    // read and write sets differ in value and timestamp
+
+                                    numerator = numerator.add(cs, &write_value_contribution);
+                                    denom = denom.add(cs, &read_value_contribution);
+
+                                    numerator = numerator.add(cs, &write_timestamp_contribution);
+                                    denom = denom.add(cs, &read_timestamp_contribution);
+
+                                    // this * demon - previous * numerator
+                                    // or just this * denom - numerator
+                                    let mut #individual_term_ident = #accumulator_expr;
+                                    #individual_term_ident = #individual_term_ident.mul(cs, &denom);
+                                    let mut t = previous;
+                                    t = t.mul(cs, &numerator);
+                                    #individual_term_ident = #individual_term_ident.sub(cs, &t);
+
+                                    #individual_term_ident
+                                };
+                            };
+
+                            streams.push(t);
+                        }
+                    }
+                }
+            };
+        }
+    }
+
     // and now we need to make Z(next) = Z(this) * previous(this)
     {
         let previous_offset = stage_2_layout
@@ -740,7 +1198,14 @@ pub(crate) fn transform_batch_ram_memory_accumulators(
         streams.push(t);
     }
 
-    assert_eq!(i, memory_layout.batched_ram_accesses.len());
+    let mut expected_num_accesses = memory_layout.batched_ram_accesses.len();
+    expected_num_accesses += memory_layout.register_and_indirect_accesses.len();
+    expected_num_accesses += memory_layout
+        .register_and_indirect_accesses
+        .iter()
+        .map(|el| el.indirect_accesses.len())
+        .sum::<usize>();
+    assert_eq!(i, expected_num_accesses);
 
     (common_stream, streams)
 }

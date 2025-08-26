@@ -4,7 +4,7 @@ use super::*;
 
 #[test]
 pub(crate) fn risc_wrapper_full_test() {
-    let worker = boojum::worker::Worker::new_with_num_threads(4);
+    let worker = boojum::worker::Worker::new();
 
     let program_proof: execution_utils::ProgramProof = deserialize_from_file(RISC_PROOF_PATH);
     let binary_commitment = BinaryCommitment::from_default_binary();
@@ -45,7 +45,7 @@ pub(crate) fn risc_wrapper_full_test() {
 
 #[test]
 pub(crate) fn risc_wrapper_setup_test() {
-    let worker = boojum::worker::Worker::new_with_num_threads(4);
+    let worker = boojum::worker::Worker::new();
     let binary_commitment = BinaryCommitment::from_default_binary();
 
     let (_finalization_hint, _setup_base, _setup, vk, _setup_tree, _vars_hint, _witness_hints) =

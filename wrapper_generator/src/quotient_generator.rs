@@ -9,7 +9,7 @@ use crate::everywhere_except_last_two::{
     transform_linking_constraints, transform_shuffle_ram_lazy_init,
 };
 use crate::first_or_last_rows::transform_first_or_last_rows;
-use crate::memory_accumulators::transform_batch_ram_memory_accumulators;
+use crate::memory_accumulators::transform_delegation_ram_memory_accumulators;
 use crate::memory_accumulators::transform_shuffle_ram_memory_accumulators;
 use crate::utils::*;
 
@@ -212,7 +212,7 @@ pub fn generate_inlined(compiled_circuit: CompiledCircuitArtifact<Mersenne31Fiel
 
     // if we process delegations - we should process checks in case if processing doesn't happen
     if memory_layout.delegation_processor_layout.is_some() {
-        let (common, exprs) = transform_batch_ram_conventions(&memory_layout, &idents);
+        let (common, exprs) = transform_delegation_ram_conventions(&memory_layout, &idents);
         every_low_except_last_subexprs.push((Some(common), exprs));
     }
 
@@ -232,7 +232,9 @@ pub fn generate_inlined(compiled_circuit: CompiledCircuitArtifact<Mersenne31Fiel
             assert!(witness_layout.range_check_16_lookup_expressions.len() % 2 == 0);
             for (i, pair) in witness_layout
                 .range_check_16_lookup_expressions
-                .array_chunks::<2>()
+                .as_chunks::<2>()
+                .0
+                .iter()
                 .enumerate()
             {
                 let (common, t) = transform_width_1_range_checks_pair(
@@ -294,7 +296,9 @@ pub fn generate_inlined(compiled_circuit: CompiledCircuitArtifact<Mersenne31Fiel
         );
         for (i, pair) in witness_layout
             .timestamp_range_check_lookup_expressions
-            .array_chunks::<2>()
+            .as_chunks::<2>()
+            .0
+            .iter()
             .enumerate()
         {
             if i < shuffle_ram_special_case_bound {
@@ -381,12 +385,14 @@ pub fn generate_inlined(compiled_circuit: CompiledCircuitArtifact<Mersenne31Fiel
 
     // batch RAM memory accumulators
 
-    if memory_layout.batched_ram_accesses.len() > 0 {
+    if memory_layout.batched_ram_accesses.len() > 0
+        || memory_layout.register_and_indirect_accesses.len() > 0
+    {
         assert!(memory_layout.shuffle_ram_inits_and_teardowns.is_none());
         assert!(memory_layout.shuffle_ram_access_sets.len() == 0);
 
         let (common, exprs) =
-            transform_batch_ram_memory_accumulators(&memory_layout, &stage_2_layout, &idents);
+            transform_delegation_ram_memory_accumulators(&memory_layout, &stage_2_layout, &idents);
         every_low_except_last_subexprs.push((Some(common), exprs));
     }
 

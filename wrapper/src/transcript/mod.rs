@@ -6,7 +6,7 @@ use boojum::gadgets::u8::UInt8;
 use boojum::gadgets::u16::UInt16;
 use boojum::gadgets::u32::UInt32;
 
-use risc_verifier::blake2s_u32::*;
+use crate::risc_verifier::blake2s_u32::*;
 
 mod blake2s_reduced;
 
