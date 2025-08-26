@@ -1309,14 +1309,10 @@ impl<F: SmallField> MersenneField<F> {
 }
 
 fn range_check_32_bits<F: SmallField, CS: ConstraintSystem<F>>(cs: &mut CS, variable: Variable) {
-    use boojum::gadgets::impls::limbs_decompose::decompose_into_limbs;
-    use boojum::gadgets::non_native_field::implementations::get_16_bits_range_check_table;
     use boojum::gadgets::u8::get_8_by_8_range_check_table;
 
     if let Some(table_id) = get_16_bits_range_check_table(&*cs) {
-        // We are decomposing to 4 limbs. In practice 2 would be enough, but GPU doesn't support reduction gate with 2.
-        let limbs =
-            decompose_into_limbs::<F, CS, 4>(cs, F::from_u64_unchecked(1u64 << 16), variable);
+        let limbs = split_variable_into_two_16_bits_limbs(cs, variable);
 
         let zero = cs.allocate_constant(F::ZERO);
         match cs.get_lookup_params().lookup_width() {
@@ -1342,17 +1338,11 @@ fn range_check_32_bits<F: SmallField, CS: ConstraintSystem<F>>(cs: &mut CS, vari
 }
 
 fn range_check_31_bits<F: SmallField, CS: ConstraintSystem<F>>(cs: &mut CS, variable: Variable) {
-    use boojum::gadgets::impls::limbs_decompose::decompose_into_limbs;
-    use boojum::gadgets::non_native_field::implementations::get_16_bits_range_check_table;
-
     if let (Some(table_id_16), Some(table_id_15)) = (
         get_16_bits_range_check_table(&*cs),
         get_15_bits_range_check_table(&*cs),
     ) {
-        // We are decomposing to 4 limbs. In practice 2 would be enough, but GPU doesn't support reduction gate with 2.
-
-        let limbs =
-            decompose_into_limbs::<F, CS, 4>(cs, F::from_u64_unchecked(1u64 << 16), variable);
+        let limbs = split_variable_into_two_16_bits_limbs(cs, variable);
 
         let zero = cs.allocate_constant(F::ZERO);
         match cs.get_lookup_params().lookup_width() {
@@ -1374,6 +1364,58 @@ fn range_check_31_bits<F: SmallField, CS: ConstraintSystem<F>>(cs: &mut CS, vari
         unimplemented!()
     }
 }
+
+/// Splits the variable into two limbs of 16 bits each, least significant limb first
+/// It sets the values for output variables and proves the equation input = output[0] + output[1] * 2^16
+/// Note: it does not range check the output limbs, so the caller should do it separately
+fn split_variable_into_two_16_bits_limbs<F: SmallField, CS: ConstraintSystem<F>>(
+    cs: &mut CS,
+    input: Variable,
+) -> [Variable; 2] {
+    use boojum::gadgets::impls::limbs_decompose::decompose_into_limbs;
+
+    if cs.gate_is_allowed::<ReductionGate<F, 2>>() {
+        decompose_into_limbs::<F, CS, 2>(cs, F::from_u64_unchecked(1u64 << 16), input)
+    } else if cs.gate_is_allowed::<ReductionGate<F, 4>>() {
+        let limbs = cs.alloc_multiple_variables_without_values::<2>();
+
+        if <CS::Config as CSConfig>::WitnessConfig::EVALUATE_WITNESS {
+            let value_fn = move |inputs: [F; 1]| {
+                let current = inputs[0].as_u64_reduced();
+                let limb_size = 1 << 16;
+                [
+                    F::from_u64_with_reduction(current % limb_size),
+                    F::from_u64_with_reduction(current / limb_size),
+                ]
+            };
+
+            cs.set_values_with_dependencies(
+                &[input.into()],
+                &Place::from_variables(limbs),
+                value_fn,
+            );
+        }
+
+        if <CS::Config as CSConfig>::SetupConfig::KEEP_SETUP == true {
+            let reduction_constants = [F::ONE, F::from_u64_unchecked(1 << 16), F::ZERO, F::ZERO];
+            let output_variables = [limbs[0], limbs[1], cs.allocate_constant(F::ZERO), cs.allocate_constant(F::ZERO)];
+
+            let gate = ReductionGate::<F, 4> {
+                params: ReductionGateParams {
+                    reduction_constants,
+                },
+                terms: output_variables,
+                reduction_result: input,
+            };
+            gate.add_to_cs(cs);
+        }
+
+        limbs
+    } else {
+        unimplemented!()
+    }
+}
+
 pub fn get_16_bits_range_check_table<F: SmallField, CS: ConstraintSystem<F>>(
     cs: &CS,
 ) -> Option<u32> {
