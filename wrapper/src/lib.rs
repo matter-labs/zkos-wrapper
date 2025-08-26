@@ -1,5 +1,4 @@
 #![feature(allocator_api)]
-#![feature(array_chunks)]
 #![allow(incomplete_features)]
 #![feature(generic_const_exprs)]
 

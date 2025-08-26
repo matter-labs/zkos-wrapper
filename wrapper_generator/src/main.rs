@@ -1,5 +1,4 @@
 #![expect(warnings)]
-#![feature(array_chunks)]
 #![feature(slice_from_ptr_range)]
 #![feature(allocator_api)]
 
@@ -26,8 +25,6 @@ use zkos_verifier_generator::generate_from_parts;
 /// Returns formatted rust code with verifier and inline verifier files.
 fn generate_verifier_files(circuit: &CompiledCircuitArtifact<Mersenne31Field>) -> (String, String) {
     let verifier = format_rust_code(&generate_from_parts(&circuit).to_string()).unwrap();
-
-    let _ = zkos_verifier_generator::generate_inlined(circuit.clone());
 
     let inlined_verifier =
         format_rust_code(&generate_inlined(circuit.clone()).to_string()).unwrap();

@@ -62,7 +62,7 @@ pub fn verify<F: SmallField, CS: ConstraintSystem<F>>(
         &mut transcript_challenges,
     );
 
-    let mut it = transcript_challenges.array_chunks::<4>();
+    let mut it = transcript_challenges.as_chunks::<4>().0.iter();
     let lookup_argument_linearization_challenges: [MersenneQuartic<F>;
         NUM_LOOKUP_ARGUMENT_LINEARIZATION_CHALLENGES] = core::array::from_fn(|_| {
         MersenneQuartic::from_coeffs(
@@ -95,7 +95,7 @@ pub fn verify<F: SmallField, CS: ConstraintSystem<F>>(
         &mut transcript_challenges,
     );
 
-    let mut it = transcript_challenges.array_chunks::<4>();
+    let mut it = transcript_challenges.as_chunks::<4>().0.iter();
     let quotient_alpha = MersenneQuartic::from_coeffs(
         it.next()
             .unwrap()
@@ -126,7 +126,7 @@ pub fn verify<F: SmallField, CS: ConstraintSystem<F>>(
         &mut transcript_challenges,
     );
 
-    let mut it = transcript_challenges.array_chunks::<4>();
+    let mut it = transcript_challenges.as_chunks::<4>().0.iter();
     let z = MersenneQuartic::from_coeffs(
         it.next()
             .unwrap()
@@ -151,7 +151,7 @@ pub fn verify<F: SmallField, CS: ConstraintSystem<F>>(
         &mut transcript_challenges,
     );
 
-    let mut it = transcript_challenges.array_chunks::<4>();
+    let mut it = transcript_challenges.as_chunks::<4>().0.iter();
     let deep_poly_alpha = MersenneQuartic::from_coeffs(
         it.next()
             .unwrap()
@@ -182,7 +182,7 @@ pub fn verify<F: SmallField, CS: ConstraintSystem<F>>(
             &mut transcript_challenges,
         );
 
-        let mut it = transcript_challenges.array_chunks::<4>();
+        let mut it = transcript_challenges.as_chunks::<4>().0.iter();
         *challenge = MersenneQuartic::from_coeffs(
             it.next()
                 .unwrap()
@@ -208,7 +208,7 @@ pub fn verify<F: SmallField, CS: ConstraintSystem<F>>(
             &mut transcript_challenges,
         );
 
-        let mut it = transcript_challenges.array_chunks::<4>();
+        let mut it = transcript_challenges.as_chunks::<4>().0.iter();
         *dst = MersenneQuartic::from_coeffs(
             it.next()
                 .unwrap()
@@ -814,7 +814,7 @@ pub fn verify<F: SmallField, CS: ConstraintSystem<F>>(
     //     proof_input_dst.output_state_variables = *it.next().unwrap();
     // }
 
-    let mut it = skeleton.public_inputs.array_chunks::<NUM_STATE_ELEMENTS>();
+    let mut it = skeleton.public_inputs.as_chunks::<NUM_STATE_ELEMENTS>().0.iter();
     let input_state_variables = *it.next().unwrap();
     let output_state_variables = *it.next().unwrap();
     let proof_input_dst = WrappedProofPublicInputs {
@@ -888,7 +888,7 @@ fn accumulate_over_row_for_consistency_check<F: SmallField, CS: ConstraintSystem
     };
 
     for leaf_el in query.stage_2_leaf[VERIFIER_COMPILED_LAYOUT.stage_2_layout.ext4_polys_offset..]
-        .array_chunks::<4>()
+        .as_chunks::<4>().0.iter()
         .rev()
     {
         let leaf_el = MersenneQuartic::from_coeffs(*leaf_el);
@@ -936,7 +936,7 @@ fn accumulate_over_row_for_consistency_check<F: SmallField, CS: ConstraintSystem
                         .stage_2_layout
                         .num_base_field_polys())
                     * 4..]
-                .array_chunks::<4>()
+                .as_chunks::<4>().0.iter()
                 .next()
                 .unwrap();
         let leaf_el = MersenneQuartic::from_coeffs(*leaf_el);
@@ -1050,7 +1050,7 @@ pub fn fri_fold_by_log_n<
 
     // here we use worst-case sizes
     let mut leaf_parsed = [MersenneQuartic::zero(cs); MAX_SIZE_FOR_LEAF];
-    let mut it = leaf.array_chunks::<4>();
+    let mut it = leaf.as_chunks::<4>().0.iter();
     for i in 0..(1 << FOLDING_DEGREE_LOG2) {
         // NOTE: field elements are reduced in the query already!
         leaf_parsed[i] = MersenneQuartic::from_coeffs(*it.next().unwrap());

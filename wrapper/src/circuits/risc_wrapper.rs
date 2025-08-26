@@ -736,7 +736,7 @@ pub fn draw_memory_and_delegation_challenges_from_transcript_seed<
                     .next_multiple_of(BLAKE2S_DIGEST_SIZE_U32_WORDS)];
             Blake2sWrappedTranscript::draw_randomness(cs, &mut seed, &mut transcript_challenges);
 
-            let mut it = transcript_challenges.array_chunks::<4>();
+            let mut it = transcript_challenges.as_chunks::<4>().0.iter();
             let memory_argument_linearization_challenges: [MersenneQuartic<F>;
                 NUM_MEM_ARGUMENT_LINEARIZATION_CHALLENGES] = core::array::from_fn(|_| {
                 MersenneQuartic::from_coeffs(
@@ -767,7 +767,7 @@ pub fn draw_memory_and_delegation_challenges_from_transcript_seed<
                 .next_multiple_of(BLAKE2S_DIGEST_SIZE_U32_WORDS)];
             Blake2sWrappedTranscript::draw_randomness(cs, &mut seed, &mut transcript_challenges);
 
-            let mut it = transcript_challenges.array_chunks::<4>();
+            let mut it = transcript_challenges.as_chunks::<4>().0.iter();
             let memory_argument_linearization_challenges: [MersenneQuartic<F>;
                 NUM_MEM_ARGUMENT_LINEARIZATION_CHALLENGES] = core::array::from_fn(|_| {
                 MersenneQuartic::from_coeffs(

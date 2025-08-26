@@ -232,7 +232,7 @@ pub fn generate_inlined(compiled_circuit: CompiledCircuitArtifact<Mersenne31Fiel
             assert!(witness_layout.range_check_16_lookup_expressions.len() % 2 == 0);
             for (i, pair) in witness_layout
                 .range_check_16_lookup_expressions
-                .array_chunks::<2>()
+                .as_chunks::<2>().0.iter()
                 .enumerate()
             {
                 let (common, t) = transform_width_1_range_checks_pair(
@@ -294,7 +294,7 @@ pub fn generate_inlined(compiled_circuit: CompiledCircuitArtifact<Mersenne31Fiel
         );
         for (i, pair) in witness_layout
             .timestamp_range_check_lookup_expressions
-            .array_chunks::<2>()
+            .as_chunks::<2>().0.iter()
             .enumerate()
         {
             if i < shuffle_ram_special_case_bound {
