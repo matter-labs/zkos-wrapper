@@ -7,8 +7,8 @@
 // - wrapping the proof into SNARK.
 use clap::{Parser, Subcommand};
 
-use zkos_wrapper::{generate_and_save_risc_wrapper_vk, generate_vk, verification_hash};
 use execution_utils::RecursionStrategy;
+use zkos_wrapper::{generate_and_save_risc_wrapper_vk, generate_vk, verification_hash};
 
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
@@ -126,7 +126,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 output_dir,
                 trusted_setup_file,
                 universal_verifier,
-                recursion_mode
+                recursion_mode,
             )?;
         }
         Commands::GenerateRiscWrapperVk {
@@ -136,7 +136,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             recursion_mode,
         } => {
             println!("=== Phase 0: Generating the RiscWrapper verification key");
-            generate_and_save_risc_wrapper_vk(input_binary, output_dir, universal_verifier, recursion_mode)?;
+            generate_and_save_risc_wrapper_vk(
+                input_binary,
+                output_dir,
+                universal_verifier,
+                recursion_mode,
+            )?;
         }
         Commands::GetVkHash { vk_path } => {
             verification_hash(vk_path);

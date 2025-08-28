@@ -27,8 +27,10 @@ use circuit_mersenne_field::{
 use std::mem::MaybeUninit;
 
 use crate::risc_verifier;
+use crate::wrapper_inner_verifier::skeleton::{
+    WrappedProofSkeletonInstance, WrappedQueryValuesInstance,
+};
 use crate::wrapper_inner_verifier::*;
-use crate::wrapper_inner_verifier::skeleton::{WrappedProofSkeletonInstance, WrappedQueryValuesInstance};
 use crate::wrapper_utils::prover_structs::*;
 use crate::wrapper_utils::verifier_traits::{CircuitLeafInclusionVerifier, PlaceholderSource};
 use risc_verifier::blake2s_u32::*;
@@ -50,7 +52,7 @@ use boojum::gadgets::tables::create_range_check_15_bits_table;
 use boojum::gadgets::tables::create_range_check_16_bits_table;
 use risc_verifier::prover::prover_stages::Proof as RiscProof;
 
-use execution_utils::{generate_constants_for_binary, RecursionStrategy, ProgramProof};
+use execution_utils::{ProgramProof, RecursionStrategy, generate_constants_for_binary};
 
 const NUM_RISC_WRAPPER_PUBLIC_INPUTS: usize = 4;
 
@@ -86,10 +88,7 @@ impl BinaryCommitment {
 }
 
 impl RiscWrapperWitness {
-    pub fn from_full_proof(
-        full_proof: ProgramProof,
-        binary_commitment: &BinaryCommitment,
-    ) -> Self {
+    pub fn from_full_proof(full_proof: ProgramProof, binary_commitment: &BinaryCommitment) -> Self {
         let ProgramProof {
             base_layer_proofs,
             delegation_proofs,

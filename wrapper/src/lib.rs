@@ -104,7 +104,7 @@ pub type SnarkWrapperSetup =
 pub type SnarkWrapperTranscript =
     bellman::plonk::commitments::transcript::keccak_transcript::RollingKeccakTranscript<Fr>;
 
-use execution_utils::{generate_constants_for_binary, RecursionStrategy, ProgramProof};
+use execution_utils::{ProgramProof, RecursionStrategy, generate_constants_for_binary};
 
 // RiscV -> Stark Wrapper
 pub fn get_risc_wrapper_setup(
@@ -730,8 +730,12 @@ pub fn generate_and_save_risc_wrapper_vk(
     recursion_mode: RecursionStrategy,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let boojum_worker = BoojumWorker::new();
-    let risc_wrapper_vk =
-        generate_risk_wrapper_vk(Some(input_binary), universal_verifier, recursion_mode, &boojum_worker)?;
+    let risc_wrapper_vk = generate_risk_wrapper_vk(
+        Some(input_binary),
+        universal_verifier,
+        recursion_mode,
+        &boojum_worker,
+    )?;
 
     serialize_to_file(
         &risc_wrapper_vk,
@@ -782,8 +786,12 @@ pub fn generate_vk(
 
     println!("=== Phase 1: Creating the Risc wrapper key");
 
-    let risc_wrapper_vk =
-        generate_risk_wrapper_vk(input_binary, universal_verifier, recursion_mode, &boojum_worker)?;
+    let risc_wrapper_vk = generate_risk_wrapper_vk(
+        input_binary,
+        universal_verifier,
+        recursion_mode,
+        &boojum_worker,
+    )?;
 
     println!("=== Phase 2: Creating the Compression key");
     let (_, _, _, compression_vk, _, _, _) =

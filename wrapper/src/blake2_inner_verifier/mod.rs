@@ -950,7 +950,9 @@ fn accumulate_over_row_for_consistency_check<F: SmallField, CS: ConstraintSystem
     };
 
     for leaf_el in query.stage_2_leaf[VERIFIER_COMPILED_LAYOUT.stage_2_layout.ext4_polys_offset..]
-        .as_chunks::<4>().0.iter()
+        .as_chunks::<4>()
+        .0
+        .iter()
         .rev()
     {
         let leaf_el = MersenneQuartic::from_coeffs(*leaf_el);
@@ -998,7 +1000,9 @@ fn accumulate_over_row_for_consistency_check<F: SmallField, CS: ConstraintSystem
                         .stage_2_layout
                         .num_base_field_polys())
                     * 4..]
-                .as_chunks::<4>().0.iter()
+                .as_chunks::<4>()
+                .0
+                .iter()
                 .next()
                 .unwrap();
         let leaf_el = MersenneQuartic::from_coeffs(*leaf_el);
