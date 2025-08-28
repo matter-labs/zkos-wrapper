@@ -8,12 +8,9 @@ mod first_or_last_rows;
 mod memory_accumulators;
 mod quotient_generator;
 
-mod end_params_generator;
-
 mod utils;
 
 use clap::Parser;
-use end_params_generator::*;
 use prover::{cs::one_row_compiler::CompiledCircuitArtifact, field::Mersenne31Field};
 use quotient_generator::generate_inlined;
 use std::io::Write;
@@ -72,8 +69,6 @@ struct Cli {
     output_dir: String,
     #[arg(long, default_value = "wrapper/src/blake2_inner_verifier/imports")]
     blake_output_dir: String,
-    #[arg(long, default_value = "true")]
-    use_universal_binaries: bool,
 }
 
 fn main() {
@@ -127,79 +122,4 @@ fn main() {
         inline_verifier,
     )
     .expect(&format!("Failed to write to {}", blake_output_dir));
-
-    let binaries = if cli.use_universal_binaries {
-        get_universal_binaries()
-    } else {
-        get_binaries()
-    };
-
-    let worker = prover::worker::Worker::new();
-
-    let machines_chain = vec![
-        (binaries[0], MachineType::Standard),
-        (binaries[1], MachineType::Reduced),
-        (binaries[2], MachineType::Reduced),
-    ];
-
-    let end_params_constants = format_rust_code(
-        &generate_constants(
-            &machines_chain,
-            (binaries[2], MachineType::ReducedLog23),
-            &worker,
-        )
-        .to_string(),
-    )
-    .unwrap();
-
-    std::fs::write(
-        Path::new(&output_dir).join("final_state_constants.rs"),
-        end_params_constants,
-    )
-    .expect(&format!("Failed to write to {}", output_dir));
-
-    let machines_chain = vec![
-        (binaries[0], MachineType::Standard),
-        (binaries[1], MachineType::Reduced),
-        (binaries[2], MachineType::Reduced),
-        (binaries[3], MachineType::ReducedFinal),
-    ];
-
-    let end_params_constants = format_rust_code(
-        &generate_constants(
-            &machines_chain,
-            (binaries[4], MachineType::ReducedFinal),
-            &worker,
-        )
-        .to_string(),
-    )
-    .unwrap();
-
-    std::fs::write(
-        Path::new(&output_dir).join("final_state_constants_for_final_machine.rs"),
-        end_params_constants,
-    )
-    .expect(&format!("Failed to write to {}", output_dir));
-}
-
-fn get_binaries() -> [&'static [u8]; 5] {
-    [
-        execution_utils::BASE_PROGRAM,
-        // Let's use universal verifiers, as it makes it easier to re-generate tests (as this is what CLI supports).
-        execution_utils::BASE_LAYER_VERIFIER,
-        execution_utils::RECURSION_LAYER_VERIFIER,
-        execution_utils::RECURSION_LAYER_NO_DELEGATION_VERIFIER,
-        execution_utils::FINAL_RECURSION_LAYER_VERIFIER,
-    ]
-}
-
-fn get_universal_binaries() -> [&'static [u8]; 5] {
-    [
-        execution_utils::BASE_PROGRAM,
-        // Let's use universal verifiers, as it makes it easier to re-generate tests (as this is what CLI supports).
-        execution_utils::UNIVERSAL_CIRCUIT_VERIFIER,
-        execution_utils::UNIVERSAL_CIRCUIT_VERIFIER,
-        execution_utils::UNIVERSAL_CIRCUIT_NO_DELEGATION_VERIFIER,
-        execution_utils::UNIVERSAL_CIRCUIT_NO_DELEGATION_VERIFIER,
-    ]
 }

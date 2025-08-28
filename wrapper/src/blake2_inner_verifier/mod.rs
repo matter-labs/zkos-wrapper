@@ -884,14 +884,6 @@ pub fn verify<F: SmallField, CS: ConstraintSystem<F>>(
         delegation_type: skeleton.delegation_type,
     };
 
-    // let mut it = skeleton.public_inputs.array_chunks::<NUM_STATE_ELEMENTS>();
-    // let input_state_variables = *it.next().unwrap();
-    // let output_state_variables = *it.next().unwrap();
-    // let proof_input_dst = WrappedProofPublicInputs {
-    //     input_state_variables,
-    //     output_state_variables,
-    // };
-
     proof_state_dst
 }
 
