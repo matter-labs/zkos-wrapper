@@ -28,14 +28,14 @@ bellman = { package = "zksync_bellman", version = "=0.32.2"}
 rescue_poseidon = "=0.32.2"
 snark_wrapper = "=0.32.2"
 
-final_risc_verifier = {git="https://github.com/matter-labs/zksync-airbender.git", package="final_reduced_risc_v_machine_verifier", features=["proof_utils"], branch = "oh_changes_for_wrapper"}
-reduced_risc_verifier = {git="https://github.com/matter-labs/zksync-airbender.git", package="reduced_risc_v_log_23_machine_verifier", features=["proof_utils"], branch = "oh_changes_for_wrapper"}
-blake_verifier = {git="https://github.com/matter-labs/zksync-airbender.git", package="blake2_with_compression_verifier", features=["proof_utils"], branch = "oh_changes_for_wrapper"}
-execution_utils = {git="https://github.com/matter-labs/zksync-airbender.git", package="execution_utils", branch = "oh_changes_for_wrapper"}
-setups = {git="https://github.com/matter-labs/zksync-airbender.git", package="setups", branch = "oh_changes_for_wrapper"}
-mersenne_field = {git="https://github.com/matter-labs/zksync-airbender.git", package="field", branch = "oh_changes_for_wrapper"}
-zkos_verifier_generator = {git="https://github.com/matter-labs/zksync-airbender.git", package="verifier_generator", branch = "oh_changes_for_wrapper"}
-prover = {git="https://github.com/matter-labs/zksync-airbender.git", package="prover", branch = "oh_changes_for_wrapper"}
+final_risc_verifier = {git="https://github.com/matter-labs/zksync-airbender.git", package="final_reduced_risc_v_machine_verifier", features=["proof_utils"], branch = "main"}
+reduced_risc_verifier = {git="https://github.com/matter-labs/zksync-airbender.git", package="reduced_risc_v_log_23_machine_verifier", features=["proof_utils"], branch = "main"}
+blake_verifier = {git="https://github.com/matter-labs/zksync-airbender.git", package="blake2_with_compression_verifier", features=["proof_utils"], branch = "main"}
+execution_utils = {git="https://github.com/matter-labs/zksync-airbender.git", package="execution_utils", branch = "main"}
+setups = {git="https://github.com/matter-labs/zksync-airbender.git", package="setups", branch = "main"}
+mersenne_field = {git="https://github.com/matter-labs/zksync-airbender.git", package="field", branch = "main"}
+zkos_verifier_generator = {git="https://github.com/matter-labs/zksync-airbender.git", package="verifier_generator", branch = "main"}
+prover = {git="https://github.com/matter-labs/zksync-airbender.git", package="prover", branch = "main"}
 
 serde_json = { version = "*" }
 serde = { version = "1", default-features = false, features = ["derive", "alloc"]}
