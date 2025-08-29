@@ -7,6 +7,7 @@
 // - wrapping the proof into SNARK.
 use clap::{Parser, Subcommand};
 
+use execution_utils::RecursionStrategy;
 use zkos_wrapper::{generate_and_save_risc_wrapper_vk, generate_vk, verification_hash};
 
 #[derive(Parser)]
@@ -61,6 +62,8 @@ enum Commands {
         /// If false then for the separate verifiers.
         #[arg(long, default_value_t = true)]
         universal_verifier: bool,
+        #[arg(long, value_enum, default_value = "use-reduced-log23-machine")]
+        recursion_mode: RecursionStrategy,
     },
     /// Generate verification key for the RiscWrapper proof.
     GenerateRiscWrapperVk {
@@ -76,6 +79,8 @@ enum Commands {
         /// If false then for the separate verifiers.
         #[arg(long, default_value_t = true)]
         universal_verifier: bool,
+        #[arg(long, value_enum, default_value = "use-reduced-log23-machine")]
+        recursion_mode: RecursionStrategy,
     },
     /// Get the hash of the verification key.
     GetVkHash {
@@ -113,6 +118,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             output_dir,
             trusted_setup_file,
             universal_verifier,
+            recursion_mode,
         } => {
             println!("=== Phase 0: Generating the verification key");
             generate_vk(
@@ -120,15 +126,22 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 output_dir,
                 trusted_setup_file,
                 universal_verifier,
+                recursion_mode,
             )?;
         }
         Commands::GenerateRiscWrapperVk {
             input_binary,
             output_dir,
             universal_verifier,
+            recursion_mode,
         } => {
             println!("=== Phase 0: Generating the RiscWrapper verification key");
-            generate_and_save_risc_wrapper_vk(input_binary, output_dir, universal_verifier)?;
+            generate_and_save_risc_wrapper_vk(
+                input_binary,
+                output_dir,
+                universal_verifier,
+                recursion_mode,
+            )?;
         }
         Commands::GetVkHash { vk_path } => {
             verification_hash(vk_path);

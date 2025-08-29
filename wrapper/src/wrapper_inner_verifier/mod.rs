@@ -785,36 +785,11 @@ pub fn verify<F: SmallField, CS: ConstraintSystem<F>>(
         delegation_type: skeleton.delegation_type,
     };
 
-    // // setup caps
-    // proof_state_dst.setup_caps = skeleton.setup_caps;
-    // // memory caps
-    // proof_state_dst.memory_caps = skeleton.memory_caps;
-    // // - memory challenges
-    // proof_state_dst.memory_challenges = skeleton.memory_argument_challenges;
-    // // - delegation challenges
-    // if NUM_DELEGATION_CHALLENGES > 0 {
-    //     proof_state_dst.delegation_challenges = skeleton.delegation_argument_challenges;
-    // }
-    // // - shuffle RAM lazy init first and last values
-    // if NUM_AUX_BOUNDARY_VALUES > 0 {
-    //     proof_state_dst.lazy_init_boundary_values = skeleton.aux_boundary_values;
-    // }
-    // // - memory grand product and delegation accumulators
-    // proof_state_dst.memory_grand_product_accumulator = skeleton.memory_grand_product_accumulator;
-    // if NUM_DELEGATION_CHALLENGES > 0 {
-    //     proof_state_dst.delegation_argument_accumulator = skeleton.delegation_argument_accumulator;
-    // }
-    // // sequence and delegation types
-    // proof_state_dst.circuit_sequence = skeleton.circuit_sequence_idx;
-    // proof_state_dst.delegation_type = skeleton.delegation_type;
-    // // - input and output state variables
-    // if NUM_STATE_ELEMENTS > 0 {
-    //     let mut it = skeleton.public_inputs.array_chunks::<NUM_STATE_ELEMENTS>();
-    //     proof_input_dst.input_state_variables = *it.next().unwrap();
-    //     proof_input_dst.output_state_variables = *it.next().unwrap();
-    // }
-
-    let mut it = skeleton.public_inputs.as_chunks::<NUM_STATE_ELEMENTS>().0.iter();
+    let mut it = skeleton
+        .public_inputs
+        .as_chunks::<NUM_STATE_ELEMENTS>()
+        .0
+        .iter();
     let input_state_variables = *it.next().unwrap();
     let output_state_variables = *it.next().unwrap();
     let proof_input_dst = WrappedProofPublicInputs {
@@ -888,7 +863,9 @@ fn accumulate_over_row_for_consistency_check<F: SmallField, CS: ConstraintSystem
     };
 
     for leaf_el in query.stage_2_leaf[VERIFIER_COMPILED_LAYOUT.stage_2_layout.ext4_polys_offset..]
-        .as_chunks::<4>().0.iter()
+        .as_chunks::<4>()
+        .0
+        .iter()
         .rev()
     {
         let leaf_el = MersenneQuartic::from_coeffs(*leaf_el);
@@ -936,7 +913,9 @@ fn accumulate_over_row_for_consistency_check<F: SmallField, CS: ConstraintSystem
                         .stage_2_layout
                         .num_base_field_polys())
                     * 4..]
-                .as_chunks::<4>().0.iter()
+                .as_chunks::<4>()
+                .0
+                .iter()
                 .next()
                 .unwrap();
         let leaf_el = MersenneQuartic::from_coeffs(*leaf_el);

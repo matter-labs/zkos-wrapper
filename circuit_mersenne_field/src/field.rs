@@ -1398,7 +1398,12 @@ fn split_variable_into_two_16_bits_limbs<F: SmallField, CS: ConstraintSystem<F>>
 
         if <CS::Config as CSConfig>::SetupConfig::KEEP_SETUP == true {
             let reduction_constants = [F::ONE, F::from_u64_unchecked(1 << 16), F::ZERO, F::ZERO];
-            let output_variables = [limbs[0], limbs[1], cs.allocate_constant(F::ZERO), cs.allocate_constant(F::ZERO)];
+            let output_variables = [
+                limbs[0],
+                limbs[1],
+                cs.allocate_constant(F::ZERO),
+                cs.allocate_constant(F::ZERO),
+            ];
 
             let gate = ReductionGate::<F, 4> {
                 params: ReductionGateParams {
