@@ -400,6 +400,55 @@ pub fn prove_snark_wrapper(
     snark_proof
 }
 
+pub fn prove_snark_wrapper_with_zk(
+    compression_proof: CompressionProof,
+    compression_vk: CompressionVK,
+    snark_setup: &SnarkWrapperSetup,
+    crs_mons: &Crs<Bn256, CrsForMonomialForm>,
+    worker: &BellmanWorker,
+    rng: &mut impl bellman::rand::Rng,
+) -> SnarkWrapperProof {
+    let mut assembly = ProvingAssembly::<
+        Bn256,
+        PlonkCsWidth4WithNextStepAndCustomGatesParams,
+        SelectorOptimizedWidth4MainGateWithDNext,
+    >::new();
+
+    let fixed_parameters = compression_vk.fixed_parameters.clone();
+
+    let wrapper_function = SnarkWrapperFunction;
+    let wrapper_circuit = SnarkWrapperCircuit {
+        witness: Some(compression_proof),
+        vk: compression_vk,
+        fixed_parameters,
+        transcript_params: (),
+        wrapper_function,
+    };
+
+    wrapper_circuit.synthesize(&mut assembly).unwrap();
+
+    const NUM_PADDING_TERMS: usize = 2 + 2 + 2; // worst case witness polys are opened at 2 points, plus there are
+    // indirect openings of grand product for permutation and for lookup
+
+    assembly.finalize_to_size_log_2_with_randomization(
+        L1_VERIFIER_DOMAIN_SIZE_LOG,
+        NUM_PADDING_TERMS,
+        rng,
+    );
+    assert!(assembly.is_satisfied());
+
+    let snark_proof = assembly
+        .create_proof::<SnarkWrapperCircuit, SnarkWrapperTranscript>(
+            worker,
+            &snark_setup,
+            &crs_mons,
+            None,
+        )
+        .unwrap();
+
+    snark_proof
+}
+
 pub fn verify_snark_wrapper_proof(proof: &SnarkWrapperProof, vk: &SnarkWrapperVK) -> bool {
     verify_snark::<Bn256, SnarkWrapperCircuit, SnarkWrapperTranscript>(vk, proof, None).unwrap()
 }
