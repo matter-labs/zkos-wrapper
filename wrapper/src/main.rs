@@ -1,4 +1,7 @@
 #![feature(allocator_api)]
+
+use std::path::Path;
+use boojum::cs::implementations::fast_serialization::MemcopySerializable;
 /// Tool that takes the riscv proof from boojum 2.0, together with the final value of the
 /// registers - and returns the SNARK proof.
 // Inside, it runs 3 submodules:
@@ -8,7 +11,7 @@
 use clap::{Parser, Subcommand};
 
 use execution_utils::RecursionStrategy;
-use zkos_wrapper::{generate_and_save_risc_wrapper_vk, generate_vk, verification_hash};
+use zkos_wrapper::{deserialize_from_file, generate_and_save_risc_wrapper_vk, generate_vk, verification_hash};
 
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
@@ -31,7 +34,7 @@ enum Commands {
         /// If missing - will use the 'fake' trusted setup.
         #[arg(long)]
         trusted_setup_file: Option<String>,
-
+        #[cfg(feature = "gpu")]
         #[arg(long)]
         precomputation_dir: Option<String>,
     },
@@ -98,20 +101,45 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             input,
             output_dir,
             trusted_setup_file,
+            #[cfg(feature = "gpu")]
             precomputation_dir,
         } => {
             println!("=== Phase 0: Proving");
+            #[cfg(feature = "gpu")]
+            let precomputations = if let Some(dir) = &precomputation_dir {
+                println!("Loading existing precomputations");
+                let output_file = Path::new(&dir).join("snark_preprocessing.bin");
+                let file = std::fs::File::open(output_file).unwrap();
+                let setup_data = proof_compression::serialization::PlonkSnarkVerifierCircuitDeviceSetupWrapper::read_from_buffer(file).unwrap();
+                let vk = deserialize_from_file(
+                    &Path::new(&dir)
+                        .join("snark_vk_expected.json")
+                        .as_os_str()
+                        .to_str()
+                        .unwrap(),
+                );
+                Some((setup_data, vk))
+            } else {
+                None
+            };
+
             zkos_wrapper::prove(
                 input,
                 output_dir,
                 trusted_setup_file,
                 false,
-                precomputation_dir,
+                #[cfg(feature = "gpu")]
+                precomputations,
             )?;
         }
         Commands::ProveRiscWrapper { input, output_dir } => {
             println!("=== Phase 0: Proving RiscWrapper");
+
+            #[cfg(feature = "gpu")]
             zkos_wrapper::prove(input, output_dir, None, true, None)?;
+            #[cfg(not(feature = "gpu"))]
+            zkos_wrapper::prove(input, output_dir, None, true)?;
+
         }
         Commands::GenerateSnarkVk {
             input_binary,
