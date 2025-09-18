@@ -105,6 +105,8 @@ pub type SnarkWrapperTranscript =
     bellman::plonk::commitments::transcript::keccak_transcript::RollingKeccakTranscript<Fr>;
 
 use execution_utils::{ProgramProof, RecursionStrategy, generate_constants_for_binary};
+#[cfg(feature = "gpu")]
+use proof_compression::serialization::PlonkSnarkVerifierCircuitDeviceSetupWrapper;
 
 // RiscV -> Stark Wrapper
 pub fn get_risc_wrapper_setup(
@@ -483,7 +485,7 @@ pub fn serialize_to_file<T: serde::ser::Serialize>(content: &T, filename: &Path)
     serde_json::to_writer_pretty(src, content).unwrap();
 }
 
-fn deserialize_from_file<T: serde::de::DeserializeOwned>(filename: &str) -> T {
+pub fn deserialize_from_file<T: serde::de::DeserializeOwned>(filename: &str) -> T {
     let src = std::fs::File::open(filename).unwrap();
     serde_json::from_reader(src).unwrap()
 }
@@ -492,7 +494,8 @@ pub fn prove_risc_wrapper_with_snark(
     risc_wrapper_proof: RiscWrapperProof,
     risc_wrapper_vk: RiscWrapperVK,
     trusted_setup_file: Option<String>,
-    precomputation_dir: Option<String>,
+    #[cfg(feature = "gpu")]
+    precomputations: Option<(PlonkSnarkVerifierCircuitDeviceSetupWrapper, SnarkWrapperVK)>,
 ) -> Result<(SnarkWrapperProof, SnarkWrapperVK), Box<dyn std::error::Error>> {
     let worker = boojum::worker::Worker::new();
     println!("=== Phase 2: Creating compression proof");
@@ -551,28 +554,18 @@ pub fn prove_risc_wrapper_with_snark(
         let crs_file =
             trusted_setup_file.expect("Trusted setup must be set for GPU (and it must be compat");
 
-        let (precomputations, vk) = if let Some(precomputation_dir) = precomputation_dir {
-            println!("Loading existing precomputations");
-            let output_file = Path::new(&precomputation_dir).join("snark_preprocessing.bin");
-            let file = std::fs::File::open(output_file).unwrap();
-            let precomputations =
-                proof_compression::serialization::PlonkSnarkVerifierCircuitDeviceSetupWrapper::read_from_buffer(file).unwrap();
-
-            let vk = deserialize_from_file(
-                &Path::new(&precomputation_dir)
-                    .join("snark_vk_expected.json")
-                    .as_os_str()
-                    .to_str()
-                    .unwrap(),
-            );
-
-            (precomputations, vk)
-        } else {
-            crate::gpu::snark::gpu_create_snark_setup_data(compression_vk.clone(), &crs_file)
+        let (setup_data, vk) = match precomputations {
+            Some((setup_data, vk)) => {
+                println!("Using provided precomputations");
+                (setup_data, vk)
+            }
+            None => {
+                gpu::snark::gpu_create_snark_setup_data(compression_vk.clone(), &crs_file)
+            }
         };
 
         let proof = crate::gpu::snark::gpu_snark_prove(
-            precomputations,
+            setup_data,
             &vk,
             compression_proof,
             compression_vk,
@@ -582,7 +575,6 @@ pub fn prove_risc_wrapper_with_snark(
     }
     #[cfg(not(feature = "gpu"))]
     {
-        let _ = precomputation_dir;
         let crs_mons = match trusted_setup_file {
             Some(ref crs_file_str) => get_trusted_setup(crs_file_str),
             None => Crs::<Bn256, CrsForMonomialForm>::crs_42(
@@ -686,7 +678,8 @@ pub fn prove(
     output_dir: String,
     trusted_setup_file: Option<String>,
     risc_wrapper_only: bool,
-    precomputation_dir: Option<String>,
+    #[cfg(feature = "gpu")]
+    precomputations: Option<(PlonkSnarkVerifierCircuitDeviceSetupWrapper, SnarkWrapperVK)>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let program_proof: crate::ProgramProof = deserialize_from_file(&input);
     let (risc_wrapper_proof, risc_wrapper_vk) = prove_fri_risc_wrapper(program_proof).unwrap();
@@ -707,7 +700,8 @@ pub fn prove(
         risc_wrapper_proof,
         risc_wrapper_vk,
         trusted_setup_file.clone(),
-        precomputation_dir,
+        #[cfg(feature = "gpu")]
+        precomputations,
     )
     .unwrap();
 
@@ -744,7 +738,7 @@ pub fn generate_and_save_risc_wrapper_vk(
     Ok(())
 }
 
-fn generate_risk_wrapper_vk(
+pub fn generate_risk_wrapper_vk(
     input_binary: Option<String>,
     universal_verifier: bool,
     recursion_mode: RecursionStrategy,

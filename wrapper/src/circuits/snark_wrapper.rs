@@ -13,6 +13,7 @@ pub type SnarkWrapperCircuit = WrapperCircuit<
     SnarkWrapperFunction,
 >;
 
+#[derive(Debug, Clone)]
 pub struct SnarkWrapperFunction;
 
 impl ProofWrapperFunction<Bn256> for SnarkWrapperFunction {
