@@ -106,7 +106,7 @@ pub type SnarkWrapperTranscript =
 
 use execution_utils::{ProgramProof, RecursionStrategy, generate_constants_for_binary};
 #[cfg(feature = "gpu")]
-use proof_compression::serialization::PlonkSnarkVerifierCircuitDeviceSetupWrapper;
+pub use proof_compression::serialization::PlonkSnarkVerifierCircuitDeviceSetupWrapper;
 
 // RiscV -> Stark Wrapper
 pub fn get_risc_wrapper_setup(
@@ -724,7 +724,7 @@ pub fn generate_and_save_risc_wrapper_vk(
     recursion_mode: RecursionStrategy,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let boojum_worker = BoojumWorker::new();
-    let risc_wrapper_vk = generate_risk_wrapper_vk(
+    let risc_wrapper_vk = generate_risc_wrapper_vk(
         Some(input_binary),
         universal_verifier,
         recursion_mode,
@@ -738,7 +738,7 @@ pub fn generate_and_save_risc_wrapper_vk(
     Ok(())
 }
 
-pub fn generate_risk_wrapper_vk(
+pub fn generate_risc_wrapper_vk(
     input_binary: Option<String>,
     universal_verifier: bool,
     recursion_mode: RecursionStrategy,
@@ -780,7 +780,7 @@ pub fn generate_vk(
 
     println!("=== Phase 1: Creating the Risc wrapper key");
 
-    let risc_wrapper_vk = generate_risk_wrapper_vk(
+    let risc_wrapper_vk = generate_risc_wrapper_vk(
         input_binary,
         universal_verifier,
         recursion_mode,
