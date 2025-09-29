@@ -74,9 +74,10 @@ pub fn gpu_create_snark_setup_data(
         .into_inner();
 
     let worker = zksync_gpu_prover::bellman::worker::Worker::new();
-    let mut precomputation = zksync_gpu_prover::AsyncSetup::<
+    // Allocate on heap to avoid stack overflow for large domain sizes
+    let mut precomputation = Box::new(zksync_gpu_prover::AsyncSetup::<
         <PlonkSnarkWrapper as ProofSystemDefinition>::Allocator,
-    >::allocate(1 << hardcoded_finalization_hint);
+    >::allocate(1 << hardcoded_finalization_hint));
     precomputation
         .generate_from_assembly(&worker, &setup_assembly, &mut ctx)
         .unwrap();
@@ -145,7 +146,7 @@ pub fn gpu_snark_prove(
         .synthesize(&mut proving_assembly)
         .expect("must work");
 
-    let mut precomputation: AsyncSetup = precomputation.into_inner();
+    let mut precomputation: AsyncSetup = (*precomputation).into_inner();
 
     assert!(proving_assembly.is_satisfied());
     assert!(finalization_hint.is_power_of_two());
