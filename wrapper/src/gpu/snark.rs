@@ -32,6 +32,20 @@ pub fn gpu_create_snark_setup_data(
     compression_vk: CompressionVK,
     crs_file: &str,
 ) -> (PlonkSnarkVerifierCircuitDeviceSetupWrapper, SnarkWrapperVK) {
+    // Execute entire function in thread with huge stack to avoid any stack overflow
+    let crs_file = crs_file.to_string();
+    std::thread::Builder::new()
+        .stack_size(16 * 1024 * 1024 * 1024) // 16GB stack
+        .spawn(move || gpu_create_snark_setup_data_impl(compression_vk, &crs_file))
+        .expect("Failed to spawn SNARK setup thread")
+        .join()
+        .expect("Failed to join SNARK setup thread")
+}
+
+fn gpu_create_snark_setup_data_impl(
+    compression_vk: CompressionVK,
+    crs_file: &str,
+) -> (PlonkSnarkVerifierCircuitDeviceSetupWrapper, SnarkWrapperVK) {
     let reader = std::fs::File::open(crs_file).unwrap();
 
     let crs_mons =
@@ -74,10 +88,10 @@ pub fn gpu_create_snark_setup_data(
         .into_inner();
 
     let worker = zksync_gpu_prover::bellman::worker::Worker::new();
-    // Allocate on heap to avoid stack overflow for large domain sizes
-    let mut precomputation = Box::new(zksync_gpu_prover::AsyncSetup::<
+    // Now running in thread with 16GB stack, so can allocate normally
+    let mut precomputation = zksync_gpu_prover::AsyncSetup::<
         <PlonkSnarkWrapper as ProofSystemDefinition>::Allocator,
-    >::allocate(1 << hardcoded_finalization_hint));
+    >::allocate(1 << hardcoded_finalization_hint);
     precomputation
         .generate_from_assembly(&worker, &setup_assembly, &mut ctx)
         .unwrap();
@@ -103,6 +117,24 @@ pub fn gpu_create_snark_setup_data(
 
 /// Computes the SnarkProof for a given compression proof.
 pub fn gpu_snark_prove(
+    precomputation: PlonkSnarkVerifierCircuitDeviceSetupWrapper,
+    snark_wrapper_vk: &SnarkWrapperVK,
+    compression_proof: CompressionProof,
+    compression_vk: CompressionVK,
+    crs_file: &str,
+) -> SnarkWrapperProof {
+    // Execute in thread with huge stack to avoid stack overflow
+    let crs_file = crs_file.to_string();
+    let snark_wrapper_vk = snark_wrapper_vk.clone();
+    std::thread::Builder::new()
+        .stack_size(16 * 1024 * 1024 * 1024) // 16GB stack
+        .spawn(move || gpu_snark_prove_impl(precomputation, &snark_wrapper_vk, compression_proof, compression_vk, &crs_file))
+        .expect("Failed to spawn SNARK prove thread")
+        .join()
+        .expect("Failed to join SNARK prove thread")
+}
+
+fn gpu_snark_prove_impl(
     precomputation: PlonkSnarkVerifierCircuitDeviceSetupWrapper,
     snark_wrapper_vk: &SnarkWrapperVK,
     compression_proof: CompressionProof,
@@ -146,7 +178,7 @@ pub fn gpu_snark_prove(
         .synthesize(&mut proving_assembly)
         .expect("must work");
 
-    let mut precomputation: AsyncSetup = (*precomputation).into_inner();
+    let mut precomputation: AsyncSetup = precomputation.into_inner();
 
     assert!(proving_assembly.is_satisfied());
     assert!(finalization_hint.is_power_of_two());
