@@ -402,6 +402,55 @@ pub fn prove_snark_wrapper(
     snark_proof
 }
 
+pub fn prove_snark_wrapper_with_zk(
+    compression_proof: CompressionProof,
+    compression_vk: CompressionVK,
+    snark_setup: &SnarkWrapperSetup,
+    crs_mons: &Crs<Bn256, CrsForMonomialForm>,
+    worker: &BellmanWorker,
+    rng: &mut impl bellman::rand::Rng,
+) -> SnarkWrapperProof {
+    let mut assembly = ProvingAssembly::<
+        Bn256,
+        PlonkCsWidth4WithNextStepAndCustomGatesParams,
+        SelectorOptimizedWidth4MainGateWithDNext,
+    >::new();
+
+    let fixed_parameters = compression_vk.fixed_parameters.clone();
+
+    let wrapper_function = SnarkWrapperFunction;
+    let wrapper_circuit = SnarkWrapperCircuit {
+        witness: Some(compression_proof),
+        vk: compression_vk,
+        fixed_parameters,
+        transcript_params: (),
+        wrapper_function,
+    };
+
+    wrapper_circuit.synthesize(&mut assembly).unwrap();
+
+    const NUM_PADDING_TERMS: usize = 2 + 2 + 2; // worst case witness polys are opened at 2 points, plus there are
+    // indirect openings of grand product for permutation and for lookup
+
+    assembly.finalize_to_size_log_2_with_randomization(
+        L1_VERIFIER_DOMAIN_SIZE_LOG,
+        NUM_PADDING_TERMS,
+        rng,
+    );
+    assert!(assembly.is_satisfied());
+
+    let snark_proof = assembly
+        .create_proof::<SnarkWrapperCircuit, SnarkWrapperTranscript>(
+            worker,
+            &snark_setup,
+            &crs_mons,
+            None,
+        )
+        .unwrap();
+
+    snark_proof
+}
+
 pub fn verify_snark_wrapper_proof(proof: &SnarkWrapperProof, vk: &SnarkWrapperVK) -> bool {
     verify_snark::<Bn256, SnarkWrapperCircuit, SnarkWrapperTranscript>(vk, proof, None).unwrap()
 }
@@ -494,8 +543,10 @@ pub fn prove_risc_wrapper_with_snark(
     risc_wrapper_proof: RiscWrapperProof,
     risc_wrapper_vk: RiscWrapperVK,
     trusted_setup_file: Option<String>,
-    #[cfg(feature = "gpu")]
-    precomputations: Option<(PlonkSnarkVerifierCircuitDeviceSetupWrapper, SnarkWrapperVK)>,
+    #[cfg(feature = "gpu")] precomputations: Option<(
+        PlonkSnarkVerifierCircuitDeviceSetupWrapper,
+        SnarkWrapperVK,
+    )>,
 ) -> Result<(SnarkWrapperProof, SnarkWrapperVK), Box<dyn std::error::Error>> {
     let worker = boojum::worker::Worker::new();
     println!("=== Phase 2: Creating compression proof");
@@ -559,9 +610,7 @@ pub fn prove_risc_wrapper_with_snark(
                 println!("Using provided precomputations");
                 (setup_data, vk)
             }
-            None => {
-                gpu::snark::gpu_create_snark_setup_data(compression_vk.clone(), &crs_file)
-            }
+            None => gpu::snark::gpu_create_snark_setup_data(compression_vk.clone(), &crs_file),
         };
 
         let proof = crate::gpu::snark::gpu_snark_prove(
@@ -678,8 +727,10 @@ pub fn prove(
     output_dir: String,
     trusted_setup_file: Option<String>,
     risc_wrapper_only: bool,
-    #[cfg(feature = "gpu")]
-    precomputations: Option<(PlonkSnarkVerifierCircuitDeviceSetupWrapper, SnarkWrapperVK)>,
+    #[cfg(feature = "gpu")] precomputations: Option<(
+        PlonkSnarkVerifierCircuitDeviceSetupWrapper,
+        SnarkWrapperVK,
+    )>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let program_proof: crate::ProgramProof = deserialize_from_file(&input);
     let (risc_wrapper_proof, risc_wrapper_vk) = prove_fri_risc_wrapper(program_proof).unwrap();
