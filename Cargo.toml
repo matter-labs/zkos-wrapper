@@ -19,10 +19,12 @@ categories = ["cryptography"]
 
 circuit_mersenne_field = { path = "circuit_mersenne_field" }
 
-boojum = { version = "=0.32.3", features = ["log_tracing"] }
-bellman = { package = "zksync_bellman", version = "=0.32.3" }
-rescue_poseidon = "=0.32.3"
-snark_wrapper = "=0.32.3"
+boojum = { package = "boojum", git = "https://github.com/matter-labs/zksync-crypto.git", branch = "av_zk_in_padding", features = [
+    "log_tracing",
+] }
+bellman = { package = "zksync_bellman", git = "https://github.com/matter-labs/zksync-crypto.git", branch = "av_zk_in_padding" }
+rescue_poseidon = { package = "rescue_poseidon", git = "https://github.com/matter-labs/zksync-crypto.git", branch = "av_zk_in_padding" }
+snark_wrapper = { package = "snark_wrapper", git = "https://github.com/matter-labs/zksync-crypto.git", branch = "av_zk_in_padding" }
 
 final_risc_verifier = { git = "https://github.com/matter-labs/zksync-airbender.git", package = "final_reduced_risc_v_machine_verifier", features = [
     "proof_utils",
@@ -49,9 +51,12 @@ sha3 = "*"
 rand = "0.8"
 
 # Used for GPU proving.
-shivini = "=0.154.10"
-proof-compression = "=0.154.10"
-zksync-gpu-prover = "=0.154.10"
+# shivini = "=0.154.9"
+# proof-compression = "=0.154.9"
+# zksync-gpu-prover = "=0.154.9"
+shivini = { package = "shivini", git = "https://github.com/matter-labs/zksync-crypto-gpu.git", branch = "evl-fix-av-zk-in-padding" }
+proof-compression = { package = "proof-compression", git = "https://github.com/matter-labs/zksync-crypto-gpu.git", branch = "evl-fix-av-zk-in-padding" }
+zksync-gpu-prover = { package = "zksync-gpu-prover", git = "https://github.com/matter-labs/zksync-crypto-gpu.git", branch = "evl-fix-av-zk-in-padding" }
 
 [profile.release.package."blake2_with_compression_verifier"]
 opt-level = 1
