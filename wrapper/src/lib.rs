@@ -543,7 +543,7 @@ pub fn prove_risc_wrapper_with_snark(
     risc_wrapper_proof: RiscWrapperProof,
     risc_wrapper_vk: RiscWrapperVK,
     trusted_setup_file: Option<String>,
-    #[cfg(feature = "gpu")] precomputations: Option<(
+    #[cfg(feature = "gpu")] precomputations: Option<&(
         PlonkSnarkVerifierCircuitDeviceSetupWrapper,
         SnarkWrapperVK,
     )>,
@@ -605,12 +605,18 @@ pub fn prove_risc_wrapper_with_snark(
         let crs_file =
             trusted_setup_file.expect("Trusted setup must be set for GPU (and it must be compat");
 
+        let precompute_store;
+
         let (setup_data, vk) = match precomputations {
             Some((setup_data, vk)) => {
                 println!("Using provided precomputations");
                 (setup_data, vk)
             }
-            None => gpu::snark::gpu_create_snark_setup_data(compression_vk.clone(), &crs_file),
+            None => {
+                precompute_store =
+                    gpu::snark::gpu_create_snark_setup_data(&compression_vk, &crs_file);
+                (&precompute_store.0, &precompute_store.1)
+            }
         };
 
         let proof = crate::gpu::snark::gpu_snark_prove(
@@ -620,7 +626,7 @@ pub fn prove_risc_wrapper_with_snark(
             compression_vk,
             &crs_file,
         );
-        Ok((proof, vk))
+        Ok((proof, vk.clone()))
     }
     #[cfg(not(feature = "gpu"))]
     {
@@ -638,12 +644,17 @@ pub fn prove_risc_wrapper_with_snark(
             let (snark_setup, snark_wrapper_vk) =
                 get_snark_wrapper_setup(compression_vk.clone(), &crs_mons, &worker);
 
+            // use bellman::rand::OsRng;
+            // let mut rng = OsRng::new()?;
+
             let snark_wrapper_proof = prove_snark_wrapper(
+                //_with_zk(
                 compression_proof,
                 compression_vk,
                 &snark_setup,
                 &crs_mons,
                 &worker,
+                // &mut rng,
             );
 
             let is_valid = verify_snark_wrapper_proof(&snark_wrapper_proof, &snark_wrapper_vk);
@@ -727,7 +738,7 @@ pub fn prove(
     output_dir: String,
     trusted_setup_file: Option<String>,
     risc_wrapper_only: bool,
-    #[cfg(feature = "gpu")] precomputations: Option<(
+    #[cfg(feature = "gpu")] precomputations: Option<&(
         PlonkSnarkVerifierCircuitDeviceSetupWrapper,
         SnarkWrapperVK,
     )>,
@@ -850,7 +861,7 @@ pub fn generate_vk(
         let crs_file =
             trusted_setup_file.expect("Trusted setup must be set for GPU (and it must be compat");
         let (preprocessing, snark_wrapper_vk) =
-            crate::gpu::snark::gpu_create_snark_setup_data(compression_vk.clone(), &crs_file);
+            crate::gpu::snark::gpu_create_snark_setup_data(&compression_vk, &crs_file);
 
         let output_file = Path::new(&output_dir).join("snark_preprocessing.bin");
         let file = std::fs::File::create(output_file).unwrap();

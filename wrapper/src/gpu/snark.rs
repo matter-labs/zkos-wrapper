@@ -29,7 +29,7 @@ use crate::{
 /// Creates setup data (precomputations and verification key) for a given circuit.
 /// crs_file must point at **compact** CRS.
 pub fn gpu_create_snark_setup_data(
-    compression_vk: CompressionVK,
+    compression_vk: &CompressionVK,
     crs_file: &str,
 ) -> (PlonkSnarkVerifierCircuitDeviceSetupWrapper, SnarkWrapperVK) {
     let reader = std::fs::File::open(crs_file).unwrap();
@@ -102,7 +102,7 @@ pub fn gpu_create_snark_setup_data(
 
 /// Computes the SnarkProof for a given compression proof.
 pub fn gpu_snark_prove(
-    precomputation: PlonkSnarkVerifierCircuitDeviceSetupWrapper,
+    precomputation: &PlonkSnarkVerifierCircuitDeviceSetupWrapper,
     snark_wrapper_vk: &SnarkWrapperVK,
     compression_proof: CompressionProof,
     compression_vk: CompressionVK,
@@ -145,7 +145,7 @@ pub fn gpu_snark_prove(
         .synthesize(&mut proving_assembly)
         .expect("must work");
 
-    let mut precomputation: AsyncSetup = precomputation.into_inner();
+    let precomputation: &AsyncSetup = precomputation.into_inner_ref();
 
     assert!(proving_assembly.is_satisfied());
     assert!(finalization_hint.is_power_of_two());
@@ -161,13 +161,7 @@ pub fn gpu_snark_prove(
         _,
         <PlonkSnarkWrapper as ProofSystemDefinition>::Transcript,
         _,
-    >(
-        &proving_assembly,
-        &mut ctx,
-        &worker,
-        &mut precomputation,
-        None,
-    )
+    >(&proving_assembly, &mut ctx, &worker, precomputation, None)
     .unwrap();
 
     println!("plonk proving takes {} s", start.elapsed().as_secs());
