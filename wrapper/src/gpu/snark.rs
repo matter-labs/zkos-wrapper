@@ -179,3 +179,94 @@ pub fn gpu_snark_prove(
     }
     proof
 }
+
+/// Computes the SnarkProof for a given compression proof, with ZK properties.
+pub fn gpu_snark_prove_with_zk(
+    precomputation: &PlonkSnarkVerifierCircuitDeviceSetupWrapper,
+    snark_wrapper_vk: &SnarkWrapperVK,
+    compression_proof: CompressionProof,
+    compression_vk: CompressionVK,
+    crs_file: &str,
+    rng: &mut impl bellman::rand::Rng,
+) -> SnarkWrapperProof {
+    println!("Proving with Emil's \"ZK\" implementation");
+    let reader = std::fs::File::open(crs_file).unwrap();
+    let finalization_hint: usize = 1 << 24;
+
+    let crs_mons =
+        <PlonkSnarkWrapper as SnarkWrapperProofSystem>::load_compact_raw_crs(reader).unwrap();
+
+    let input_proof = compression_proof;
+    // Recreate stuff from prove_plonk_snark_wrapper_step
+
+    let input_vk = compression_vk.clone();
+    let mut ctx = PlonkSnarkWrapper::init_context(&crs_mons)
+        .unwrap()
+        .into_inner();
+    let fixed_parameters = input_vk.fixed_parameters.clone();
+
+    let wrapper_function = SnarkWrapperFunction;
+    let circuit = SnarkWrapperCircuit {
+        witness: Some(input_proof),
+        vk: compression_vk.clone(),
+        fixed_parameters,
+        transcript_params: (),
+        wrapper_function,
+    };
+    type PlonkAssembly<CSConfig> = Assembly<
+        Bn256,
+        PlonkCsWidth4WithNextStepAndCustomGatesParams,
+        SelectorOptimizedWidth4MainGateWithDNext,
+        CSConfig,
+        zksync_gpu_prover::cuda_bindings::CudaAllocator,
+    >;
+
+    let mut proving_assembly = PlonkAssembly::<SynthesisModeProve>::new();
+
+    circuit
+        .synthesize(&mut proving_assembly)
+        .expect("must work");
+
+    let precomputation: &AsyncSetup = precomputation.into_inner_ref();
+
+    assert!(proving_assembly.is_satisfied());
+    assert!(finalization_hint.is_power_of_two());
+
+    const NUM_PADDING_TERMS: usize = 2 + 2 + 2; // worst case witness polys are opened at 2 points, plus there are
+    // indirect openings of grand product for permutation and for lookup
+
+    proving_assembly.finalize_to_size_log_2_with_randomization(
+        L1_VERIFIER_DOMAIN_SIZE_LOG,
+        NUM_PADDING_TERMS,
+        rng,
+    );
+
+    let domain_size = proving_assembly.n() + 1;
+    assert!(domain_size.is_power_of_two());
+    assert!(domain_size == finalization_hint.clone());
+
+    let worker = zksync_gpu_prover::bellman::worker::Worker::new();
+    let start = std::time::Instant::now();
+    let proof = zksync_gpu_prover::create_proof::<
+        _,
+        _,
+        <PlonkSnarkWrapper as ProofSystemDefinition>::Transcript,
+        _,
+    >(&proving_assembly, &mut ctx, &worker, precomputation, None)
+    .unwrap();
+
+    println!("plonk proving takes {} s", start.elapsed().as_secs());
+    ctx.free_all_slots();
+
+    let result = zksync_gpu_prover::bellman::plonk::better_better_cs::verifier::verify::<
+        _,
+        _,
+        <PlonkSnarkWrapper as ProofSystemDefinition>::Transcript,
+    >(snark_wrapper_vk, &proof, None)
+    .unwrap();
+
+    if !result {
+        panic!("*** WARNING - SNARK FAILED TO VERIFY ****");
+    }
+    proof
+}

@@ -619,12 +619,16 @@ pub fn prove_risc_wrapper_with_snark(
             }
         };
 
-        let proof = crate::gpu::snark::gpu_snark_prove(
+        use bellman::rand::OsRng;
+        let mut rng = OsRng::new()?;
+
+        let proof = crate::gpu::snark::gpu_snark_prove_with_zk(
             setup_data,
             &vk,
             compression_proof,
             compression_vk,
             &crs_file,
+            &mut rng,
         );
         Ok((proof, vk.clone()))
     }
@@ -644,17 +648,17 @@ pub fn prove_risc_wrapper_with_snark(
             let (snark_setup, snark_wrapper_vk) =
                 get_snark_wrapper_setup(compression_vk.clone(), &crs_mons, &worker);
 
-            // use bellman::rand::OsRng;
-            // let mut rng = OsRng::new()?;
+            use bellman::rand::OsRng;
+            let mut rng = OsRng::new()?;
 
-            let snark_wrapper_proof = prove_snark_wrapper(
-                //_with_zk(
+            println!("EMIL WAS HERE!!!");
+            let snark_wrapper_proof = prove_snark_wrapper_with_zk(
                 compression_proof,
                 compression_vk,
                 &snark_setup,
                 &crs_mons,
                 &worker,
-                // &mut rng,
+                &mut rng,
             );
 
             let is_valid = verify_snark_wrapper_proof(&snark_wrapper_proof, &snark_wrapper_vk);
