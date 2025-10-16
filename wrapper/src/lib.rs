@@ -599,6 +599,9 @@ pub fn prove_risc_wrapper_with_snark(
 
     println!("=== Phase 3: Creating SNARK proof");
 
+    serialize_to_file(&compression_proof, Path::new("compression_proof.json"));
+    serialize_to_file(&compression_vk, Path::new("compression_vk.json"));
+
     #[cfg(feature = "gpu")]
     {
         println!("Using GPU for SNARK proof generation");
@@ -619,16 +622,17 @@ pub fn prove_risc_wrapper_with_snark(
             }
         };
 
-        use bellman::rand::OsRng;
-        let mut rng = OsRng::new()?;
+        // use bellman::rand::OsRng;
+        // let mut rng = OsRng::new()?;
 
-        let proof = crate::gpu::snark::gpu_snark_prove_with_zk(
+        let proof = crate::gpu::snark::gpu_snark_prove(
+            //_with_zk(
             setup_data,
             &vk,
             compression_proof,
             compression_vk,
             &crs_file,
-            &mut rng,
+            // &mut rng,
         );
         Ok((proof, vk.clone()))
     }
@@ -905,4 +909,124 @@ pub fn verification_hash(vk_path: String) {
     let vk = deserialize_from_file(&vk_path);
     let vk_hash = calculate_verification_key_hash(vk);
     println!("VK hash: {:?}", vk_hash);
+}
+
+#[cfg(test)]
+mod local_tests {
+    use super::*;
+
+    #[test]
+    fn one_off_test() {
+        let crs_file = "/home/evl/code/zksync-airbender-prover/crs/setup_compact.key";
+
+        let compression_vk =
+            deserialize_from_file("/home/evl/code/zksync-airbender-prover/compression_vk.json");
+
+        println!("Computing setup data");
+        let (setup_data, vk) = gpu::snark::gpu_create_snark_setup_data(&compression_vk, crs_file);
+
+        println!("Finished computing setup data");
+
+        use bellman::rand::OsRng;
+        let mut rng = OsRng::new().unwrap();
+
+        println!("Starting test");
+        let compression_proof =
+            deserialize_from_file("/home/evl/code/zksync-airbender-prover/compression_proof.json");
+        let compression_vk =
+            deserialize_from_file("/home/evl/code/zksync-airbender-prover/compression_vk.json");
+        println!("Deserialized from file");
+
+        println!("Running for first proof, NO ZK");
+
+        let proof = crate::gpu::snark::gpu_snark_prove(
+            //_with_zk(
+            &setup_data,
+            &vk,
+            compression_proof,
+            compression_vk,
+            crs_file,
+            // &mut rng,
+        );
+
+        println!("Finished proving for first proof, NO ZK");
+
+        serialize_to_file(&proof, Path::new("snark_proof_no_zk_1.json"));
+
+        println!("Serialized first proof no zk to file ");
+
+        println!("Starting test");
+        let compression_proof =
+            deserialize_from_file("/home/evl/code/zksync-airbender-prover/compression_proof.json");
+        let compression_vk =
+            deserialize_from_file("/home/evl/code/zksync-airbender-prover/compression_vk.json");
+        println!("Deserialized from file");
+
+        println!("Running for second proof, NO ZK");
+
+        let proof = crate::gpu::snark::gpu_snark_prove(
+            //_with_zk(
+            &setup_data,
+            &vk,
+            compression_proof,
+            compression_vk,
+            crs_file,
+            // &mut rng,
+        );
+
+        println!("Finished proving for second proof, NO ZK");
+
+        serialize_to_file(&proof, Path::new("snark_proof_no_zk_2.json"));
+
+        println!("Serialized second proof no zk to file ");
+
+        println!("Starting test");
+        let compression_proof =
+            deserialize_from_file("/home/evl/code/zksync-airbender-prover/compression_proof.json");
+        let compression_vk =
+            deserialize_from_file("/home/evl/code/zksync-airbender-prover/compression_vk.json");
+        println!("Deserialized from file");
+
+        println!("Running for first proof, with ZK");
+
+        let proof = crate::gpu::snark::gpu_snark_prove_with_zk(
+            &setup_data,
+            &vk,
+            compression_proof,
+            compression_vk,
+            crs_file,
+            &mut rng,
+        );
+
+        println!("Finished proving for first proof, with ZK");
+
+        serialize_to_file(&proof, Path::new("snark_proof_with_zk_1.json"));
+
+        println!("Serialized first proof no zk to file ");
+
+        println!("Starting test");
+        let compression_proof =
+            deserialize_from_file("/home/evl/code/zksync-airbender-prover/compression_proof.json");
+        let compression_vk =
+            deserialize_from_file("/home/evl/code/zksync-airbender-prover/compression_vk.json");
+        println!("Deserialized from file");
+
+        println!("Running for second proof, with ZK");
+
+        let proof = crate::gpu::snark::gpu_snark_prove_with_zk(
+            &setup_data,
+            &vk,
+            compression_proof,
+            compression_vk,
+            crs_file,
+            &mut rng,
+        );
+
+        println!("Finished proving for second proof, with ZK");
+
+        serialize_to_file(&proof, Path::new("snark_proof_with_zk_2.json"));
+
+        println!("Serialized second proof with zk to file ");
+        assert!(true);
+    }
 }

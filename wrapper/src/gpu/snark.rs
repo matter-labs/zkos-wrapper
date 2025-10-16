@@ -108,6 +108,7 @@ pub fn gpu_snark_prove(
     compression_vk: CompressionVK,
     crs_file: &str,
 ) -> SnarkWrapperProof {
+    println!("EMIL -- NO ZK!");
     let reader = std::fs::File::open(crs_file).unwrap();
     let finalization_hint: usize = 1 << 24;
 
