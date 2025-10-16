@@ -193,20 +193,23 @@ pub fn gpu_snark_prove_with_zk(
     println!("Proving with Emil's \"ZK\" implementation");
     let reader = std::fs::File::open(crs_file).unwrap();
     let finalization_hint: usize = 1 << 24;
-
+    println!("1");
     let crs_mons =
         <PlonkSnarkWrapper as SnarkWrapperProofSystem>::load_compact_raw_crs(reader).unwrap();
-
+    println!("2");
     let input_proof = compression_proof;
     // Recreate stuff from prove_plonk_snark_wrapper_step
-
+    println!("3");
     let input_vk = compression_vk.clone();
+    println!("4");
     let mut ctx = PlonkSnarkWrapper::init_context(&crs_mons)
         .unwrap()
         .into_inner();
+    println!("5");
     let fixed_parameters = input_vk.fixed_parameters.clone();
-
+    println!("6");
     let wrapper_function = SnarkWrapperFunction;
+    println!("7");
     let circuit = SnarkWrapperCircuit {
         witness: Some(input_proof),
         vk: compression_vk.clone(),
@@ -214,6 +217,7 @@ pub fn gpu_snark_prove_with_zk(
         transcript_params: (),
         wrapper_function,
     };
+    println!("8");
     type PlonkAssembly<CSConfig> = Assembly<
         Bn256,
         PlonkCsWidth4WithNextStepAndCustomGatesParams,
@@ -221,13 +225,13 @@ pub fn gpu_snark_prove_with_zk(
         CSConfig,
         zksync_gpu_prover::cuda_bindings::CudaAllocator,
     >;
-
+    println!("9");
     let mut proving_assembly = PlonkAssembly::<SynthesisModeProve>::new();
-
+    println!("10");
     circuit
         .synthesize(&mut proving_assembly)
         .expect("must work");
-
+    println!("11");
     let precomputation: &AsyncSetup = precomputation.into_inner_ref();
 
     assert!(proving_assembly.is_satisfied());
@@ -236,6 +240,7 @@ pub fn gpu_snark_prove_with_zk(
     const NUM_PADDING_TERMS: usize = 2 + 2 + 2; // worst case witness polys are opened at 2 points, plus there are
     // indirect openings of grand product for permutation and for lookup
 
+    println!("CALLING!!");
     proving_assembly.finalize_to_size_log_2_with_randomization(
         L1_VERIFIER_DOMAIN_SIZE_LOG,
         NUM_PADDING_TERMS,
