@@ -21,6 +21,7 @@ pub(crate) fn snark_wrapper_full_test() {
         &snark_setup,
         &crs_mons,
         &worker,
+        true,
     );
 
     let is_valid = crate::verify_snark_wrapper_proof(&snark_wrapper_proof, &snark_wrapper_vk);
