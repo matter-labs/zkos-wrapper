@@ -1,6 +1,5 @@
 #![feature(allocator_api)]
 
-use std::path::Path;
 use boojum::cs::implementations::fast_serialization::MemcopySerializable;
 /// Tool that takes the riscv proof from boojum 2.0, together with the final value of the
 /// registers - and returns the SNARK proof.
@@ -9,9 +8,12 @@ use boojum::cs::implementations::fast_serialization::MemcopySerializable;
 // - doing the compression
 // - wrapping the proof into SNARK.
 use clap::{Parser, Subcommand};
+use std::path::Path;
 
 use execution_utils::RecursionStrategy;
-use zkos_wrapper::{deserialize_from_file, generate_and_save_risc_wrapper_vk, generate_vk, verification_hash};
+use zkos_wrapper::{
+    deserialize_from_file, generate_and_save_risc_wrapper_vk, generate_vk, verification_hash,
+};
 
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
@@ -130,16 +132,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 false,
                 #[cfg(feature = "gpu")]
                 precomputations,
+                true,
             )?;
         }
         Commands::ProveRiscWrapper { input, output_dir } => {
             println!("=== Phase 0: Proving RiscWrapper");
 
             #[cfg(feature = "gpu")]
-            zkos_wrapper::prove(input, output_dir, None, true, None)?;
+            zkos_wrapper::prove(input, output_dir, None, true, None, true)?;
             #[cfg(not(feature = "gpu"))]
-            zkos_wrapper::prove(input, output_dir, None, true)?;
-
+            zkos_wrapper::prove(input, output_dir, None, true, true)?;
         }
         Commands::GenerateSnarkVk {
             input_binary,

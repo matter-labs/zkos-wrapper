@@ -19,6 +19,7 @@ pub use final_risc_verifier as risc_verifier;
 #[cfg(feature = "wrap_with_reduced_log_23")]
 pub use reduced_risc_verifier as risc_verifier;
 
+use bellman::rand;
 use boojum::algebraic_props::round_function::AbsorptionModeOverwrite;
 use boojum::algebraic_props::sponge::GoldilocksPoseidon2Sponge;
 use boojum::config::{ProvingCSConfig, SetupCSConfig};
@@ -199,12 +200,12 @@ pub fn prove_risc_wrapper(
 
     cs.prove_from_precomputations::<GLExt2, RiscWrapperTranscript, RiscWrapperTreeHasher, NoPow>(
         proof_config,
-        &setup_base,
-        &setup,
-        &setup_tree,
-        &vk,
-        &vars_hint,
-        &witness_hints,
+        setup_base,
+        setup,
+        setup_tree,
+        vk,
+        vars_hint,
+        witness_hints,
         (),
         worker,
     )
@@ -305,12 +306,12 @@ pub fn prove_compression(
 
     cs.prove_from_precomputations::<GLExt2, CompressionTranscript, CompressionTreeHasher, NoPow>(
         proof_config,
-        &setup_base,
-        &setup,
-        &setup_tree,
+        setup_base,
+        setup,
+        setup_tree,
         vk,
-        &vars_hint,
-        &witness_hints,
+        vars_hint,
+        witness_hints,
         (),
         worker,
     )
@@ -367,6 +368,9 @@ pub fn prove_snark_wrapper(
     snark_setup: &SnarkWrapperSetup,
     crs_mons: &Crs<Bn256, CrsForMonomialForm>,
     worker: &BellmanWorker,
+    // TODO!: Remove by end of Q4 2025.
+    // Currently in place to allow a easy revert in case ZK proving causes issues.
+    use_zk: bool,
 ) -> SnarkWrapperProof {
     let mut assembly = ProvingAssembly::<
         Bn256,
@@ -387,19 +391,31 @@ pub fn prove_snark_wrapper(
 
     wrapper_circuit.synthesize(&mut assembly).unwrap();
 
-    assembly.finalize_to_size_log_2(L1_VERIFIER_DOMAIN_SIZE_LOG);
+    if use_zk {
+        println!("using zk (padding) proving");
+        const NUM_PADDING_TERMS: usize = 2 + 2 + 2; // worst case witness polys are opened at 2 points, plus there are
+        // indirect openings of grand product for permutation and for lookup
+        let mut rng = rand::OsRng::new().expect("failed to get OS random generator");
+        assembly.finalize_to_size_log_2_with_randomization(
+            L1_VERIFIER_DOMAIN_SIZE_LOG,
+            NUM_PADDING_TERMS,
+            &mut rng,
+        );
+    } else {
+        println!("using non-zk (no padding) proving");
+        assembly.finalize_to_size_log_2(L1_VERIFIER_DOMAIN_SIZE_LOG);
+    }
+
     assert!(assembly.is_satisfied());
 
-    let snark_proof = assembly
+    assembly
         .create_proof::<SnarkWrapperCircuit, SnarkWrapperTranscript>(
             worker,
-            &snark_setup,
-            &crs_mons,
+            snark_setup,
+            crs_mons,
             None,
         )
-        .unwrap();
-
-    snark_proof
+        .unwrap()
 }
 
 pub fn verify_snark_wrapper_proof(proof: &SnarkWrapperProof, vk: &SnarkWrapperVK) -> bool {
@@ -494,8 +510,13 @@ pub fn prove_risc_wrapper_with_snark(
     risc_wrapper_proof: RiscWrapperProof,
     risc_wrapper_vk: RiscWrapperVK,
     trusted_setup_file: Option<String>,
-    #[cfg(feature = "gpu")]
-    precomputations: Option<(PlonkSnarkVerifierCircuitDeviceSetupWrapper, SnarkWrapperVK)>,
+    #[cfg(feature = "gpu")] precomputations: Option<(
+        PlonkSnarkVerifierCircuitDeviceSetupWrapper,
+        SnarkWrapperVK,
+    )>,
+    // TODO!: Remove by end of Q4 2025.
+    // Currently in place to allow a easy revert in case ZK proving causes issues.
+    use_zk: bool,
 ) -> Result<(SnarkWrapperProof, SnarkWrapperVK), Box<dyn std::error::Error>> {
     let worker = boojum::worker::Worker::new();
     println!("=== Phase 2: Creating compression proof");
@@ -559,17 +580,16 @@ pub fn prove_risc_wrapper_with_snark(
                 println!("Using provided precomputations");
                 (setup_data, vk)
             }
-            None => {
-                gpu::snark::gpu_create_snark_setup_data(compression_vk.clone(), &crs_file)
-            }
+            None => gpu::snark::gpu_create_snark_setup_data(&compression_vk, &crs_file),
         };
 
         let proof = crate::gpu::snark::gpu_snark_prove(
-            setup_data,
+            &setup_data,
             &vk,
             compression_proof,
             compression_vk,
             &crs_file,
+            use_zk,
         );
         Ok((proof, vk))
     }
@@ -595,6 +615,7 @@ pub fn prove_risc_wrapper_with_snark(
                 &snark_setup,
                 &crs_mons,
                 &worker,
+                use_zk,
             );
 
             let is_valid = verify_snark_wrapper_proof(&snark_wrapper_proof, &snark_wrapper_vk);
@@ -626,7 +647,7 @@ pub fn prove_fri_risc_wrapper(
     #[cfg(feature = "gpu")]
     let (risc_wrapper_proof, risc_wrapper_vk) = {
         let (setup, risc_wrapper_vk, finalization_hint) =
-            crate::gpu::risc_wrapper::get_risc_wrapper_setup(&worker, binary_commitment.clone());
+            crate::gpu::risc_wrapper::get_risc_wrapper_setup(&worker, binary_commitment);
         let risc_wrapper_proof = crate::gpu::risc_wrapper::prove_risc_wrapper(
             risc_wrapper_witness,
             &finalization_hint,
@@ -678,8 +699,13 @@ pub fn prove(
     output_dir: String,
     trusted_setup_file: Option<String>,
     risc_wrapper_only: bool,
-    #[cfg(feature = "gpu")]
-    precomputations: Option<(PlonkSnarkVerifierCircuitDeviceSetupWrapper, SnarkWrapperVK)>,
+    #[cfg(feature = "gpu")] precomputations: Option<(
+        PlonkSnarkVerifierCircuitDeviceSetupWrapper,
+        SnarkWrapperVK,
+    )>,
+    // TODO!: Remove by end of Q4 2025.
+    // Currently in place to allow a easy revert in case ZK proving causes issues.
+    use_zk: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let program_proof: crate::ProgramProof = deserialize_from_file(&input);
     let (risc_wrapper_proof, risc_wrapper_vk) = prove_fri_risc_wrapper(program_proof).unwrap();
@@ -702,6 +728,7 @@ pub fn prove(
         trusted_setup_file.clone(),
         #[cfg(feature = "gpu")]
         precomputations,
+        use_zk,
     )
     .unwrap();
 
@@ -799,7 +826,7 @@ pub fn generate_vk(
         let crs_file =
             trusted_setup_file.expect("Trusted setup must be set for GPU (and it must be compat");
         let (preprocessing, snark_wrapper_vk) =
-            crate::gpu::snark::gpu_create_snark_setup_data(compression_vk.clone(), &crs_file);
+            crate::gpu::snark::gpu_create_snark_setup_data(&compression_vk, &crs_file);
 
         let output_file = Path::new(&output_dir).join("snark_preprocessing.bin");
         let file = std::fs::File::create(output_file).unwrap();
@@ -830,7 +857,7 @@ pub fn generate_vk(
     );
 
     let verification_key = calculate_verification_key_hash(snark_wrapper_vk);
-    println!("VK key hash: {:?}", verification_key);
+    println!("VK key hash: {verification_key:?}");
 
     Ok(verification_key)
 }
@@ -838,5 +865,5 @@ pub fn generate_vk(
 pub fn verification_hash(vk_path: String) {
     let vk = deserialize_from_file(&vk_path);
     let vk_hash = calculate_verification_key_hash(vk);
-    println!("VK hash: {:?}", vk_hash);
+    println!("VK hash: {vk_hash:?}");
 }

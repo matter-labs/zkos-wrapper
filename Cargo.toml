@@ -19,10 +19,10 @@ categories = ["cryptography"]
 
 circuit_mersenne_field = { path = "circuit_mersenne_field" }
 
-boojum = { version = "=0.32.3", features = ["log_tracing"] }
-bellman = { package = "zksync_bellman", version = "=0.32.3" }
-rescue_poseidon = "=0.32.3"
-snark_wrapper = "=0.32.3"
+boojum = { version = "=0.32.5", features = ["log_tracing"] }
+bellman = { package = "zksync_bellman", version = "=0.32.5" }
+rescue_poseidon = "=0.32.5"
+snark_wrapper = "=0.32.5"
 
 final_risc_verifier = { git = "https://github.com/matter-labs/zksync-airbender.git", package = "final_reduced_risc_v_machine_verifier", features = [
     "proof_utils",
@@ -49,9 +49,9 @@ sha3 = "*"
 rand = "0.8"
 
 # Used for GPU proving.
-shivini = "=0.154.10"
-proof-compression = "=0.154.10"
-zksync-gpu-prover = "=0.154.10"
+shivini = "=0.155.2"
+proof-compression = "=0.155.2"
+zksync-gpu-prover = "=0.155.2"
 
 [profile.release.package."blake2_with_compression_verifier"]
 opt-level = 1
