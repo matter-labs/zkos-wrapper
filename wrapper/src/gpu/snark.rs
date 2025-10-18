@@ -165,7 +165,7 @@ pub fn gpu_snark_prove(
         );
     } else {
         println!("using non-zk (no padding) proving");
-        proving_assembly.finalize_to_size_log_2(finalization_hint.trailing_zeros() as usize);
+        proving_assembly.finalize_to_size_log_2(L1_VERIFIER_DOMAIN_SIZE_LOG);
     }
     let domain_size = proving_assembly.n() + 1;
     assert!(domain_size.is_power_of_two());
