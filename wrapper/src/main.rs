@@ -131,7 +131,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 trusted_setup_file,
                 false,
                 #[cfg(feature = "gpu")]
-                precomputations,
+                precomputations.as_ref(),
                 true,
             )?;
         }

@@ -159,13 +159,13 @@ pub fn gpu_snark_prove(
         // indirect openings of grand product for permutation and for lookup
         let mut rng = rand::OsRng::new().expect("failed to get OS random generator");
         proving_assembly.finalize_to_size_log_2_with_randomization(
-            L1_VERIFIER_DOMAIN_SIZE_LOG,
+            finalization_hint.trailing_zeros() as usize,
             NUM_PADDING_TERMS,
             &mut rng,
         );
     } else {
         println!("using non-zk (no padding) proving");
-        proving_assembly.finalize_to_size_log_2(L1_VERIFIER_DOMAIN_SIZE_LOG);
+        proving_assembly.finalize_to_size_log_2(finalization_hint.trailing_zeros() as usize);
     }
     let domain_size = proving_assembly.n() + 1;
     assert!(domain_size.is_power_of_two());
