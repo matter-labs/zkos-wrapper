@@ -1,3 +1,4 @@
+use bellman::rand;
 use proof_compression::{
     PlonkSnarkWrapper, ProofSystemDefinition, SnarkWrapperProofSystem,
     hardcoded_canonical_g2_bases,
@@ -29,7 +30,7 @@ use crate::{
 /// Creates setup data (precomputations and verification key) for a given circuit.
 /// crs_file must point at **compact** CRS.
 pub fn gpu_create_snark_setup_data(
-    compression_vk: CompressionVK,
+    compression_vk: &CompressionVK,
     crs_file: &str,
 ) -> (PlonkSnarkVerifierCircuitDeviceSetupWrapper, SnarkWrapperVK) {
     let reader = std::fs::File::open(crs_file).unwrap();
@@ -102,11 +103,14 @@ pub fn gpu_create_snark_setup_data(
 
 /// Computes the SnarkProof for a given compression proof.
 pub fn gpu_snark_prove(
-    precomputation: PlonkSnarkVerifierCircuitDeviceSetupWrapper,
+    precomputation: &PlonkSnarkVerifierCircuitDeviceSetupWrapper,
     snark_wrapper_vk: &SnarkWrapperVK,
     compression_proof: CompressionProof,
     compression_vk: CompressionVK,
     crs_file: &str,
+    // TODO!: Remove by end of Q4 2025.
+    // Currently in place to allow a easy revert in case ZK proving causes issues.
+    use_zk: bool,
 ) -> SnarkWrapperProof {
     let reader = std::fs::File::open(crs_file).unwrap();
     let finalization_hint: usize = 1 << 24;
@@ -145,14 +149,27 @@ pub fn gpu_snark_prove(
         .synthesize(&mut proving_assembly)
         .expect("must work");
 
-    let mut precomputation: AsyncSetup = precomputation.into_inner();
+    let precomputation: &AsyncSetup = precomputation.into_inner_ref();
 
     assert!(proving_assembly.is_satisfied());
     assert!(finalization_hint.is_power_of_two());
-    proving_assembly.finalize_to_size_log_2(finalization_hint.trailing_zeros() as usize);
+    if use_zk {
+        println!("using zk (padding) proving");
+        const NUM_PADDING_TERMS: usize = 2 + 2 + 2; // worst case witness polys are opened at 2 points, plus there are
+        // indirect openings of grand product for permutation and for lookup
+        let mut rng = rand::OsRng::new().expect("failed to get OS random generator");
+        proving_assembly.finalize_to_size_log_2_with_randomization(
+            L1_VERIFIER_DOMAIN_SIZE_LOG,
+            NUM_PADDING_TERMS,
+            &mut rng,
+        );
+    } else {
+        println!("using non-zk (no padding) proving");
+        proving_assembly.finalize_to_size_log_2(L1_VERIFIER_DOMAIN_SIZE_LOG);
+    }
     let domain_size = proving_assembly.n() + 1;
     assert!(domain_size.is_power_of_two());
-    assert!(domain_size == finalization_hint.clone());
+    assert!(domain_size == finalization_hint);
 
     let worker = zksync_gpu_prover::bellman::worker::Worker::new();
     let start = std::time::Instant::now();
@@ -161,13 +178,7 @@ pub fn gpu_snark_prove(
         _,
         <PlonkSnarkWrapper as ProofSystemDefinition>::Transcript,
         _,
-    >(
-        &proving_assembly,
-        &mut ctx,
-        &worker,
-        &mut precomputation,
-        None,
-    )
+    >(&proving_assembly, &mut ctx, &worker, precomputation, None)
     .unwrap();
 
     println!("plonk proving takes {} s", start.elapsed().as_secs());
