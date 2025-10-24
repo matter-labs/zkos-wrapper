@@ -1,4 +1,4 @@
 /target
-Cargo.lock
 wrapper_generator/target
 circuit_mersenne_field/target
+.idea/
