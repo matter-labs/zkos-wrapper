@@ -44,3 +44,4 @@ cargo run -p cli --release prove --bin examples/hashed_fibonacci/app.bin --input
 cp /tmp/update/final_program_proof.json wrapper/testing_data/risc_proof
 RUST_MIN_STACK=67108864 cargo test all_layers_full_test --release -- --nocapture
 ```
+test
