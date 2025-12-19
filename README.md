@@ -1,10 +1,10 @@
 # zkos-wrapper
+
 Library for verifying zkos with boojum
 
 It takes the zkos proof (in json format), and returns the snark proof going through the following steps:
 
 ![diagram](diagram.svg)
-
 
 ## Docs
 
@@ -18,8 +18,8 @@ See [SECURITY.md](./SECURITY.md).
 
 Licensed under either of
 
- * Apache License, Version 2.0, ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
- * MIT license ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
+- Apache License, Version 2.0, ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
+- MIT license ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
 
 at your option.
 
@@ -27,14 +27,13 @@ at your option.
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md).
 
-
 ### Updating airbender version
 
-
 If you want to update the airbender dependency, please do these additional steps:
-* update Cargo.toml
-* re-generate quotients - this can be done by running wrapper_generator: `cargo run --release --bin wrapper_generator`
-* update test inputs: from the corresponding air-bender branch: 
+
+- update Cargo.toml
+- re-generate quotients - this can be done by running wrapper_generator: `cargo run --release --bin wrapper_generator`
+- update test inputs: from the corresponding airbender branch:
 
 ```shell
 # From zksync-airbender directory

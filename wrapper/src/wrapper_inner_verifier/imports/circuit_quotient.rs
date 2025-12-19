@@ -1493,16 +1493,16 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
                 let individual_term = {
                     let mut individual_term = {
                         let mut a = unsafe { *(witness.get_unchecked(35usize)) };
-                        let b = unsafe { *(witness.get_unchecked(93usize)) };
+                        let b = unsafe { *(witness.get_unchecked(94usize)) };
                         a = a.mul(cs, &b);
                         a
                     };
                     {
-                        let a = unsafe { *(witness.get_unchecked(87usize)) };
+                        let a = unsafe { *(witness.get_unchecked(88usize)) };
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let a = unsafe { *(witness.get_unchecked(94usize)) };
+                        let a = unsafe { *(witness.get_unchecked(95usize)) };
                         individual_term = individual_term.sub(cs, &a);
                     }
                     individual_term
@@ -1517,21 +1517,21 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
                 let individual_term = {
                     let mut individual_term = {
                         let mut a = unsafe { *(witness.get_unchecked(35usize)) };
-                        let b = unsafe { *(witness.get_unchecked(88usize)) };
+                        let b = unsafe { *(witness.get_unchecked(89usize)) };
                         a = a.mul(cs, &b);
                         a = a.negated(cs);
                         a
                     };
                     {
-                        let a = unsafe { *(witness.get_unchecked(88usize)) };
-                        individual_term = individual_term.add(cs, &a);
-                    }
-                    {
                         let a = unsafe { *(witness.get_unchecked(89usize)) };
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let a = unsafe { *(witness.get_unchecked(95usize)) };
+                        let a = unsafe { *(witness.get_unchecked(93usize)) };
+                        individual_term = individual_term.add(cs, &a);
+                    }
+                    {
+                        let a = unsafe { *(witness.get_unchecked(96usize)) };
                         individual_term = individual_term.sub(cs, &a);
                     }
                     individual_term
@@ -1557,7 +1557,7 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
                         individual_term = individual_term.sub(cs, &a);
                     }
                     {
-                        let a = unsafe { *(witness.get_unchecked(98usize)) };
+                        let a = unsafe { *(witness.get_unchecked(99usize)) };
                         individual_term = individual_term.sub(cs, &a);
                     }
                     {
@@ -1587,7 +1587,7 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
                         individual_term = individual_term.sub(cs, &a);
                     }
                     {
-                        let a = unsafe { *(witness.get_unchecked(99usize)) };
+                        let a = unsafe { *(witness.get_unchecked(100usize)) };
                         individual_term = individual_term.sub(cs, &a);
                     }
                     {
@@ -1651,7 +1651,7 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let a = unsafe { *(witness.get_unchecked(100usize)) };
+                        let a = unsafe { *(witness.get_unchecked(101usize)) };
                         individual_term = individual_term.sub(cs, &a);
                     }
                     individual_term
@@ -1694,7 +1694,7 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
                     }
                     {
                         let mut a = unsafe { *(witness.get_unchecked(35usize)) };
-                        let b = unsafe { *(witness.get_unchecked(100usize)) };
+                        let b = unsafe { *(witness.get_unchecked(101usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
                     }
@@ -1728,11 +1728,11 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let a = unsafe { *(witness.get_unchecked(101usize)) };
+                        let a = unsafe { *(witness.get_unchecked(102usize)) };
                         individual_term = individual_term.sub(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(102usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(103usize)) };
                         let coeff =
                             MersenneField::allocate_constant(cs, Mersenne31Field(2147418111u32));
                         a = a.mul_by_base(cs, &coeff);
@@ -1757,7 +1757,7 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
                     };
                     {
                         let mut a = unsafe { *(witness.get_unchecked(30usize)) };
-                        let b = unsafe { *(witness.get_unchecked(101usize)) };
+                        let b = unsafe { *(witness.get_unchecked(102usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
                     }
@@ -1780,7 +1780,7 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
                     };
                     {
                         let mut a = unsafe { *(witness.get_unchecked(30usize)) };
-                        let b = unsafe { *(witness.get_unchecked(102usize)) };
+                        let b = unsafe { *(witness.get_unchecked(103usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
                     }
@@ -1827,7 +1827,7 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let a = unsafe { *(witness.get_unchecked(103usize)) };
+                        let a = unsafe { *(witness.get_unchecked(104usize)) };
                         individual_term = individual_term.sub(cs, &a);
                     }
                     individual_term
@@ -1847,7 +1847,7 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
                         a
                     };
                     {
-                        let a = unsafe { *(witness.get_unchecked(104usize)) };
+                        let a = unsafe { *(witness.get_unchecked(105usize)) };
                         individual_term = individual_term.sub(cs, &a);
                     }
                     individual_term
@@ -1861,7 +1861,7 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
             let contribution = {
                 let individual_term = {
                     let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(103usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(104usize)) };
                         let b = unsafe { *(memory.get_unchecked(16usize)) };
                         a = a.mul(cs, &b);
                         a
@@ -1877,7 +1877,7 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
             let contribution = {
                 let individual_term = {
                     let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(103usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(104usize)) };
                         let b = unsafe { *(memory.get_unchecked(17usize)) };
                         a = a.mul(cs, &b);
                         a
@@ -1893,7 +1893,7 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
             let contribution = {
                 let individual_term = {
                     let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(103usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(104usize)) };
                         let b = unsafe { *(memory.get_unchecked(13usize)) };
                         a = a.mul(cs, &b);
                         a
@@ -1909,7 +1909,7 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
             let contribution = {
                 let individual_term = {
                     let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(103usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(104usize)) };
                         let b = unsafe { *(memory.get_unchecked(14usize)) };
                         a = a.mul(cs, &b);
                         a
@@ -1926,12 +1926,12 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
                 let individual_term = {
                     let mut individual_term = {
                         let mut a = unsafe { *(witness.get_unchecked(5usize)) };
-                        let b = unsafe { *(witness.get_unchecked(104usize)) };
+                        let b = unsafe { *(witness.get_unchecked(105usize)) };
                         a = a.mul(cs, &b);
                         a
                     };
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(104usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(105usize)) };
                         let b = unsafe { *(memory.get_unchecked(16usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.sub(cs, &a);
@@ -1948,12 +1948,12 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
                 let individual_term = {
                     let mut individual_term = {
                         let mut a = unsafe { *(witness.get_unchecked(6usize)) };
-                        let b = unsafe { *(witness.get_unchecked(104usize)) };
+                        let b = unsafe { *(witness.get_unchecked(105usize)) };
                         a = a.mul(cs, &b);
                         a
                     };
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(104usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(105usize)) };
                         let b = unsafe { *(memory.get_unchecked(17usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.sub(cs, &a);
@@ -2425,7 +2425,7 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
                     }
                     {
                         let mut a = unsafe { *(witness.get_unchecked(27usize)) };
-                        let b = unsafe { *(witness.get_unchecked(98usize)) };
+                        let b = unsafe { *(witness.get_unchecked(99usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
                     }
@@ -2587,7 +2587,7 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
                     }
                     {
                         let mut a = unsafe { *(witness.get_unchecked(27usize)) };
-                        let b = unsafe { *(witness.get_unchecked(99usize)) };
+                        let b = unsafe { *(witness.get_unchecked(100usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
                     }
@@ -2736,7 +2736,7 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
                         a
                     };
                     {
-                        let a = unsafe { *(witness.get_unchecked(105usize)) };
+                        let a = unsafe { *(witness.get_unchecked(106usize)) };
                         individual_term = individual_term.sub(cs, &a);
                     }
                     individual_term
@@ -2756,7 +2756,7 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
                         a
                     };
                     {
-                        let a = unsafe { *(witness.get_unchecked(106usize)) };
+                        let a = unsafe { *(witness.get_unchecked(107usize)) };
                         individual_term = individual_term.sub(cs, &a);
                     }
                     individual_term
@@ -2770,14 +2770,14 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
             let contribution = {
                 let individual_term = {
                     let mut individual_term = {
-                        let mut a = unsafe { *(witness.get_unchecked(105usize)) };
-                        let b = unsafe { *(witness.get_unchecked(107usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(106usize)) };
+                        let b = unsafe { *(witness.get_unchecked(108usize)) };
                         a = a.mul(cs, &b);
                         a
                     };
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(106usize)) };
-                        let b = unsafe { *(witness.get_unchecked(107usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(107usize)) };
+                        let b = unsafe { *(witness.get_unchecked(108usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
                     }
@@ -2800,13 +2800,13 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
                 let individual_term = {
                     let mut individual_term = {
                         let mut a = unsafe { *(witness.get_unchecked(38usize)) };
-                        let b = unsafe { *(witness.get_unchecked(105usize)) };
+                        let b = unsafe { *(witness.get_unchecked(106usize)) };
                         a = a.mul(cs, &b);
                         a
                     };
                     {
                         let mut a = unsafe { *(witness.get_unchecked(38usize)) };
-                        let b = unsafe { *(witness.get_unchecked(106usize)) };
+                        let b = unsafe { *(witness.get_unchecked(107usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
                     }
@@ -2870,7 +2870,7 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
                     }
                     {
                         let mut a = unsafe { *(witness.get_unchecked(31usize)) };
-                        let b = unsafe { *(witness.get_unchecked(85usize)) };
+                        let b = unsafe { *(witness.get_unchecked(82usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
                     }
@@ -2919,15 +2919,15 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(33usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(31usize)) };
                         let b = unsafe { *(witness.get_unchecked(86usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(31usize)) };
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(31u32));
-                        a = a.mul_by_base(cs, &coeff);
+                        let mut a = unsafe { *(witness.get_unchecked(33usize)) };
+                        let b = unsafe { *(witness.get_unchecked(86usize)) };
+                        a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
@@ -2976,7 +2976,7 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
                     }
                     {
                         let mut a = unsafe { *(witness.get_unchecked(31usize)) };
-                        let b = unsafe { *(witness.get_unchecked(86usize)) };
+                        let b = unsafe { *(witness.get_unchecked(87usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
                     }
@@ -3032,7 +3032,7 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
                     }
                     {
                         let mut a = unsafe { *(witness.get_unchecked(31usize)) };
-                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(7u32));
+                        let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(43u32));
                         a = a.mul_by_base(cs, &coeff);
                         individual_term = individual_term.add(cs, &a);
                     }
@@ -3201,7 +3201,7 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
                     }
                     {
                         let mut a = unsafe { *(witness.get_unchecked(31usize)) };
-                        let b = unsafe { *(witness.get_unchecked(87usize)) };
+                        let b = unsafe { *(witness.get_unchecked(88usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
                     }
@@ -3245,7 +3245,7 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
                     }
                     {
                         let mut a = unsafe { *(witness.get_unchecked(31usize)) };
-                        let b = unsafe { *(witness.get_unchecked(88usize)) };
+                        let b = unsafe { *(witness.get_unchecked(89usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
                     }
@@ -3382,7 +3382,7 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
                     }
                     {
                         let mut a = unsafe { *(witness.get_unchecked(31usize)) };
-                        let b = unsafe { *(witness.get_unchecked(89usize)) };
+                        let b = unsafe { *(witness.get_unchecked(93usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
                     }
@@ -3408,7 +3408,7 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
                     };
                     {
                         let mut a = unsafe { *(witness.get_unchecked(31usize)) };
-                        let b = unsafe { *(witness.get_unchecked(93usize)) };
+                        let b = unsafe { *(witness.get_unchecked(94usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
                     }
@@ -3502,7 +3502,7 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
                     };
                     {
                         let mut a = unsafe { *(witness.get_unchecked(31usize)) };
-                        let b = unsafe { *(witness.get_unchecked(96usize)) };
+                        let b = unsafe { *(witness.get_unchecked(97usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
                     }
@@ -3528,7 +3528,7 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
                     };
                     {
                         let mut a = unsafe { *(witness.get_unchecked(31usize)) };
-                        let b = unsafe { *(witness.get_unchecked(97usize)) };
+                        let b = unsafe { *(witness.get_unchecked(98usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
                     }
@@ -3636,30 +3636,30 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
                     }
                     {
                         let mut a = unsafe { *(witness.get_unchecked(31usize)) };
-                        let b = unsafe { *(witness.get_unchecked(94usize)) };
+                        let b = unsafe { *(witness.get_unchecked(95usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
                         let mut a = unsafe { *(witness.get_unchecked(31usize)) };
-                        let b = unsafe { *(witness.get_unchecked(96usize)) };
+                        let b = unsafe { *(witness.get_unchecked(97usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
                         let mut a = unsafe { *(witness.get_unchecked(88usize)) };
-                        let b = unsafe { *(witness.get_unchecked(103usize)) };
+                        let b = unsafe { *(witness.get_unchecked(104usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(104usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(105usize)) };
                         let b = unsafe { *(memory.get_unchecked(13usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let a = unsafe { *(witness.get_unchecked(108usize)) };
+                        let a = unsafe { *(witness.get_unchecked(109usize)) };
                         individual_term = individual_term.sub(cs, &a);
                     }
                     individual_term
@@ -3747,24 +3747,24 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
                     }
                     {
                         let mut a = unsafe { *(witness.get_unchecked(31usize)) };
-                        let b = unsafe { *(witness.get_unchecked(95usize)) };
+                        let b = unsafe { *(witness.get_unchecked(96usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
                         let mut a = unsafe { *(witness.get_unchecked(31usize)) };
-                        let b = unsafe { *(witness.get_unchecked(97usize)) };
+                        let b = unsafe { *(witness.get_unchecked(98usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
                         let mut a = unsafe { *(witness.get_unchecked(89usize)) };
-                        let b = unsafe { *(witness.get_unchecked(103usize)) };
+                        let b = unsafe { *(witness.get_unchecked(104usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let mut a = unsafe { *(witness.get_unchecked(104usize)) };
+                        let mut a = unsafe { *(witness.get_unchecked(105usize)) };
                         let b = unsafe { *(memory.get_unchecked(14usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
@@ -3777,7 +3777,7 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let a = unsafe { *(witness.get_unchecked(109usize)) };
+                        let a = unsafe { *(witness.get_unchecked(110usize)) };
                         individual_term = individual_term.sub(cs, &a);
                     }
                     individual_term
@@ -3838,7 +3838,7 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
                 let individual_term = {
                     let mut individual_term = {
                         let mut a = unsafe { *(witness.get_unchecked(13usize)) };
-                        let b = unsafe { *(witness.get_unchecked(110usize)) };
+                        let b = unsafe { *(witness.get_unchecked(111usize)) };
                         a = a.mul(cs, &b);
                         let coeff =
                             MersenneField::allocate_constant(cs, Mersenne31Field(2147483391u32));
@@ -3847,7 +3847,7 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
                     };
                     {
                         let mut a = unsafe { *(witness.get_unchecked(51usize)) };
-                        let b = unsafe { *(witness.get_unchecked(110usize)) };
+                        let b = unsafe { *(witness.get_unchecked(111usize)) };
                         a = a.mul(cs, &b);
                         let coeff =
                             MersenneField::allocate_constant(cs, Mersenne31Field(16777216u32));
@@ -3856,7 +3856,7 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
                     }
                     {
                         let mut a = unsafe { *(witness.get_unchecked(56usize)) };
-                        let b = unsafe { *(witness.get_unchecked(110usize)) };
+                        let b = unsafe { *(witness.get_unchecked(111usize)) };
                         a = a.mul(cs, &b);
                         let coeff =
                             MersenneField::allocate_constant(cs, Mersenne31Field(2130706431u32));
@@ -3865,7 +3865,7 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
                     }
                     {
                         let mut a = unsafe { *(witness.get_unchecked(57usize)) };
-                        let b = unsafe { *(witness.get_unchecked(110usize)) };
+                        let b = unsafe { *(witness.get_unchecked(111usize)) };
                         a = a.mul(cs, &b);
                         let coeff =
                             MersenneField::allocate_constant(cs, Mersenne31Field(2147483615u32));
@@ -3891,17 +3891,17 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
                 let individual_term = {
                     let mut individual_term = {
                         let mut a = unsafe { *(witness.get_unchecked(42usize)) };
-                        let b = unsafe { *(witness.get_unchecked(108usize)) };
+                        let b = unsafe { *(witness.get_unchecked(109usize)) };
                         a = a.mul(cs, &b);
                         a = a.negated(cs);
                         a
                     };
                     {
-                        let a = unsafe { *(witness.get_unchecked(108usize)) };
+                        let a = unsafe { *(witness.get_unchecked(109usize)) };
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let a = unsafe { *(witness.get_unchecked(111usize)) };
+                        let a = unsafe { *(witness.get_unchecked(112usize)) };
                         individual_term = individual_term.sub(cs, &a);
                     }
                     individual_term
@@ -3916,17 +3916,17 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
                 let individual_term = {
                     let mut individual_term = {
                         let mut a = unsafe { *(witness.get_unchecked(42usize)) };
-                        let b = unsafe { *(witness.get_unchecked(109usize)) };
+                        let b = unsafe { *(witness.get_unchecked(110usize)) };
                         a = a.mul(cs, &b);
                         a = a.negated(cs);
                         a
                     };
                     {
-                        let a = unsafe { *(witness.get_unchecked(109usize)) };
+                        let a = unsafe { *(witness.get_unchecked(110usize)) };
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let a = unsafe { *(witness.get_unchecked(112usize)) };
+                        let a = unsafe { *(witness.get_unchecked(113usize)) };
                         individual_term = individual_term.sub(cs, &a);
                     }
                     individual_term
@@ -4185,7 +4185,7 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
                 let individual_term = {
                     let mut individual_term = {
                         let mut a = unsafe { *(witness.get_unchecked(16usize)) };
-                        let b = unsafe { *(witness.get_unchecked(111usize)) };
+                        let b = unsafe { *(witness.get_unchecked(112usize)) };
                         a = a.mul(cs, &b);
                         a
                     };
@@ -4197,7 +4197,7 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
                     }
                     {
                         let mut a = unsafe { *(witness.get_unchecked(17usize)) };
-                        let b = unsafe { *(witness.get_unchecked(111usize)) };
+                        let b = unsafe { *(witness.get_unchecked(112usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
                     }
@@ -4209,7 +4209,7 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
                     }
                     {
                         let mut a = unsafe { *(witness.get_unchecked(20usize)) };
-                        let b = unsafe { *(witness.get_unchecked(111usize)) };
+                        let b = unsafe { *(witness.get_unchecked(112usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
                     }
@@ -4221,7 +4221,7 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
                     }
                     {
                         let mut a = unsafe { *(witness.get_unchecked(21usize)) };
-                        let b = unsafe { *(witness.get_unchecked(111usize)) };
+                        let b = unsafe { *(witness.get_unchecked(112usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
                     }
@@ -4243,7 +4243,7 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
                 let individual_term = {
                     let mut individual_term = {
                         let mut a = unsafe { *(witness.get_unchecked(16usize)) };
-                        let b = unsafe { *(witness.get_unchecked(112usize)) };
+                        let b = unsafe { *(witness.get_unchecked(113usize)) };
                         a = a.mul(cs, &b);
                         a
                     };
@@ -4255,7 +4255,7 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
                     }
                     {
                         let mut a = unsafe { *(witness.get_unchecked(17usize)) };
-                        let b = unsafe { *(witness.get_unchecked(112usize)) };
+                        let b = unsafe { *(witness.get_unchecked(113usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
                     }
@@ -4267,7 +4267,7 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
                     }
                     {
                         let mut a = unsafe { *(witness.get_unchecked(20usize)) };
-                        let b = unsafe { *(witness.get_unchecked(112usize)) };
+                        let b = unsafe { *(witness.get_unchecked(113usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
                     }
@@ -4279,7 +4279,7 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
                     }
                     {
                         let mut a = unsafe { *(witness.get_unchecked(21usize)) };
-                        let b = unsafe { *(witness.get_unchecked(112usize)) };
+                        let b = unsafe { *(witness.get_unchecked(113usize)) };
                         a = a.mul(cs, &b);
                         individual_term = individual_term.add(cs, &a);
                     }
@@ -4404,7 +4404,7 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let a = unsafe { *(witness.get_unchecked(113usize)) };
+                        let a = unsafe { *(witness.get_unchecked(114usize)) };
                         individual_term = individual_term.sub(cs, &a);
                     }
                     individual_term
@@ -4730,7 +4730,7 @@ unsafe fn evaluate_every_row_except_last<F: SmallField, CS: ConstraintSystem<F>>
                         individual_term = individual_term.add(cs, &a);
                     }
                     {
-                        let a = unsafe { *(witness.get_unchecked(114usize)) };
+                        let a = unsafe { *(witness.get_unchecked(115usize)) };
                         individual_term = individual_term.sub(cs, &a);
                     }
                     individual_term
@@ -6456,7 +6456,7 @@ unsafe fn evaluate_every_row_except_two<F: SmallField, CS: ConstraintSystem<F>>(
     let every_row_except_two_last_contribution = {
         let mut accumulated_contribution = {
             let individual_term = {
-                let mut individual_term = unsafe { *(witness.get_unchecked(113usize)) };
+                let mut individual_term = unsafe { *(witness.get_unchecked(114usize)) };
                 let t = unsafe { *(witness_next_row.get_unchecked(3usize)) };
                 individual_term = individual_term.sub(cs, &t);
                 individual_term
@@ -6466,7 +6466,7 @@ unsafe fn evaluate_every_row_except_two<F: SmallField, CS: ConstraintSystem<F>>(
         {
             let contribution = {
                 let individual_term = {
-                    let mut individual_term = unsafe { *(witness.get_unchecked(114usize)) };
+                    let mut individual_term = unsafe { *(witness.get_unchecked(115usize)) };
                     let t = unsafe { *(witness_next_row.get_unchecked(48usize)) };
                     individual_term = individual_term.sub(cs, &t);
                     individual_term
@@ -6973,7 +6973,7 @@ pub unsafe fn evaluate_quotient<F: SmallField, CS: ConstraintSystem<F>>(
         {
             let contribution = {
                 let individual_term = {
-                    let mut individual_term = unsafe { *(witness.get_unchecked(113usize)) };
+                    let mut individual_term = unsafe { *(witness.get_unchecked(114usize)) };
                     let t = public_inputs[2usize];
                     individual_term = individual_term.sub_base(cs, &t);
                     individual_term
@@ -6986,7 +6986,7 @@ pub unsafe fn evaluate_quotient<F: SmallField, CS: ConstraintSystem<F>>(
         {
             let contribution = {
                 let individual_term = {
-                    let mut individual_term = unsafe { *(witness.get_unchecked(114usize)) };
+                    let mut individual_term = unsafe { *(witness.get_unchecked(115usize)) };
                     let t = public_inputs[3usize];
                     individual_term = individual_term.sub_base(cs, &t);
                     individual_term
