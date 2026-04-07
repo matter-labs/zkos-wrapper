@@ -20,7 +20,7 @@ use shivini::{
 
 use crate::{
     BinaryCommitment, RiscWrapper, RiscWrapperProof, RiscWrapperTranscript, RiscWrapperTreeHasher,
-    RiscWrapperVK, RiscWrapperWitness,
+    RiscWrapperVK, RiscWrapperWitness, StCircuitResolver
 };
 
 type GL = GoldilocksField;
@@ -44,7 +44,7 @@ pub fn get_risc_wrapper_setup(
     let geometry = RiscWrapper::geometry();
     let (max_trace_len, num_vars) = circuit.size_hint();
 
-    let builder_impl = CsReferenceImplementationBuilder::<GL, GL, SetupCSConfig, StCircuitResolver>::new(
+    let builder_impl = CsReferenceImplementationBuilder::<GL, GL, SetupCSConfig, StCircuitResolver<_, _>>::new(
         geometry,
         max_trace_len.unwrap(),
     );
@@ -107,7 +107,7 @@ pub fn prove_risc_wrapper(
     let geometry = RiscWrapper::geometry();
     let (max_trace_len, num_vars) = circuit.size_hint();
 
-    let builder_impl = CsReferenceImplementationBuilder::<GL, GL, ProvingCSConfig, StCircuitResolver>::new(
+    let builder_impl = CsReferenceImplementationBuilder::<GL, GL, ProvingCSConfig, StCircuitResolver<_, _>>::new(
         geometry,
         max_trace_len.unwrap(),
     );

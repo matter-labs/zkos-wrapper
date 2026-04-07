@@ -24,10 +24,10 @@ circuit_mersenne_field = { path = "circuit_mersenne_field" }
 # rescue_poseidon = "=0.32.5"
 # snark_wrapper = "=0.32.5"
 
-boojum = { git = "https://github.com/matter-labs/zksync-crypto.git", package = "boojum", branch = "oh_unpin_compiler_version" }
-bellman = { git = "https://github.com/matter-labs/zksync-crypto.git", package = "zksync_bellman", branch = "oh_unpin_compiler_version" }
-rescue_poseidon = { git = "https://github.com/matter-labs/zksync-crypto.git", package = "rescue_poseidon", branch = "oh_unpin_compiler_version" }
-snark_wrapper = { git = "https://github.com/matter-labs/zksync-crypto.git", package = "snark_wrapper", branch = "oh_unpin_compiler_version" }
+boojum = { git = "https://github.com/matter-labs/zksync-crypto.git", package = "boojum", branch = "main" }
+bellman = { git = "https://github.com/matter-labs/zksync-crypto.git", package = "zksync_bellman", branch = "main" }
+rescue_poseidon = { git = "https://github.com/matter-labs/zksync-crypto.git", package = "rescue_poseidon", branch = "main" }
+snark_wrapper = { git = "https://github.com/matter-labs/zksync-crypto.git", package = "snark_wrapper", branch = "main" }
 
 unified_reduced_machine_verifier = { git = "https://github.com/matter-labs/zksync-airbender.git", package = "unified_reduced_machine_verifier", features = [
     "proof_utils", "blake2_with_compression"
@@ -39,7 +39,7 @@ execution_utils = { git = "https://github.com/matter-labs/zksync-airbender.git",
     "prover"
 ], default-features = false, branch = "oh_for_wrapper" }
 setups = { git = "https://github.com/matter-labs/zksync-airbender.git", package = "setups", branch = "oh_for_wrapper" }
-mersenne_field = { git = "https://github.com/matter-labs/zksync-airbender.git", package = "field", branch = "oh_for_wrapper" }
+mersenne_field = { git = "https://github.com/matter-labs/zksync-airbender.git", package = "field", branch = "oh_for_wrapper", features = ["no_inline"] }
 zkos_verifier_generator = { git = "https://github.com/matter-labs/zksync-airbender.git", package = "verifier_generator", branch = "oh_for_wrapper" }
 prover = { git = "https://github.com/matter-labs/zksync-airbender.git", package = "prover", branch = "oh_for_wrapper" }
 
@@ -67,9 +67,17 @@ sha3 = "*"
 rand = "0.8"
 
 # Used for GPU proving.
-shivini = "=0.155.2"
-proof-compression = "=0.155.2"
-zksync-gpu-prover = "=0.155.2"
+# shivini = "=0.155.2"
+# proof-compression = "=0.155.2"
+# zksync-gpu-prover = "=0.155.2"
+
+# shivini = { git = "https://github.com/matter-labs/zksync-crypto-gpu.git", package = "shivini", branch = "di/bump-rustc-test" }
+# proof-compression = { git = "https://github.com/matter-labs/zksync-crypto-gpu.git", package = "proof-compression", branch = "di/bump-rustc-test" }
+# zksync-gpu-prover = { git = "https://github.com/matter-labs/zksync-crypto-gpu.git", package = "zksync-gpu-prover", branch = "di/bump-rustc-test" }
+
+shivini = { path = "../zksync-crypto-gpu/crates/shivini", package = "shivini" }
+proof-compression = { path = "../zksync-crypto-gpu/crates/proof-compression", package = "proof-compression" }
+zksync-gpu-prover = { path = "../zksync-crypto-gpu/crates/gpu-prover", package = "zksync-gpu-prover" }
 
 [profile.release.package."blake2_with_compression_verifier"]
 opt-level = 1

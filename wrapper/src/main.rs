@@ -1,17 +1,21 @@
 #![feature(allocator_api)]
 
+use boojum::worker::Worker as BoojumWorker;
 use clap::{Parser, Subcommand, ValueEnum};
 use std::path::{Path, PathBuf};
 use std::time::Instant;
 
+#[cfg(not(feature = "gpu"))]
 use bellman::kate_commitment::{Crs, CrsForMonomialForm};
+#[cfg(not(feature = "gpu"))]
 use bellman::worker::Worker as BellmanWorker;
 
 use zkos_wrapper::{
-    Bn256, L1_VERIFIER_DOMAIN_SIZE_LOG,
-    calculate_verification_key_hash, deserialize_from_file, get_trusted_setup, serialize_to_file,
+    calculate_verification_key_hash, deserialize_from_file, serialize_to_file,
     circuits::{BinaryCommitment, RiscWrapperWitness},
 };
+#[cfg(not(feature = "gpu"))]
+use zkos_wrapper::{Bn256, L1_VERIFIER_DOMAIN_SIZE_LOG, get_trusted_setup};
 
 #[derive(Parser)]
 #[command(
@@ -171,23 +175,20 @@ enum VerifyStage {
 // Helpers
 // ---------------------------------------------------------------------------
 
-fn create_boojum_worker(threads: Option<usize>) -> boojum::worker::Worker {
+fn create_boojum_worker(threads: Option<usize>) -> BoojumWorker {
     match threads {
         Some(n) => {
             println!("Using {n} worker threads");
-            boojum::worker::Worker::new_with_num_threads(n)
+            BoojumWorker::new_with_num_threads(n)
         }
-        None => boojum::worker::Worker::new(),
+        None => BoojumWorker::new(),
     }
 }
 
-fn timed<T>(label: &str, f: impl FnOnce() -> T) -> T {
-    println!("=== {label}: starting...");
-    let start = Instant::now();
-    let result = f();
-    let elapsed = start.elapsed();
-    println!("=== {label}: completed in {:.1}s", elapsed.as_secs_f64());
-    result
+/// Prints a timing message for a named phase. Call with the label and start instant
+/// after the work is done.
+fn print_elapsed(label: &str, start: Instant) {
+    println!("=== {label}: completed in {:.1}s", start.elapsed().as_secs_f64());
 }
 
 fn load_binary_commitment(
@@ -216,6 +217,7 @@ fn ensure_output_dir(path: &Path) -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[cfg(not(feature = "gpu"))]
 fn load_crs(trusted_setup: &Option<PathBuf>) -> Crs<Bn256, CrsForMonomialForm> {
     match trusted_setup {
         Some(path) => {
@@ -244,30 +246,37 @@ fn run_phase1_risc_wrapper(
     proof_path: &Path,
     bin: &Option<PathBuf>,
     text: &Option<PathBuf>,
-    worker: &boojum::worker::Worker,
+    worker: &BoojumWorker,
 ) -> Result<
     (zkos_wrapper::RiscWrapperProof, zkos_wrapper::RiscWrapperVK),
     Box<dyn std::error::Error>,
 > {
-    let binary_commitment = timed("Phase 1 - binary commitment", || {
-        load_binary_commitment(bin, text)
-    })?;
+    println!("=== Phase 1 - binary commitment: starting...");
+    let start = Instant::now();
+    let binary_commitment = load_binary_commitment(bin, text)?;
+    print_elapsed("Phase 1 - binary commitment", start);
 
     println!("Loading FRI proof from {}", proof_path.display());
     let program_proof: execution_utils::unrolled::UnrolledProgramProof =
         deserialize_from_file(proof_path.to_str().unwrap());
 
-    let risc_wrapper_witness = timed("Phase 1 - witness generation", || {
-        RiscWrapperWitness::from_full_proof(program_proof, &binary_commitment)
-    });
+    println!("=== Phase 1 - witness generation: starting...");
+    let start = Instant::now();
+    let risc_wrapper_witness =
+        RiscWrapperWitness::from_full_proof(program_proof, &binary_commitment);
+    print_elapsed("Phase 1 - witness generation", start);
 
-    let (finalization_hint, setup_base, setup, risc_wrapper_vk, setup_tree, vars_hint, witness_hints) =
-        timed("Phase 1 - setup", || {
-            zkos_wrapper::get_risc_wrapper_setup(worker, binary_commitment)
-        });
+    #[cfg(not(feature = "gpu"))]
+    let (risc_wrapper_proof, risc_wrapper_vk) = {
+        println!("=== Phase 1 - setup (CPU): starting...");
+        let start = Instant::now();
+        let (finalization_hint, setup_base, setup, risc_wrapper_vk, setup_tree, vars_hint, witness_hints) =
+            zkos_wrapper::get_risc_wrapper_setup(worker, binary_commitment.clone());
+        print_elapsed("Phase 1 - setup (CPU)", start);
 
-    let risc_wrapper_proof = timed("Phase 1 - prove", || {
-        zkos_wrapper::prove_risc_wrapper(
+        println!("=== Phase 1 - prove (CPU): starting...");
+        let start = Instant::now();
+        let risc_wrapper_proof = zkos_wrapper::prove_risc_wrapper(
             risc_wrapper_witness,
             &finalization_hint,
             &setup_base,
@@ -278,12 +287,39 @@ fn run_phase1_risc_wrapper(
             &witness_hints,
             worker,
             binary_commitment,
-        )
-    });
+        );
+        print_elapsed("Phase 1 - prove (CPU)", start);
 
-    let is_valid = timed("Phase 1 - verify", || {
-        zkos_wrapper::verify_risc_wrapper_proof(&risc_wrapper_proof, &risc_wrapper_vk)
-    });
+        (risc_wrapper_proof, risc_wrapper_vk)
+    };
+
+    #[cfg(feature = "gpu")]
+    let (risc_wrapper_proof, risc_wrapper_vk) = {
+        println!("=== Phase 1 - setup (GPU): starting...");
+        let start = Instant::now();
+        let (gpu_setup, gpu_vk, finalization_hint) =
+            zkos_wrapper::gpu::risc_wrapper::get_risc_wrapper_setup(worker, binary_commitment.clone());
+        print_elapsed("Phase 1 - setup (GPU)", start);
+
+        println!("=== Phase 1 - prove (GPU): starting...");
+        let start = Instant::now();
+        let risc_wrapper_proof = zkos_wrapper::gpu::risc_wrapper::prove_risc_wrapper(
+            risc_wrapper_witness,
+            &finalization_hint,
+            &gpu_setup,
+            &gpu_vk,
+            worker,
+            binary_commitment,
+        );
+        print_elapsed("Phase 1 - prove (GPU)", start);
+
+        (risc_wrapper_proof, gpu_vk)
+    };
+
+    println!("=== Phase 1 - verify: starting...");
+    let start = Instant::now();
+    let is_valid = zkos_wrapper::verify_risc_wrapper_proof(&risc_wrapper_proof, &risc_wrapper_vk);
+    print_elapsed("Phase 1 - verify", start);
     if !is_valid {
         return Err("RISC wrapper proof verification failed".into());
     }
@@ -295,18 +331,22 @@ fn run_phase1_risc_wrapper(
 fn run_phase2_compression(
     risc_wrapper_proof: zkos_wrapper::RiscWrapperProof,
     risc_wrapper_vk: zkos_wrapper::RiscWrapperVK,
-    worker: &boojum::worker::Worker,
+    worker: &BoojumWorker,
 ) -> Result<
     (zkos_wrapper::CompressionProof, zkos_wrapper::CompressionVK),
     Box<dyn std::error::Error>,
 > {
-    let (finalization_hint, setup_base, setup, compression_vk, setup_tree, vars_hint, witness_hints) =
-        timed("Phase 2 - setup", || {
-            zkos_wrapper::get_compression_setup(risc_wrapper_vk.clone(), worker)
-        });
+    #[cfg(not(feature = "gpu"))]
+    let (compression_proof, compression_vk) = {
+        println!("=== Phase 2 - setup (CPU): starting...");
+        let start = Instant::now();
+        let (finalization_hint, setup_base, setup, compression_vk, setup_tree, vars_hint, witness_hints) =
+            zkos_wrapper::get_compression_setup(risc_wrapper_vk.clone(), worker);
+        print_elapsed("Phase 2 - setup (CPU)", start);
 
-    let compression_proof = timed("Phase 2 - prove", || {
-        zkos_wrapper::prove_compression(
+        println!("=== Phase 2 - prove (CPU): starting...");
+        let start = Instant::now();
+        let compression_proof = zkos_wrapper::prove_compression(
             risc_wrapper_proof,
             risc_wrapper_vk,
             &finalization_hint,
@@ -317,12 +357,42 @@ fn run_phase2_compression(
             &vars_hint,
             &witness_hints,
             worker,
-        )
-    });
+        );
+        print_elapsed("Phase 2 - prove (CPU)", start);
 
-    let is_valid = timed("Phase 2 - verify", || {
-        zkos_wrapper::verify_compression_proof(&compression_proof, &compression_vk)
-    });
+        (compression_proof, compression_vk)
+    };
+
+    #[cfg(feature = "gpu")]
+    let (compression_proof, compression_vk) = {
+        let config = shivini::ProverContextConfig::default().with_smallest_supported_domain_size(1 << 15);
+        let _prover_context = shivini::ProverContext::create_with_config(config).unwrap();
+
+        println!("=== Phase 2 - setup (GPU): starting...");
+        let start = Instant::now();
+        let (gpu_setup, gpu_vk, finalization_hint) =
+            zkos_wrapper::gpu::compression::get_compression_setup(worker, risc_wrapper_vk.clone());
+        print_elapsed("Phase 2 - setup (GPU)", start);
+
+        println!("=== Phase 2 - prove (GPU): starting...");
+        let start = Instant::now();
+        let compression_proof = zkos_wrapper::gpu::compression::prove_compression(
+            risc_wrapper_proof,
+            risc_wrapper_vk,
+            &finalization_hint,
+            &gpu_setup,
+            &gpu_vk,
+            worker,
+        );
+        print_elapsed("Phase 2 - prove (GPU)", start);
+
+        (compression_proof, gpu_vk)
+    };
+
+    println!("=== Phase 2 - verify: starting...");
+    let start = Instant::now();
+    let is_valid = zkos_wrapper::verify_compression_proof(&compression_proof, &compression_vk);
+    print_elapsed("Phase 2 - verify", start);
     if !is_valid {
         return Err("Compression proof verification failed".into());
     }
@@ -340,28 +410,69 @@ fn run_phase3_snark(
     (zkos_wrapper::SnarkWrapperProof, zkos_wrapper::SnarkWrapperVK),
     Box<dyn std::error::Error>,
 > {
-    let crs_mons = timed("Phase 3 - load CRS", || load_crs(trusted_setup));
+    #[cfg(not(feature = "gpu"))]
+    let (snark_proof, snark_vk) = {
+        println!("=== Phase 3 - load CRS: starting...");
+        let start = Instant::now();
+        let crs_mons = load_crs(trusted_setup);
+        print_elapsed("Phase 3 - load CRS", start);
 
-    let bellman_worker = BellmanWorker::new();
+        let bellman_worker = BellmanWorker::new();
 
-    let (snark_setup, snark_vk) = timed("Phase 3 - setup", || {
-        zkos_wrapper::get_snark_wrapper_setup(compression_vk.clone(), &crs_mons, &bellman_worker)
-    });
+        println!("=== Phase 3 - setup (CPU): starting...");
+        let start = Instant::now();
+        let (snark_setup, snark_vk) =
+            zkos_wrapper::get_snark_wrapper_setup(compression_vk.clone(), &crs_mons, &bellman_worker);
+        print_elapsed("Phase 3 - setup (CPU)", start);
 
-    let snark_proof = timed("Phase 3 - prove", || {
-        zkos_wrapper::prove_snark_wrapper(
+        println!("=== Phase 3 - prove (CPU): starting...");
+        let start = Instant::now();
+        let snark_proof = zkos_wrapper::prove_snark_wrapper(
             compression_proof,
             compression_vk,
             &snark_setup,
             &crs_mons,
             &bellman_worker,
             use_zk,
-        )
-    });
+        );
+        print_elapsed("Phase 3 - prove (CPU)", start);
 
-    let is_valid = timed("Phase 3 - verify", || {
-        zkos_wrapper::verify_snark_wrapper_proof(&snark_proof, &snark_vk)
-    });
+        (snark_proof, snark_vk)
+    };
+
+    #[cfg(feature = "gpu")]
+    let (snark_proof, snark_vk) = {
+        let crs_file = trusted_setup
+            .as_ref()
+            .expect("GPU SNARK proving requires a trusted setup file path (--trusted-setup)")
+            .to_string_lossy()
+            .to_string();
+
+        println!("=== Phase 3 - setup (GPU): starting...");
+        let start = Instant::now();
+        let (precomputation, snark_vk) =
+            zkos_wrapper::gpu::snark::gpu_create_snark_setup_data(&compression_vk, &crs_file);
+        print_elapsed("Phase 3 - setup (GPU)", start);
+
+        println!("=== Phase 3 - prove (GPU): starting...");
+        let start = Instant::now();
+        let snark_proof = zkos_wrapper::gpu::snark::gpu_snark_prove(
+            &precomputation,
+            &snark_vk,
+            compression_proof,
+            compression_vk,
+            &crs_file,
+            use_zk,
+        );
+        print_elapsed("Phase 3 - prove (GPU)", start);
+
+        (snark_proof, snark_vk)
+    };
+
+    println!("=== Phase 3 - verify: starting...");
+    let start = Instant::now();
+    let is_valid = zkos_wrapper::verify_snark_wrapper_proof(&snark_proof, &snark_vk);
+    print_elapsed("Phase 3 - verify", start);
     if !is_valid {
         return Err("SNARK wrapper proof verification failed".into());
     }
@@ -503,30 +614,74 @@ fn cmd_generate_vk(
     let worker = create_boojum_worker(threads);
 
     // Phase 1: RISC wrapper VK
-    let binary_commitment = timed("VK generation - binary commitment", || {
-        load_binary_commitment(&bin, &text)
-    })?;
+    println!("=== VK generation - binary commitment: starting...");
+    let start = Instant::now();
+    let binary_commitment = load_binary_commitment(&bin, &text)?;
+    print_elapsed("VK generation - binary commitment", start);
 
-    let (_, _, _, risc_wrapper_vk, _, _, _) = timed("VK generation - Phase 1 (RISC wrapper)", || {
-        zkos_wrapper::get_risc_wrapper_setup(&worker, binary_commitment)
-    });
+    println!("=== VK generation - Phase 1 (RISC wrapper): starting...");
+    let start = Instant::now();
+    #[cfg(not(feature = "gpu"))]
+    let risc_wrapper_vk = {
+        let (_, _, _, risc_wrapper_vk, _, _, _) =
+            zkos_wrapper::get_risc_wrapper_setup(&worker, binary_commitment);
+        risc_wrapper_vk
+    };
+    #[cfg(feature = "gpu")]
+    let risc_wrapper_vk = {
+        let (_, gpu_vk, _) =
+            zkos_wrapper::gpu::risc_wrapper::get_risc_wrapper_setup(&worker, binary_commitment);
+        gpu_vk
+    };
+    print_elapsed("VK generation - Phase 1 (RISC wrapper)", start);
     serialize_to_file(&risc_wrapper_vk, &output_path(&output_dir, "risc_wrapper_vk.json"));
     println!("Saved risc_wrapper_vk.json");
 
     // Phase 2: Compression VK
-    let (_, _, _, compression_vk, _, _, _) = timed("VK generation - Phase 2 (compression)", || {
-        zkos_wrapper::get_compression_setup(risc_wrapper_vk, &worker)
-    });
+    println!("=== VK generation - Phase 2 (compression): starting...");
+    let start = Instant::now();
+    #[cfg(not(feature = "gpu"))]
+    let compression_vk = {
+        let (_, _, _, compression_vk, _, _, _) =
+            zkos_wrapper::get_compression_setup(risc_wrapper_vk, &worker);
+        compression_vk
+    };
+    #[cfg(feature = "gpu")]
+    let compression_vk = {
+        let config = shivini::ProverContextConfig::default().with_smallest_supported_domain_size(1 << 15);
+        let _prover_context = shivini::ProverContext::create_with_config(config).unwrap();
+
+        let (_, gpu_vk, _) =
+            zkos_wrapper::gpu::compression::get_compression_setup(&worker, risc_wrapper_vk);
+        gpu_vk
+    };
+    print_elapsed("VK generation - Phase 2 (compression)", start);
     serialize_to_file(&compression_vk, &output_path(&output_dir, "compression_vk.json"));
     println!("Saved compression_vk.json");
 
     // Phase 3: SNARK VK
-    let crs_mons = timed("VK generation - load CRS", || load_crs(&trusted_setup));
-    let bellman_worker = BellmanWorker::new();
-
-    let (_, snark_vk) = timed("VK generation - Phase 3 (SNARK)", || {
-        zkos_wrapper::get_snark_wrapper_setup(compression_vk, &crs_mons, &bellman_worker)
-    });
+    println!("=== VK generation - Phase 3 (SNARK): starting...");
+    let start = Instant::now();
+    #[cfg(not(feature = "gpu"))]
+    let snark_vk = {
+        let crs_mons = load_crs(&trusted_setup);
+        let bellman_worker = BellmanWorker::new();
+        let (_, snark_vk) =
+            zkos_wrapper::get_snark_wrapper_setup(compression_vk, &crs_mons, &bellman_worker);
+        snark_vk
+    };
+    #[cfg(feature = "gpu")]
+    let snark_vk = {
+        let crs_file = trusted_setup
+            .as_ref()
+            .expect("GPU VK generation requires a trusted setup file path (--trusted-setup)")
+            .to_string_lossy()
+            .to_string();
+        let (_, snark_vk) =
+            zkos_wrapper::gpu::snark::gpu_create_snark_setup_data(&compression_vk, &crs_file);
+        snark_vk
+    };
+    print_elapsed("VK generation - Phase 3 (SNARK)", start);
     serialize_to_file(&snark_vk, &output_path(&output_dir, "snark_vk.json"));
     println!("Saved snark_vk.json");
 
