@@ -1,6 +1,6 @@
+use crate::inner_verifiers::unified_reduced::skeleton::*;
 use crate::risc_verifier;
 use crate::transcript::*;
-use crate::inner_verifiers::unified_reduced::skeleton::*;
 use crate::wrapper_utils::verifier_traits::CircuitBlake2sForEverythingVerifier;
 use crate::wrapper_utils::verifier_traits::CircuitLeafInclusionVerifier;
 use crate::{deserialize_from_file, serialize_to_file};
@@ -19,7 +19,7 @@ use boojum::{
         gates::{ConstantsAllocatorGate, ReductionGate, U32TriAddCarryAsChunkGate, UIntXAddGate},
         traits::{cs::ConstraintSystem, gate::GatePlacementStrategy},
     },
-    dag::{StCircuitResolver, CircuitResolverOpts},
+    dag::{CircuitResolverOpts, StCircuitResolver},
     gadgets::blake2s::mixing_function::Word,
     gadgets::{
         tables::{

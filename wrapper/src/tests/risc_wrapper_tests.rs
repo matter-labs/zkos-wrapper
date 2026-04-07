@@ -19,7 +19,8 @@ pub(crate) fn risc_wrapper_full_test() {
     let binary_commitment = BinaryCommitment::from_binary(&binary, &text);
     dbg!(binary_commitment);
 
-    let program_proof: execution_utils::unrolled::UnrolledProgramProof = deserialize_from_file(RISC_PROOF_PATH);
+    let program_proof: execution_utils::unrolled::UnrolledProgramProof =
+        deserialize_from_file(RISC_PROOF_PATH);
 
     let risc_wrapper_witness =
         RiscWrapperWitness::from_full_proof(program_proof, &binary_commitment);
@@ -104,7 +105,10 @@ fn test_verifier_inner_function() {
     // use boojum::config::SetupCSConfig;
     use boojum::cs::cs_builder_reference::*;
     let builder_impl =
-        CsReferenceImplementationBuilder::<F, F, DevCSConfig, StCircuitResolver<_, _>>::new(geometry, 1 << 20);
+        CsReferenceImplementationBuilder::<F, F, DevCSConfig, StCircuitResolver<_, _>>::new(
+            geometry,
+            1 << 20,
+        );
     use boojum::cs::cs_builder::new_builder;
     let builder = new_builder::<_, F>(builder_impl);
 
@@ -190,7 +194,8 @@ fn test_verifier_inner_function() {
 
     let path = "testing_data/unified_proof_for_hashed_fibonacci.json";
     // let path = "testing_data/risc_proof_80sb.json";
-    let program_proof: execution_utils::unrolled::UnrolledProgramProof = deserialize_from_file(path);
+    let program_proof: execution_utils::unrolled::UnrolledProgramProof =
+        deserialize_from_file(path);
     let binary_commitment = BinaryCommitment::from_default_binary();
 
     let risc_wrapper_witness =
@@ -198,11 +203,7 @@ fn test_verifier_inner_function() {
 
     use crate::RiscWrapper;
 
-    let circuit = RiscWrapper::new(
-        Some(risc_wrapper_witness),
-        true,
-        binary_commitment,
-    );
+    let circuit = RiscWrapper::new(Some(risc_wrapper_witness), true, binary_commitment);
 
     circuit.synthesize_into_cs(cs);
 

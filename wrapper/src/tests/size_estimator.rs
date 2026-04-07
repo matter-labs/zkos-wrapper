@@ -1,6 +1,6 @@
 use std::fs;
 use std::io::Write as IoWrite;
-use std::panic::{catch_unwind, AssertUnwindSafe};
+use std::panic::{AssertUnwindSafe, catch_unwind};
 use std::sync::{Arc, Mutex};
 
 use crate::circuits::BinaryCommitment;
@@ -76,10 +76,8 @@ fn try_synthesize_wrapper_with_params(
             builder,
             GatePlacementStrategy::UseGeneralPurposeColumns,
         );
-        let builder = NopGate::configure_builder(
-            builder,
-            GatePlacementStrategy::UseGeneralPurposeColumns,
-        );
+        let builder =
+            NopGate::configure_builder(builder, GatePlacementStrategy::UseGeneralPurposeColumns);
         let builder = ZeroCheckGate::configure_builder(
             builder,
             GatePlacementStrategy::UseGeneralPurposeColumns,
@@ -169,7 +167,12 @@ fn find_minimum_cs_parameters_for_wrapper() {
                     SIZE_ESTIMATOR_OUTPUT_DIR, mid, num_repetitions
                 );
                 let mut f = fs::File::create(&filename).unwrap();
-                writeln!(f, "Parameters: num_columns={}, num_repetitions={}", mid, num_repetitions).unwrap();
+                writeln!(
+                    f,
+                    "Parameters: num_columns={}, num_repetitions={}",
+                    mid, num_repetitions
+                )
+                .unwrap();
                 writeln!(f, "\nPanic message:\n{}", msg).unwrap();
                 writeln!(f, "\nPanic hook info:\n{}", hook_info).unwrap();
                 low = mid + 1;
@@ -201,7 +204,12 @@ fn find_minimum_cs_parameters_for_wrapper() {
                     SIZE_ESTIMATOR_OUTPUT_DIR, num_columns, mid
                 );
                 let mut f = fs::File::create(&filename).unwrap();
-                writeln!(f, "Parameters: num_columns={}, num_repetitions={}", num_columns, mid).unwrap();
+                writeln!(
+                    f,
+                    "Parameters: num_columns={}, num_repetitions={}",
+                    num_columns, mid
+                )
+                .unwrap();
                 writeln!(f, "\nPanic message:\n{}", msg).unwrap();
                 writeln!(f, "\nPanic hook info:\n{}", hook_info).unwrap();
                 low = mid + 1;
@@ -315,7 +323,10 @@ fn find_minimum_cs_parameters_for_compression() {
             }
         }
 
-        println!("\n=== Results for CompressionCircuit (num_total_columns={}) ===", num_total_columns);
+        println!(
+            "\n=== Results for CompressionCircuit (num_total_columns={}) ===",
+            num_total_columns
+        );
         if let Some(copy_cols) = min_copy_cols {
             let witness_cols = num_total_columns - copy_cols;
             println!("  min num_columns_under_copy_permutation: {}", copy_cols);

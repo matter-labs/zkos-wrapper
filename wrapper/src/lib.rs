@@ -2,8 +2,8 @@
 #![allow(incomplete_features)]
 #![feature(generic_const_exprs)]
 
-mod inner_verifiers;
 pub mod circuits;
+mod inner_verifiers;
 pub mod transcript;
 pub mod wrapper_utils;
 
@@ -104,7 +104,8 @@ pub type SnarkWrapperSetup =
 pub type SnarkWrapperTranscript =
     bellman::plonk::commitments::transcript::keccak_transcript::RollingKeccakTranscript<Fr>;
 
-use execution_utils::{ProgramProof,
+use execution_utils::{
+    ProgramProof,
     // RecursionStrategy,
     // generate_constants_for_binary
 };
@@ -131,10 +132,11 @@ pub fn get_risc_wrapper_setup(
     let geometry = RiscWrapper::geometry();
     let (max_trace_len, num_vars) = circuit.size_hint();
 
-    let builder_impl = CsReferenceImplementationBuilder::<GL, GL, SetupCSConfig, StCircuitResolver<_, _>>::new(
-        geometry,
-        max_trace_len.unwrap(),
-    );
+    let builder_impl =
+        CsReferenceImplementationBuilder::<GL, GL, SetupCSConfig, StCircuitResolver<_, _>>::new(
+            geometry,
+            max_trace_len.unwrap(),
+        );
     let builder = new_builder::<_, GL>(builder_impl);
 
     let builder = RiscWrapper::configure_builder(builder);
@@ -188,10 +190,11 @@ pub fn prove_risc_wrapper(
     let (max_trace_len, num_vars) = circuit.size_hint();
 
     use boojum::config::DevCSConfig;
-    let builder_impl = CsReferenceImplementationBuilder::<GL, GL, DevCSConfig, StCircuitResolver<_, _>>::new(
-        geometry,
-        max_trace_len.unwrap(),
-    );
+    let builder_impl =
+        CsReferenceImplementationBuilder::<GL, GL, DevCSConfig, StCircuitResolver<_, _>>::new(
+            geometry,
+            max_trace_len.unwrap(),
+        );
     let builder = new_builder::<_, GL>(builder_impl);
 
     let builder = RiscWrapper::configure_builder(builder);
@@ -250,10 +253,11 @@ pub fn get_compression_setup(
     let geometry = CompressionCircuit::geometry();
     let (max_trace_len, num_vars) = circuit.size_hint();
 
-    let builder_impl = CsReferenceImplementationBuilder::<GL, GL, SetupCSConfig, StCircuitResolver<_, _>>::new(
-        geometry,
-        max_trace_len.unwrap(),
-    );
+    let builder_impl =
+        CsReferenceImplementationBuilder::<GL, GL, SetupCSConfig, StCircuitResolver<_, _>>::new(
+            geometry,
+            max_trace_len.unwrap(),
+        );
     let builder = new_builder::<_, GL>(builder_impl);
 
     let builder = CompressionCircuit::configure_builder(builder);
@@ -304,10 +308,11 @@ pub fn prove_compression(
     let geometry = CompressionCircuit::geometry();
     let (max_trace_len, num_vars) = circuit.size_hint();
 
-    let builder_impl = CsReferenceImplementationBuilder::<GL, GL, ProvingCSConfig, StCircuitResolver<_, _>>::new(
-        geometry,
-        max_trace_len.unwrap(),
-    );
+    let builder_impl =
+        CsReferenceImplementationBuilder::<GL, GL, ProvingCSConfig, StCircuitResolver<_, _>>::new(
+            geometry,
+            max_trace_len.unwrap(),
+        );
     let builder = new_builder::<_, GL>(builder_impl);
 
     let builder = CompressionCircuit::configure_builder(builder);

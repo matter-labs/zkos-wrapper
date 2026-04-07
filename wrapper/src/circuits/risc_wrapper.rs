@@ -14,9 +14,9 @@ use boojum::{
     gadgets::{
         num::Num,
         tables::{
+            and8::{And8Table, create_and8_table},
             byte_split::{ByteSplitTable, create_byte_split_table},
             xor8::{Xor8Table, create_xor8_table},
-            and8::{And8Table, create_and8_table},
         },
         traits::allocatable::{CSAllocatable, CSPlaceholder},
         u16::UInt16,
@@ -28,25 +28,24 @@ use circuit_mersenne_field::{
 };
 use std::mem::MaybeUninit;
 
-use crate::{risc_verifier, inner_verifiers::unified_reduced};
 use crate::inner_verifiers::unified_reduced::skeleton::{
     WrappedProofSkeletonInstance, WrappedQueryValuesInstance,
 };
 use crate::inner_verifiers::unified_reduced::*;
 use crate::wrapper_utils::prover_structs::*;
 use crate::wrapper_utils::verifier_traits::{CircuitLeafInclusionVerifier, PlaceholderSource};
+use crate::{inner_verifiers::unified_reduced, risc_verifier};
 use risc_verifier::blake2s_u32::*;
 use risc_verifier::concrete::size_constants::*;
 use risc_verifier::prover::definitions::LeafInclusionVerifier;
 use risc_verifier::prover::field::Mersenne31Field;
-use risc_verifier::prover::risc_v_simulator::cycle::state::NUM_REGISTERS;
+use risc_verifier::prover::riscv_transpiler::cycle::state::NUM_REGISTERS;
 
 use risc_verifier::prover::cs::definitions::*;
 
 use risc_verifier::verifier_common::{
-    cs::one_row_compiler::CompiledCircuitArtifact,
     DefaultNonDeterminismSource, ProofOutput, ProofPublicInputs,
-    transcript::Blake2sBufferingTranscript,
+    cs::one_row_compiler::CompiledCircuitArtifact, transcript::Blake2sBufferingTranscript,
 };
 
 use boojum::gadgets::tables::RangeCheck15BitsTable;
@@ -82,17 +81,14 @@ impl BinaryCommitment {
         // We expect to verify an unified_reduced_machine
 
         Self::from_binary(
-            execution_utils::RECURSION_UNIFIED_BIN,
-            execution_utils::RECURSION_UNIFIED_TXT,
+            execution_utils::verifier_binaries::RECURSION_UNIFIED_BIN,
+            execution_utils::verifier_binaries::RECURSION_UNIFIED_TXT,
         )
     }
 
-    pub fn from_binary(
-        binary: &[u8],
-        text: &[u8],
-    ) -> Self {
-        use risc_verifier::prover::risc_v_simulator::cycle::IWithoutByteAccessIsaConfigWithDelegation;
+    pub fn from_binary(binary: &[u8], text: &[u8]) -> Self {
         use execution_utils::unified_circuit::compute_unified_setup_for_machine_configuration;
+        use risc_verifier::prover::riscv_transpiler::cycle::IWithoutByteAccessIsaConfigWithDelegation;
 
         let mut padded_binary = binary.to_vec();
         setups::pad_bytecode_bytes_for_proving(&mut padded_binary);
@@ -100,11 +96,8 @@ impl BinaryCommitment {
         setups::pad_bytecode_bytes_for_proving(&mut padded_text);
 
         let setup = compute_unified_setup_for_machine_configuration::<
-            IWithoutByteAccessIsaConfigWithDelegation
-        >(
-            &padded_binary,
-            &padded_text,
-        );
+            IWithoutByteAccessIsaConfigWithDelegation,
+        >(&padded_binary, &padded_text);
 
         Self {
             end_params: setup.end_params,
@@ -113,7 +106,10 @@ impl BinaryCommitment {
 }
 
 impl RiscWrapperWitness {
-    pub fn from_full_proof(full_proof: UnrolledProgramProof, binary_commitment: &BinaryCommitment) -> Self {
+    pub fn from_full_proof(
+        full_proof: UnrolledProgramProof,
+        binary_commitment: &BinaryCommitment,
+    ) -> Self {
         let UnrolledProgramProof {
             final_pc,
             final_timestamp,
@@ -139,9 +135,8 @@ impl RiscWrapperWitness {
         // );
         // assert_eq!(recursion_chain_hash.unwrap(), binary_commitment.aux_params);
 
-        let (final_timestamp_low, final_timestamp_high) = risc_verifier::prover::cs::definitions::split_timestamp(
-            final_timestamp,
-        );
+        let (final_timestamp_low, final_timestamp_high) =
+            risc_verifier::prover::cs::definitions::split_timestamp(final_timestamp);
 
         let final_registers_state: Vec<_> = register_final_values
             .into_iter()
@@ -156,18 +151,30 @@ impl RiscWrapperWitness {
         let mut cf_iter = circuit_families_proofs.iter();
         let unified_proof = {
             let unified_proofs = cf_iter.next().unwrap();
-            assert!(*unified_proofs.0 == REDUCED_MACHINE_CIRCUIT_FAMILY_IDX, "Expected unified reduced circuit family");
-            assert!(unified_proofs.1.len() == 1, "Expected only one unified proof");
+            assert!(
+                *unified_proofs.0 == REDUCED_MACHINE_CIRCUIT_FAMILY_IDX,
+                "Expected unified reduced circuit family"
+            );
+            assert!(
+                unified_proofs.1.len() == 1,
+                "Expected only one unified proof"
+            );
             unified_proofs.1.into_iter().next().unwrap().clone()
         };
         assert!(cf_iter.next().is_none(), "Too many circuit family proofs");
 
-        assert!(inits_and_teardowns_proofs.is_empty(), "Expected no inits and teardowns proofs");
+        assert!(
+            inits_and_teardowns_proofs.is_empty(),
+            "Expected no inits and teardowns proofs"
+        );
 
         let mut dp_iter = delegation_proofs.iter();
         let blake_proof = {
             let blake_proofs = dp_iter.next().unwrap();
-            assert!(*blake_proofs.0 == BLAKE2S_DELEGATION_CSR_REGISTER, "Expected blake delegation proof");
+            assert!(
+                *blake_proofs.0 == BLAKE2S_DELEGATION_CSR_REGISTER,
+                "Expected blake delegation proof"
+            );
             assert!(blake_proofs.1.len() == 1, "Expected only one blake proof");
             blake_proofs.1.into_iter().next().unwrap().clone()
         };
@@ -425,7 +432,8 @@ impl<F: SmallField, V: CircuitLeafInclusionVerifier<F>> RiscWrapperCircuit<F, V>
             crate::inner_verifiers::blake_delegation::placeholders::<_, _, V>(cs)
         };
 
-        let (blake_state, _) = crate::inner_verifiers::blake_delegation::verify(cs, skeleton, queries);
+        let (blake_state, _) =
+            crate::inner_verifiers::blake_delegation::verify(cs, skeleton, queries);
 
         let pow_challenge = if let Some(witness) = &self.witness {
             [
@@ -500,7 +508,8 @@ pub(crate) fn prepare_proof_for_wrapper<
 ) {
     let shuffle_ram_inits_and_teardowns_len = unified_reduced::imports::VERIFIER_COMPILED_LAYOUT
         .memory_layout
-        .shuffle_ram_inits_and_teardowns.len();
+        .shuffle_ram_inits_and_teardowns
+        .len();
 
     set_iterator_from_proof(proof, shuffle_ram_inits_and_teardowns_len);
 
@@ -527,7 +536,13 @@ pub(crate) fn prepare_proof_for_wrapper<
 pub(crate) fn verify_risc_proof<V: LeafInclusionVerifier>(
     proof: &RiscUnrolledProof,
 ) -> (
-    ProofOutput<TREE_CAP_SIZE, NUM_COSETS, NUM_DELEGATION_CHALLENGES, NUM_AUX_BOUNDARY_VALUES, NUM_MACHINE_STATE_PERMUTATION_CHALLENGES>,
+    ProofOutput<
+        TREE_CAP_SIZE,
+        NUM_COSETS,
+        NUM_DELEGATION_CHALLENGES,
+        NUM_AUX_BOUNDARY_VALUES,
+        NUM_MACHINE_STATE_PERMUTATION_CHALLENGES,
+    >,
     ProofPublicInputs<NUM_STATE_ELEMENTS>,
 ) {
     let compiled_circuit: CompiledCircuitArtifact<Mersenne31Field> =
@@ -560,18 +575,25 @@ pub(crate) fn verify_risc_proof<V: LeafInclusionVerifier>(
     (proof_state_dst, proof_input_dst)
 }
 
-pub(crate) fn set_iterator_from_unrolled_proof(proof: &RiscUnrolledProof, compiled_circuit: CompiledCircuitArtifact<Mersenne31Field>) {
-    let mut oracle_data = risc_verifier::verifier_common::proof_flattener::flatten_full_unrolled_proof(
-        &proof,
-        &compiled_circuit,
-    );
+pub(crate) fn set_iterator_from_unrolled_proof(
+    proof: &RiscUnrolledProof,
+    compiled_circuit: CompiledCircuitArtifact<Mersenne31Field>,
+) {
+    let mut oracle_data =
+        risc_verifier::verifier_common::proof_flattener::flatten_full_unrolled_proof(
+            &proof,
+            &compiled_circuit,
+        );
 
     let it = oracle_data.into_iter();
 
     risc_verifier::prover::nd_source_std::set_iterator(it.clone());
 }
 
-pub(crate) fn set_iterator_from_proof(proof: &RiscProof, shuffle_ram_inits_and_teardowns_len: usize) {
+pub(crate) fn set_iterator_from_proof(
+    proof: &RiscProof,
+    shuffle_ram_inits_and_teardowns_len: usize,
+) {
     let mut oracle_data = vec![];
 
     oracle_data.extend(
@@ -660,7 +682,11 @@ pub(crate) fn check_proof_state<F: SmallField, CS: ConstraintSystem<F>>(
 
         Num::enforce_equal(cs, &blake_state.circuit_sequence.into_num(), &zero);
         let blake_delegation_type = UInt32::allocated_constant(cs, BLAKE2S_DELEGATION_CSR_REGISTER);
-        Num::enforce_equal(cs, &blake_state.delegation_type.into_num(), &blake_delegation_type.into_num());
+        Num::enforce_equal(
+            cs,
+            &blake_state.delegation_type.into_num(),
+            &blake_delegation_type.into_num(),
+        );
 
         // assert!(MerkleTreeCap::compare(
         //     &delegation_proof_output.setup_caps,
@@ -695,20 +721,20 @@ pub(crate) fn check_proof_state<F: SmallField, CS: ConstraintSystem<F>>(
     let (
         memory_argument_challenges,
         delegation_argument_challenges,
-        machine_state_permutation_challenges
+        machine_state_permutation_challenges,
     ) = draw_from_transcript_seed_with_state_permutation(
-            cs,
-            memory_seed,
-            risc_verifier::verifier_common::MEMORY_DELEGATION_POW_BITS as u32,
-            pow_challenge
-        );
+        cs,
+        memory_seed,
+        risc_verifier::verifier_common::MEMORY_DELEGATION_POW_BITS as u32,
+        pow_challenge,
+    );
 
     memory_argument_challenges.enforce_equal(cs, &proof_state.memory_challenges);
     if NUM_DELEGATION_CHALLENGES > 0 {
-        delegation_argument_challenges
-            .enforce_equal(cs, &proof_state.delegation_challenges[0]);
+        delegation_argument_challenges.enforce_equal(cs, &proof_state.delegation_challenges[0]);
     }
-    machine_state_permutation_challenges.enforce_equal(cs, &proof_state.machine_state_permutation_challenges[0]);
+    machine_state_permutation_challenges
+        .enforce_equal(cs, &proof_state.machine_state_permutation_challenges[0]);
 
     // conclude that our memory argument is valid
     let register_contribution = produce_register_contribution_into_memory_accumulator_raw(
@@ -719,21 +745,18 @@ pub(crate) fn check_proof_state<F: SmallField, CS: ConstraintSystem<F>>(
             .memory_argument_linearization_challenges,
         proof_state.memory_challenges.memory_argument_gamma,
     );
-    let machine_state_contribution =
-        produce_pc_into_permutation_accumulator_raw(
-            cs,
-            INITIAL_PC,
-            split_timestamp(INITIAL_TIMESTAMP),
-            final_pc,
-            (final_timestamp[0], final_timestamp[1]),
-            &proof_state.machine_state_permutation_challenges[0].linearization_challenges,
-            &proof_state.machine_state_permutation_challenges[0].additive_term,
-        );
+    let machine_state_contribution = produce_pc_into_permutation_accumulator_raw(
+        cs,
+        INITIAL_PC,
+        split_timestamp(INITIAL_TIMESTAMP),
+        final_pc,
+        (final_timestamp[0], final_timestamp[1]),
+        &proof_state.machine_state_permutation_challenges[0].linearization_challenges,
+        &proof_state.machine_state_permutation_challenges[0].additive_term,
+    );
 
-    grand_product_accumulator =
-        grand_product_accumulator.mul(cs, &register_contribution);
-    grand_product_accumulator =
-        grand_product_accumulator.mul(cs, &machine_state_contribution);
+    grand_product_accumulator = grand_product_accumulator.mul(cs, &register_contribution);
+    grand_product_accumulator = grand_product_accumulator.mul(cs, &machine_state_contribution);
 
     let one_m4 = MersenneQuartic::one(cs);
     let zero_m4 = MersenneQuartic::zero(cs);
@@ -771,7 +794,7 @@ fn prepare_and_allocate_public_inputs<F: SmallField, CS: ConstraintSystem<F>>(
 ) {
     // We hash needed data for the L1 verifier
     // registers 10-17 - those are the output of the base program
-    // registers 18-25 - those are the aux registers that we use to store 
+    // registers 18-25 - those are the aux registers that we use to store
     // the hash of the execution trace, and the chain of executed programs
     let flattened_public_input: Vec<_> = final_registers_state
         .chunks(3)
@@ -868,10 +891,7 @@ pub fn produce_register_contribution_into_memory_accumulator_raw<
 }
 
 /// (PC, timestamp)
-pub fn produce_pc_into_permutation_accumulator_raw<
-    F: SmallField,
-    CS: ConstraintSystem<F>,
->(
+pub fn produce_pc_into_permutation_accumulator_raw<F: SmallField, CS: ConstraintSystem<F>>(
     cs: &mut CS,
     initial_pc: u32,
     initial_timestamp: (u32, u32),
@@ -943,18 +963,18 @@ fn split_uint32_into_pair_mersenne<F: SmallField, CS: ConstraintSystem<F>>(
     chunks.map(|chunk| MersenneField::from_variable_checked(cs, chunk.get_variable(), true))
 }
 
-fn split_uint32_into_pair_uint16<F: SmallField, CS: ConstraintSystem<F>>(cs: &mut CS, uint32_value: UInt32<F>) -> (UInt16<F>, UInt16<F>) {
+fn split_uint32_into_pair_uint16<F: SmallField, CS: ConstraintSystem<F>>(
+    cs: &mut CS,
+    uint32_value: UInt32<F>,
+) -> (UInt16<F>, UInt16<F>) {
     let bytes = uint32_value.decompose_into_bytes(cs);
     (
         UInt16::from_le_bytes(cs, [bytes[0], bytes[1]]),
-        UInt16::from_le_bytes(cs, [bytes[2], bytes[3]])
+        UInt16::from_le_bytes(cs, [bytes[2], bytes[3]]),
     )
 }
 
-pub fn draw_from_transcript_seed_with_state_permutation<
-    F: SmallField,
-    CS: ConstraintSystem<F>,
->(
+pub fn draw_from_transcript_seed_with_state_permutation<F: SmallField, CS: ConstraintSystem<F>>(
     cs: &mut CS,
     mut seed: SeedWrapped<F>,
     pow_bits: u32,
@@ -962,7 +982,7 @@ pub fn draw_from_transcript_seed_with_state_permutation<
 ) -> (
     WrappedExternalMemoryArgumentChallenges<F>,
     WrappedExternalDelegationArgumentChallenges<F>,
-    WrappedExternalMachineStateArgumentChallenges<F>
+    WrappedExternalMachineStateArgumentChallenges<F>,
 ) {
     if pow_bits > 0 {
         let mut transcript_hasher = Blake2sStateGate::<F>::new(cs);
@@ -972,27 +992,34 @@ pub fn draw_from_transcript_seed_with_state_permutation<
             &mut transcript_hasher,
             &mut seed,
             pow_challenge,
-            pow_bits
+            pow_bits,
         );
     }
 
     unsafe {
-        const TOTAL_CHALLENGES: usize = (NUM_MEM_ARGUMENT_LINEARIZATION_CHALLENGES + 1
-            + NUM_DELEGATION_ARGUMENT_LINEARIZATION_CHALLENGES + 1
-            + NUM_MACHINE_STATE_LINEARIZATION_CHALLENGES + 1)
+        const TOTAL_CHALLENGES: usize = (NUM_MEM_ARGUMENT_LINEARIZATION_CHALLENGES
+            + 1
+            + NUM_DELEGATION_ARGUMENT_LINEARIZATION_CHALLENGES
+            + 1
+            + NUM_MACHINE_STATE_LINEARIZATION_CHALLENGES
+            + 1)
             * 4;
 
         let mut transcript_challenges = vec![];
 
         let mut it = if pow_bits > 0 {
-            transcript_challenges.resize((TOTAL_CHALLENGES + 1)
-                .next_multiple_of(BLAKE2S_DIGEST_SIZE_U32_WORDS), UInt32::zero(cs));
+            transcript_challenges.resize(
+                (TOTAL_CHALLENGES + 1).next_multiple_of(BLAKE2S_DIGEST_SIZE_U32_WORDS),
+                UInt32::zero(cs),
+            );
             Blake2sWrappedTranscript::draw_randomness(cs, &mut seed, &mut transcript_challenges);
 
             transcript_challenges[1..].as_chunks::<4>().0.iter()
         } else {
-            transcript_challenges.resize((TOTAL_CHALLENGES)
-                .next_multiple_of(BLAKE2S_DIGEST_SIZE_U32_WORDS), UInt32::zero(cs));
+            transcript_challenges.resize(
+                (TOTAL_CHALLENGES).next_multiple_of(BLAKE2S_DIGEST_SIZE_U32_WORDS),
+                UInt32::zero(cs),
+            );
             Blake2sWrappedTranscript::draw_randomness(cs, &mut seed, &mut transcript_challenges);
 
             transcript_challenges.as_chunks::<4>().0.iter()
@@ -1035,12 +1062,11 @@ pub fn draw_from_transcript_seed_with_state_permutation<
             )
         });
 
-        let machine_state_permutation_argument_additive_term =
-            MersenneQuartic::from_coeffs(
-                it.next()
-                    .unwrap_unchecked()
-                    .map(|el| MersenneField::from_uint32_with_reduction(cs, el)),
-            );
+        let machine_state_permutation_argument_additive_term = MersenneQuartic::from_coeffs(
+            it.next()
+                .unwrap_unchecked()
+                .map(|el| MersenneField::from_uint32_with_reduction(cs, el)),
+        );
 
         let memory_argument = WrappedExternalMemoryArgumentChallenges {
             memory_argument_linearization_challenges,
@@ -1053,8 +1079,7 @@ pub fn draw_from_transcript_seed_with_state_permutation<
         };
 
         let machine_state_permutation_argument = WrappedExternalMachineStateArgumentChallenges {
-            linearization_challenges:
-                machine_state_permutation_argument_linearization_challenges,
+            linearization_challenges: machine_state_permutation_argument_linearization_challenges,
             additive_term: machine_state_permutation_argument_additive_term,
         };
 

@@ -200,10 +200,7 @@ impl Blake2sWrappedTranscript {
         seed.0 = hasher.read_state_for_output();
     }
 
-    pub fn verify_pow_using_hasher<
-        F: SmallField,
-        CS: ConstraintSystem<F>,
-    >(
+    pub fn verify_pow_using_hasher<F: SmallField, CS: ConstraintSystem<F>>(
         cs: &mut CS,
         hasher: &mut Blake2sStateGate<F>,
         seed: &mut SeedWrapped<F>,
@@ -247,10 +244,8 @@ impl Blake2sWrappedTranscript {
             let pow_bits_mask = UInt16::allocated_constant(cs, pow_bits_mask);
             let _ = pow_bits_mask.sub_no_overflow(cs, first_el_low);
         } else {
-            let first_el_high = UInt16::from_le_bytes(
-                cs,
-                hasher.extended_state[0].inner[2..].try_into().unwrap(),
-            );
+            let first_el_high =
+                UInt16::from_le_bytes(cs, hasher.extended_state[0].inner[2..].try_into().unwrap());
             let pow_bits_mask = (0xffff as u32 >> pow_bits) as u16;
             let pow_bits_mask = UInt16::allocated_constant(cs, pow_bits_mask);
             let _ = pow_bits_mask.sub_no_overflow(cs, first_el_high);

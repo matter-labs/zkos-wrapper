@@ -16,11 +16,11 @@ use risc_verifier::concrete::size_constants::*;
 use risc_verifier::concrete::skeleton_instance::ProofSkeletonInstance;
 use risc_verifier::concrete::skeleton_instance::QueryValuesInstance;
 use risc_verifier::field::*;
-use risc_verifier::verifier_common;
-use risc_verifier::verifier_common::{transcript_challenge_array_size, SizedProofPowChallenges};
 use risc_verifier::prover::cs::definitions::*;
 use risc_verifier::skeleton::{ProofSkeleton, QueryValues};
+use risc_verifier::verifier_common;
 use risc_verifier::verifier_common::non_determinism_source::NonDeterminismSource;
+use risc_verifier::verifier_common::{SizedProofPowChallenges, transcript_challenge_array_size};
 
 use crate::wrapper_utils::prover_structs::*;
 

@@ -203,12 +203,9 @@ pub struct WrappedExternalMachineStateArgumentChallenges<F: SmallField> {
 
 impl<F: SmallField> WrappedExternalMachineStateArgumentChallenges<F> {
     pub(crate) fn to_uint32_vec(&self) -> Vec<UInt32<F>> {
-        let mut result =
-            Vec::with_capacity(NUM_MACHINE_STATE_LINEARIZATION_CHALLENGES * 4 + 4);
+        let mut result = Vec::with_capacity(NUM_MACHINE_STATE_LINEARIZATION_CHALLENGES * 4 + 4);
         for i in 0..NUM_MACHINE_STATE_LINEARIZATION_CHALLENGES {
-            result.extend_from_slice(
-                &self.linearization_challenges[i].into_uint32s(),
-            );
+            result.extend_from_slice(&self.linearization_challenges[i].into_uint32s());
         }
         result.extend_from_slice(&self.additive_term.into_uint32s());
         result
@@ -216,11 +213,9 @@ impl<F: SmallField> WrappedExternalMachineStateArgumentChallenges<F> {
 
     pub(crate) fn enforce_equal<CS: ConstraintSystem<F>>(&self, cs: &mut CS, other: &Self) {
         for i in 0..NUM_MACHINE_STATE_LINEARIZATION_CHALLENGES {
-            self.linearization_challenges[i]
-                .enforce_equal(cs, &other.linearization_challenges[i]);
+            self.linearization_challenges[i].enforce_equal(cs, &other.linearization_challenges[i]);
         }
-        self.additive_term
-            .enforce_equal(cs, &other.additive_term)
+        self.additive_term.enforce_equal(cs, &other.additive_term)
     }
 }
 
@@ -229,7 +224,8 @@ impl<F: SmallField> CSAllocatable<F> for WrappedExternalMachineStateArgumentChal
 
     fn placeholder_witness() -> Self::Witness {
         ExternalMachineStateArgumentChallenges {
-            linearization_challenges: [MersenneQuartic::<F>::placeholder_witness(); NUM_MACHINE_STATE_LINEARIZATION_CHALLENGES],
+            linearization_challenges: [MersenneQuartic::<F>::placeholder_witness();
+                NUM_MACHINE_STATE_LINEARIZATION_CHALLENGES],
             additive_term: MersenneQuartic::<F>::placeholder_witness(),
         }
     }
@@ -382,11 +378,16 @@ impl<
         NUM_COSETS,
         NUM_DELEGATION_CHALLENGES,
         NUM_AUX_BOUNDARY_VALUES,
-        NUM_MACHINE_STATE_CHALLENGES
+        NUM_MACHINE_STATE_CHALLENGES,
     >
 {
-    type Witness =
-        ProofOutput<CAP_SIZE, NUM_COSETS, NUM_DELEGATION_CHALLENGES, NUM_AUX_BOUNDARY_VALUES, NUM_MACHINE_STATE_CHALLENGES>;
+    type Witness = ProofOutput<
+        CAP_SIZE,
+        NUM_COSETS,
+        NUM_DELEGATION_CHALLENGES,
+        NUM_AUX_BOUNDARY_VALUES,
+        NUM_MACHINE_STATE_CHALLENGES,
+    >;
 
     fn placeholder_witness() -> Self::Witness {
         ProofOutput {
@@ -398,8 +399,9 @@ impl<
                     NUM_DELEGATION_CHALLENGES],
             lazy_init_boundary_values: [WrappedAuxArgumentsBoundaryValues::<F>::placeholder_witness(
             ); NUM_AUX_BOUNDARY_VALUES],
-            machine_state_permutation_challenges: [WrappedExternalMachineStateArgumentChallenges::<F>::placeholder_witness();
-                NUM_MACHINE_STATE_CHALLENGES],
+            machine_state_permutation_challenges:
+                [WrappedExternalMachineStateArgumentChallenges::<F>::placeholder_witness();
+                    NUM_MACHINE_STATE_CHALLENGES],
             grand_product_accumulator: Mersenne31Quartic::ZERO,
             delegation_argument_accumulator: [Mersenne31Quartic::ZERO; NUM_DELEGATION_CHALLENGES],
             circuit_sequence: 0u32,

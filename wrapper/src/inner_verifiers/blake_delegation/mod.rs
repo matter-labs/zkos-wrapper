@@ -15,10 +15,10 @@ use blake_verifier::concrete::size_constants::*;
 use blake_verifier::concrete::skeleton_instance::ProofSkeletonInstance;
 use blake_verifier::concrete::skeleton_instance::QueryValuesInstance;
 use blake_verifier::field::*;
-use risc_verifier::verifier_common::{transcript_challenge_array_size, SizedProofPowChallenges};
 use blake_verifier::prover::cs::definitions::*;
 use blake_verifier::skeleton::{ProofSkeleton, QueryValues};
 use blake_verifier::verifier_common::non_determinism_source::NonDeterminismSource;
+use risc_verifier::verifier_common::{SizedProofPowChallenges, transcript_challenge_array_size};
 
 use crate::wrapper_utils::prover_structs::*;
 
@@ -46,7 +46,8 @@ pub fn prepare_blake_proof_for_wrapper<
 ) {
     let shuffle_ram_inits_and_teardowns_len = imports::VERIFIER_COMPILED_LAYOUT
         .memory_layout
-        .shuffle_ram_inits_and_teardowns.len();
+        .shuffle_ram_inits_and_teardowns
+        .len();
     set_iterator_from_proof(proof, shuffle_ram_inits_and_teardowns_len);
 
     let skeleton = unsafe {
@@ -102,7 +103,8 @@ pub(crate) fn verify_blake_proof<V: LeafInclusionVerifier>(
 ) {
     let shuffle_ram_inits_and_teardowns_len = imports::VERIFIER_COMPILED_LAYOUT
         .memory_layout
-        .shuffle_ram_inits_and_teardowns.len();
+        .shuffle_ram_inits_and_teardowns
+        .len();
     set_iterator_from_proof(proof, shuffle_ram_inits_and_teardowns_len);
 
     let mut proof_state_dst = unsafe {

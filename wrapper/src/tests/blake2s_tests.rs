@@ -50,7 +50,10 @@ fn test_blake2s_round_function() {
     use boojum::config::DevCSConfig;
     use boojum::cs::cs_builder_reference::*;
     let builder_impl =
-        CsReferenceImplementationBuilder::<F, F, DevCSConfig, StCircuitResolver<_, _>>::new(geometry, 1 << 17);
+        CsReferenceImplementationBuilder::<F, F, DevCSConfig, StCircuitResolver<_, _>>::new(
+            geometry,
+            1 << 17,
+        );
     use boojum::cs::cs_builder::new_builder;
     let builder = new_builder::<_, F>(builder_impl);
 
@@ -317,7 +320,10 @@ fn test_leaf_inclusion() {
     use boojum::config::DevCSConfig;
     use boojum::cs::cs_builder_reference::*;
     let builder_impl =
-        CsReferenceImplementationBuilder::<F, F, DevCSConfig, StCircuitResolver<_, _>>::new(geometry, 1 << 20);
+        CsReferenceImplementationBuilder::<F, F, DevCSConfig, StCircuitResolver<_, _>>::new(
+            geometry,
+            1 << 20,
+        );
     use boojum::cs::cs_builder::new_builder;
     let builder = new_builder::<_, F>(builder_impl);
 
@@ -392,9 +398,11 @@ fn test_leaf_inclusion() {
 
     // read proof and set iterator
     let risc_proof = deserialize_from_file(RISC_PROOF_PATH);
-    let shuffle_ram_inits_and_teardowns_len = crate::inner_verifiers::unified_reduced::imports::VERIFIER_COMPILED_LAYOUT
-        .memory_layout
-        .shuffle_ram_inits_and_teardowns.len();
+    let shuffle_ram_inits_and_teardowns_len =
+        crate::inner_verifiers::unified_reduced::imports::VERIFIER_COMPILED_LAYOUT
+            .memory_layout
+            .shuffle_ram_inits_and_teardowns
+            .len();
     crate::set_iterator_from_proof(&risc_proof, shuffle_ram_inits_and_teardowns_len);
 
     let mut leaf_inclusion_verifier = CircuitBlake2sForEverythingVerifier::new(cs);
@@ -432,7 +440,10 @@ fn test_buffering_transcript() {
     use boojum::config::DevCSConfig;
     use boojum::cs::cs_builder_reference::*;
     let builder_impl =
-        CsReferenceImplementationBuilder::<F, F, DevCSConfig, StCircuitResolver<_, _>>::new(geometry, 1 << 20);
+        CsReferenceImplementationBuilder::<F, F, DevCSConfig, StCircuitResolver<_, _>>::new(
+            geometry,
+            1 << 20,
+        );
     use boojum::cs::cs_builder::new_builder;
     let builder = new_builder::<_, F>(builder_impl);
 
@@ -567,7 +578,10 @@ fn test_decompose() {
     use boojum::config::DevCSConfig;
     use boojum::cs::cs_builder_reference::*;
     let builder_impl =
-        CsReferenceImplementationBuilder::<F, F, DevCSConfig, StCircuitResolver<_, _>>::new(geometry, 1 << 17);
+        CsReferenceImplementationBuilder::<F, F, DevCSConfig, StCircuitResolver<_, _>>::new(
+            geometry,
+            1 << 17,
+        );
     use boojum::cs::cs_builder::new_builder;
     let builder = new_builder::<_, F>(builder_impl);
 
