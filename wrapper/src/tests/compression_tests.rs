@@ -41,7 +41,7 @@ pub(crate) fn compression_full_test() {
     #[cfg(feature = "gpu")]
     let (compression_proof, compression_vk) = {
         use shivini::{ProverContext, ProverContextConfig};
-        let config = ProverContextConfig::default().with_smallest_supported_domain_size(1 << 16);
+        let config = ProverContextConfig::default().with_smallest_supported_domain_size(1 << 15);
         let _prover_context = ProverContext::create_with_config(config).unwrap();
 
         let (gpu_setup, gpu_vk, finalization_hint) =

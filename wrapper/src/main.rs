@@ -13,7 +13,6 @@ use bellman::worker::Worker as BellmanWorker;
 use zkos_wrapper::{
     calculate_verification_key_hash, deserialize_from_file, serialize_to_file,
     circuits::{BinaryCommitment, RiscWrapperWitness},
-    deserialize_from_file, get_trusted_setup, serialize_to_file,
 };
 #[cfg(not(feature = "gpu"))]
 use zkos_wrapper::{Bn256, L1_VERIFIER_DOMAIN_SIZE_LOG, get_trusted_setup};
