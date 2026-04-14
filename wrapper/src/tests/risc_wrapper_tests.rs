@@ -25,32 +25,56 @@ pub(crate) fn risc_wrapper_full_test() {
     let risc_wrapper_witness =
         RiscWrapperWitness::from_full_proof(program_proof, &binary_commitment);
 
-    let (
-        finalization_hint,
-        setup_base,
-        setup,
-        risc_wrapper_vk,
-        setup_tree,
-        vars_hint,
-        witness_hints,
-    ) = crate::get_risc_wrapper_setup(&worker, binary_commitment.clone());
+    #[cfg(not(feature = "gpu"))]
+    let (risc_wrapper_proof, risc_wrapper_vk) = {
+        let (
+            finalization_hint,
+            setup_base,
+            setup,
+            risc_wrapper_vk,
+            setup_tree,
+            vars_hint,
+            witness_hints,
+        ) = crate::get_risc_wrapper_setup(&worker, binary_commitment.clone());
 
-    let risc_wrapper_proof = crate::prove_risc_wrapper(
-        risc_wrapper_witness,
-        &finalization_hint,
-        &setup_base,
-        &setup,
-        &risc_wrapper_vk,
-        &setup_tree,
-        &vars_hint,
-        &witness_hints,
-        &worker,
-        binary_commitment.clone(),
-    );
+        let risc_wrapper_proof = crate::prove_risc_wrapper(
+            risc_wrapper_witness,
+            &finalization_hint,
+            &setup_base,
+            &setup,
+            &risc_wrapper_vk,
+            &setup_tree,
+            &vars_hint,
+            &witness_hints,
+            &worker,
+            binary_commitment.clone(),
+        );
 
-    let is_valid = crate::verify_risc_wrapper_proof(&risc_wrapper_proof, &risc_wrapper_vk);
+        let is_valid = crate::verify_risc_wrapper_proof(&risc_wrapper_proof, &risc_wrapper_vk);
+        assert!(is_valid);
 
-    assert!(is_valid);
+        (risc_wrapper_proof, risc_wrapper_vk)
+    };
+
+    #[cfg(feature = "gpu")]
+    let (risc_wrapper_proof, risc_wrapper_vk) = {
+        let (gpu_setup, gpu_vk, finalization_hint) =
+            crate::gpu::risc_wrapper::get_risc_wrapper_setup(&worker, binary_commitment.clone());
+
+        let risc_wrapper_proof = crate::gpu::risc_wrapper::prove_risc_wrapper(
+            risc_wrapper_witness,
+            &finalization_hint,
+            &gpu_setup,
+            &gpu_vk,
+            &worker,
+            binary_commitment.clone(),
+        );
+
+        let is_valid = crate::verify_risc_wrapper_proof(&risc_wrapper_proof, &gpu_vk);
+        assert!(is_valid);
+
+        (risc_wrapper_proof, gpu_vk)
+    };
 
     serialize_to_file(&risc_wrapper_proof, RISC_WRAPPER_PROOF_PATH);
     serialize_to_file(&risc_wrapper_vk, RISC_WRAPPER_VK_PATH);

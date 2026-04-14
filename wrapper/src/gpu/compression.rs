@@ -12,7 +12,6 @@ use boojum::{
     worker::Worker,
 };
 use shivini::{
-    ProverContext, ProverContextConfig,
     cs::{GpuSetup, gpu_setup_and_vk_from_base_setup_vk_params_and_hints},
     gpu_proof_config::GpuProofConfig,
     gpu_prove_from_external_witness_data,
@@ -34,11 +33,6 @@ pub fn get_compression_setup(
     FinalizationHintsForProver,
 ) {
     let start = std::time::Instant::now();
-
-    // Currently the GPU context is initialized here, but it should be done at a higher level.
-    // For compression circuit, we actually have to set the domain size lower.
-    let config = ProverContextConfig::default().with_smallest_supported_domain_size(1 << 15);
-    let _prover_context = ProverContext::create_with_config(config).unwrap();
 
     let verify_inner_proof: bool = false;
     let circuit = CompressionCircuit::new(None, risc_wrapper_vk, verify_inner_proof);
@@ -95,11 +89,6 @@ pub fn prove_compression(
     worker: &Worker,
 ) -> CompressionProof {
     let start = std::time::Instant::now();
-
-    // Currently the GPU context is initialized here, but it should be done at a higher level.
-    // For compression circuit, we actually have to set the domain size lower.
-    let config = ProverContextConfig::default().with_smallest_supported_domain_size(1 << 15);
-    let _prover_context = ProverContext::create_with_config(config).unwrap();
 
     let verify_inner_proof = true;
     let circuit = CompressionCircuit::new(

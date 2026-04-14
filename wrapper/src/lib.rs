@@ -516,14 +516,13 @@ pub fn get_trusted_setup(crs_file_str: &String) -> Crs<Bn256, CrsForMonomialForm
 }
 
 pub fn serialize_to_file<T: serde::ser::Serialize>(content: &T, filename: &str) {
-    let src = std::fs::File::create(filename).unwrap();
-    serde_json::to_writer_pretty(src, content).unwrap();
+    let src = std::fs::File::create(filename).expect(filename);
+    serde_json::to_writer_pretty(src, content).expect(filename);
 }
 
 pub fn deserialize_from_file<T: serde::de::DeserializeOwned>(filename: &str) -> T {
-    dbg!(filename);
-    let src = std::fs::File::open(filename).unwrap();
-    serde_json::from_reader(src).unwrap()
+    let src = std::fs::File::open(filename).expect(filename);
+    serde_json::from_reader(src).expect(filename)
 }
 
 pub fn prove_risc_wrapper_with_snark(
@@ -543,6 +542,9 @@ pub fn prove_risc_wrapper_with_snark(
 
     #[cfg(feature = "gpu")]
     let (compression_proof, compression_vk) = {
+        let config = shivini::ProverContextConfig::default().with_smallest_supported_domain_size(1 << 15);
+        let _prover_context = shivini::ProverContext::create_with_config(config).unwrap();
+
         let (setup, compression_vk, finalization) =
             gpu::compression::get_compression_setup(&worker, risc_wrapper_vk.clone());
         let compression_proof = gpu::compression::prove_compression(

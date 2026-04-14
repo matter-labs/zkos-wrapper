@@ -29,15 +29,15 @@ impl CircuitBuilder<GL> for CompressionCircuit {
     fn geometry() -> CSGeometry {
         if cfg!(feature = "security_80") {
             CSGeometry {
-                num_columns_under_copy_permutation: 51,
-                num_witness_columns: 79,
+                num_columns_under_copy_permutation: 52,
+                num_witness_columns: 78,
                 num_constant_columns: 4,
                 max_allowed_constraint_degree: 8,
             }
         } else if cfg!(feature = "security_100") {
             CSGeometry {
-                num_columns_under_copy_permutation: 65,
-                num_witness_columns: 65,
+                num_columns_under_copy_permutation: 68,
+                num_witness_columns: 62,
                 num_constant_columns: 4,
                 max_allowed_constraint_degree: 8,
             }
