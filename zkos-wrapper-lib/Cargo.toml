@@ -1,0 +1,40 @@
+[package]
+name = "zkos-wrapper-lib"
+version = "0.1.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+boojum.workspace = true
+bellman.workspace = true
+rescue_poseidon.workspace = true
+snark_wrapper.workspace = true
+reduced_risc_verifier.workspace = true
+final_risc_verifier.workspace = true
+blake_verifier.workspace = true
+execution_utils.workspace = true
+setups.workspace = true
+circuit_mersenne_field.workspace = true
+serde_json.workspace = true
+serde.workspace = true
+sha3.workspace = true
+tracing.workspace = true
+
+shivini = { workspace = true, optional = true }
+proof-compression = { workspace = true, optional = true }
+zksync-gpu-prover = { workspace = true, optional = true }
+
+[dev-dependencies]
+rand.workspace = true
+hex = "0.4.3"
+libc = "0.2.175"
+
+[features]
+
+default = ["wrap_with_reduced_log_23"]
+wrap_final_machine = []
+wrap_with_reduced_log_23 = []
+gpu = ["shivini", "proof-compression", "zksync-gpu-prover"]

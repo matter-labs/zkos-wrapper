@@ -1,7 +1,7 @@
 [workspace]
 resolver = "2"
 
-members = ["circuit_mersenne_field", "wrapper", "wrapper_generator"]
+members = ["circuit_mersenne_field", "zkos-wrapper-lib", "wrapper", "wrapper_generator"]
 
 
 [workspace.package]
@@ -47,6 +47,9 @@ serde = { version = "1", default-features = false, features = [
 clap = { version = "4.5.21", features = ["derive"] }
 sha3 = "0.10"
 rand = "0.8"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+zkos-wrapper-lib = { path = "zkos-wrapper-lib" }
 
 # Used for GPU proving.
 shivini = "=0.155.2"

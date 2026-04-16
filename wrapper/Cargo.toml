@@ -12,25 +12,14 @@ name = "wrapper"
 path = "src/main.rs"
 
 [dependencies]
-boojum.workspace = true
-bellman.workspace = true
-rescue_poseidon.workspace = true
-snark_wrapper.workspace = true
-reduced_risc_verifier.workspace = true
-final_risc_verifier.workspace = true
-blake_verifier.workspace = true
-execution_utils.workspace = true
-setups.workspace = true
-circuit_mersenne_field.workspace = true
-serde_json.workspace = true
-serde.workspace = true
+zkos-wrapper-lib.workspace = true
 clap.workspace = true
-sha3.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
 
-
-shivini = { workspace = true, optional = true } 
-proof-compression = {workspace = true, optional = true}
-zksync-gpu-prover = {workspace = true, optional = true}
+# Needed in main.rs for GPU precomputation loading
+boojum = { workspace = true, optional = true }
+proof-compression = { workspace = true, optional = true }
 
 [dev-dependencies]
 rand.workspace = true
@@ -40,6 +29,6 @@ libc = "0.2.175"
 [features]
 
 default = ["wrap_with_reduced_log_23"]
-wrap_final_machine = []
-wrap_with_reduced_log_23 = []
-gpu = ["shivini", "proof-compression", "zksync-gpu-prover"]
+wrap_final_machine = ["zkos-wrapper-lib/wrap_final_machine"]
+wrap_with_reduced_log_23 = ["zkos-wrapper-lib/wrap_with_reduced_log_23"]
+gpu = ["zkos-wrapper-lib/gpu", "boojum", "proof-compression"]

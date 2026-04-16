@@ -1,6 +1,5 @@
 #![feature(allocator_api)]
 
-use boojum::cs::implementations::fast_serialization::MemcopySerializable;
 /// Tool that takes the riscv proof from boojum 2.0, together with the final value of the
 /// registers - and returns the SNARK proof.
 // Inside, it runs 3 submodules:
@@ -10,10 +9,13 @@ use boojum::cs::implementations::fast_serialization::MemcopySerializable;
 use clap::{Parser, Subcommand};
 use std::path::Path;
 
-use execution_utils::RecursionStrategy;
 use zkos_wrapper::{
-    deserialize_from_file, generate_and_save_risc_wrapper_vk, generate_vk, verification_hash,
+    RecursionStrategy, deserialize_from_file, generate_and_save_risc_wrapper_vk, generate_vk,
+    verification_hash,
 };
+
+#[cfg(feature = "gpu")]
+use boojum::cs::implementations::fast_serialization::MemcopySerializable;
 
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
@@ -96,6 +98,13 @@ enum Commands {
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+    tracing_subscriber::fmt()
+        .with_env_filter(
+            tracing_subscriber::EnvFilter::try_from_default_env()
+                .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("info")),
+        )
+        .init();
+
     let cli = Cli::parse();
 
     match cli.command {
@@ -106,10 +115,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             #[cfg(feature = "gpu")]
             precomputation_dir,
         } => {
-            println!("=== Phase 0: Proving");
+            tracing::info!("=== Phase 0: Proving");
             #[cfg(feature = "gpu")]
             let precomputations = if let Some(dir) = &precomputation_dir {
-                println!("Loading existing precomputations");
+                tracing::info!("Loading existing precomputations");
                 let output_file = Path::new(&dir).join("snark_preprocessing.bin");
                 let file = std::fs::File::open(output_file).unwrap();
                 let setup_data = proof_compression::serialization::PlonkSnarkVerifierCircuitDeviceSetupWrapper::read_from_buffer(file).unwrap();
@@ -136,7 +145,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             )?;
         }
         Commands::ProveRiscWrapper { input, output_dir } => {
-            println!("=== Phase 0: Proving RiscWrapper");
+            tracing::info!("=== Phase 0: Proving RiscWrapper");
 
             #[cfg(feature = "gpu")]
             zkos_wrapper::prove(input, output_dir, None, true, None, true)?;
@@ -150,7 +159,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             universal_verifier,
             recursion_mode,
         } => {
-            println!("=== Phase 0: Generating the verification key");
+            tracing::info!("=== Phase 0: Generating the verification key");
             generate_vk(
                 input_binary,
                 output_dir,
@@ -165,7 +174,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             universal_verifier,
             recursion_mode,
         } => {
-            println!("=== Phase 0: Generating the RiscWrapper verification key");
+            tracing::info!("=== Phase 0: Generating the RiscWrapper verification key");
             generate_and_save_risc_wrapper_vk(
                 input_binary,
                 output_dir,
