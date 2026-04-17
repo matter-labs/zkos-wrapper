@@ -63,12 +63,12 @@ fn format_rust_code(code: &str) -> Result<String, String> {
 struct Cli {
     #[arg(
         long,
-        default_value = "../wrapper/src/inner_verifiers/unified_reduced/imports"
+        default_value = "wrapper/src/inner_verifiers/unified_reduced/imports"
     )]
     output_dir: String,
     #[arg(
         long,
-        default_value = "../wrapper/src/inner_verifiers/blake_delegation/imports"
+        default_value = "wrapper/src/inner_verifiers/blake_delegation/imports"
     )]
     blake_output_dir: String,
 }
