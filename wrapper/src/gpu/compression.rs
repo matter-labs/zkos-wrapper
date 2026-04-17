@@ -72,7 +72,7 @@ pub fn get_compression_setup(
         )
         .unwrap();
 
-    println!(
+    tracing::info!(
         "compression circuit setup takes {} ms",
         start.elapsed().as_millis()
     );
@@ -135,7 +135,7 @@ pub fn prove_compression(
     )
     .unwrap();
 
-    println!(
+    tracing::info!(
         "compression wrapper proving takes {} ms",
         start.elapsed().as_millis()
     );

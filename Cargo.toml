@@ -70,6 +70,10 @@ zksync-gpu-prover = { git = "https://github.com/matter-labs/zksync-crypto-gpu.gi
 # proof-compression = { path = "../zksync-crypto-gpu/crates/proof-compression", package = "proof-compression" }
 # zksync-gpu-prover = { path = "../zksync-crypto-gpu/crates/gpu-prover", package = "zksync-gpu-prover" }
 
+tracing = "0.1"
+tracing-subscriber = "0.3"
+anyhow = "1"
+
 [profile.release.package."blake2_with_compression_verifier"]
 opt-level = 1
 codegen-units = 256

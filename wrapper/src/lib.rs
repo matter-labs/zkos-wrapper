@@ -4,6 +4,7 @@
 
 pub mod circuits;
 mod inner_verifiers;
+pub mod interface;
 pub mod transcript;
 pub mod wrapper_utils;
 
@@ -47,6 +48,8 @@ use circuits::*;
 use std::alloc::Global;
 use std::path::Path;
 use wrapper_utils::verifier_traits::CircuitBlake2sForEverythingVerifier;
+
+use anyhow::Context as _;
 
 pub type GL = boojum::field::goldilocks::GoldilocksField;
 pub type GLExt2 = boojum::field::goldilocks::GoldilocksExt2;
@@ -411,7 +414,7 @@ pub fn prove_snark_wrapper(
     wrapper_circuit.synthesize(&mut assembly).unwrap();
 
     if use_zk {
-        println!("using zk (padding) proving");
+        tracing::info!("using zk (padding) proving");
         const NUM_PADDING_TERMS: usize = 2 + 2 + 2; // worst case witness polys are opened at 2 points, plus there are
         // indirect openings of grand product for permutation and for lookup
         let mut rng = rand::rngs::OsRng;
@@ -421,7 +424,7 @@ pub fn prove_snark_wrapper(
             &mut rng,
         );
     } else {
-        println!("using non-zk (no padding) proving");
+        tracing::info!("using non-zk (no padding) proving");
         assembly.finalize_to_size_log_2(L1_VERIFIER_DOMAIN_SIZE_LOG);
     }
 
@@ -508,21 +511,29 @@ pub fn calculate_verification_key_hash(verification_key: SnarkWrapperVK) -> H256
 }
 
 /// Uploads trusted setup file to the RAM
-pub fn get_trusted_setup(crs_file_str: &String) -> Crs<Bn256, CrsForMonomialForm> {
+pub fn get_trusted_setup(crs_file_str: &String) -> anyhow::Result<Crs<Bn256, CrsForMonomialForm>> {
     let crs_file_path = std::path::Path::new(crs_file_str);
     let crs_file = std::fs::File::open(&crs_file_path)
-        .expect(format!("Trying to open CRS FILE: {:?}", crs_file_path).as_str());
-    Crs::read(&crs_file).expect(format!("Trying to read CRS FILE: {:?}", crs_file_path).as_str())
+        .with_context(|| format!("Can't open CRS FILE: {:?}", crs_file_path))?;
+    Crs::read(&crs_file).with_context(|| format!("Can't read CRS FILE: {:?}", crs_file_path))
 }
 
-pub fn serialize_to_file<T: serde::ser::Serialize>(content: &T, filename: &str) {
-    let src = std::fs::File::create(filename).expect(filename);
-    serde_json::to_writer_pretty(src, content).expect(filename);
+pub fn serialize_to_file<T: serde::ser::Serialize>(
+    content: &T,
+    filename: &str,
+) -> anyhow::Result<()> {
+    let src =
+        std::fs::File::create(filename).with_context(|| format!("Can't create file {filename}"))?;
+    serde_json::to_writer_pretty(src, content)
+        .with_context(|| format!("Can't serialize {filename}"))?;
+    Ok(())
 }
 
-pub fn deserialize_from_file<T: serde::de::DeserializeOwned>(filename: &str) -> T {
-    let src = std::fs::File::open(filename).expect(filename);
-    serde_json::from_reader(src).expect(filename)
+pub fn deserialize_from_file<T: serde::de::DeserializeOwned>(filename: &str) -> anyhow::Result<T> {
+    let src =
+        std::fs::File::open(filename).with_context(|| format!("Can't open file {filename}"))?;
+    serde_json::from_reader(src)
+        .with_context(|| format!("Can't deserialize the contents of file {filename}"))
 }
 
 pub fn prove_risc_wrapper_with_snark(
@@ -536,13 +547,14 @@ pub fn prove_risc_wrapper_with_snark(
     // TODO!: Remove by end of Q4 2025.
     // Currently in place to allow a easy revert in case ZK proving causes issues.
     use_zk: bool,
-) -> Result<(SnarkWrapperProof, SnarkWrapperVK), Box<dyn std::error::Error>> {
+) -> anyhow::Result<(SnarkWrapperProof, SnarkWrapperVK)> {
     let worker = boojum::worker::Worker::new();
-    println!("=== Phase 2: Creating compression proof");
+    tracing::info!("=== Phase 2: Creating compression proof");
 
     #[cfg(feature = "gpu")]
     let (compression_proof, compression_vk) = {
-        let config = shivini::ProverContextConfig::default().with_smallest_supported_domain_size(1 << 15);
+        let config =
+            shivini::ProverContextConfig::default().with_smallest_supported_domain_size(1 << 15);
         let _prover_context = shivini::ProverContext::create_with_config(config).unwrap();
 
         let (setup, compression_vk, finalization) =
@@ -586,14 +598,14 @@ pub fn prove_risc_wrapper_with_snark(
     let is_valid = verify_compression_proof(&compression_proof, &compression_vk);
 
     if !is_valid {
-        return Err("Compression proof is not valid".into());
+        return Err(anyhow::anyhow!("Compression proof is not valid"));
     }
 
-    println!("=== Phase 3: Creating SNARK proof");
+    tracing::info!("=== Phase 3: Creating SNARK proof");
 
     #[cfg(feature = "gpu")]
     {
-        println!("Using GPU for SNARK proof generation");
+        tracing::info!("Using GPU for SNARK proof generation");
         let crs_file =
             trusted_setup_file.expect("Trusted setup must be set for GPU (and it must be compat");
 
@@ -601,7 +613,7 @@ pub fn prove_risc_wrapper_with_snark(
 
         let (setup_data, vk) = match precomputations {
             Some((setup_data, vk)) => {
-                println!("Using provided precomputations");
+                tracing::info!("Using provided precomputations");
                 (setup_data, vk)
             }
             None => {
@@ -624,7 +636,7 @@ pub fn prove_risc_wrapper_with_snark(
     #[cfg(not(feature = "gpu"))]
     {
         let crs_mons = match trusted_setup_file {
-            Some(ref crs_file_str) => get_trusted_setup(crs_file_str),
+            Some(ref crs_file_str) => get_trusted_setup(crs_file_str)?,
             None => Crs::<Bn256, CrsForMonomialForm>::crs_42(
                 1 << L1_VERIFIER_DOMAIN_SIZE_LOG,
                 &BellmanWorker::new(),
@@ -649,7 +661,7 @@ pub fn prove_risc_wrapper_with_snark(
             let is_valid = verify_snark_wrapper_proof(&snark_wrapper_proof, &snark_wrapper_vk);
 
             if !is_valid {
-                return Err("Snark wrapper proof is not valid".into());
+                return Err(anyhow::anyhow!("Snark wrapper proof is not valid"));
             }
             Ok((snark_wrapper_proof, snark_wrapper_vk))
         }
@@ -659,7 +671,7 @@ pub fn prove_risc_wrapper_with_snark(
 // pub fn prove_fri_risc_wrapper(
 //     program_proof: ProgramProof,
 // ) -> Result<(RiscWrapperProof, RiscWrapperVK), Box<dyn std::error::Error>> {
-//     println!("=== Phase 1: Creating the Risc wrapper proof");
+//     tracing::info!("=== Phase 1: Creating the Risc wrapper proof");
 
 //     let worker = boojum::worker::Worker::new();
 
@@ -828,7 +840,7 @@ pub fn prove_risc_wrapper_with_snark(
 // ) -> Result<H256, Box<dyn std::error::Error>> {
 //     let boojum_worker = boojum::worker::Worker::new();
 
-//     println!("=== Phase 1: Creating the Risc wrapper key");
+//     tracing::info!("=== Phase 1: Creating the Risc wrapper key");
 
 //     let risc_wrapper_vk = generate_risk_wrapper_vk(
 //         input_binary,
@@ -837,15 +849,15 @@ pub fn prove_risc_wrapper_with_snark(
 //         &boojum_worker,
 //     )?;
 
-//     println!("=== Phase 2: Creating the Compression key");
+//     tracing::info!("=== Phase 2: Creating the Compression key");
 //     let (_, _, _, compression_vk, _, _, _) =
 //         get_compression_setup(risc_wrapper_vk.clone(), &boojum_worker);
 
-//     println!("=== Phase 3: Creating the SNARK key");
+//     tracing::info!("=== Phase 3: Creating the SNARK key");
 
 //     #[cfg(feature = "gpu")]
 //     let snark_wrapper_vk = {
-//         println!("Using GPU for SNARK key generation");
+//         tracing::info!("Using GPU for SNARK key generation");
 //         let crs_file =
 //             trusted_setup_file.expect("Trusted setup must be set for GPU (and it must be compat");
 //         let (preprocessing, snark_wrapper_vk) =
@@ -880,13 +892,14 @@ pub fn prove_risc_wrapper_with_snark(
 //     );
 
 //     let verification_key = calculate_verification_key_hash(snark_wrapper_vk);
-//     println!("VK key hash: {verification_key:?}");
+//     tracing::info!("VK key hash: {verification_key:?}");
 
 //     Ok(verification_key)
 // }
 
-pub fn verification_hash(vk_path: String) {
-    let vk = deserialize_from_file(&vk_path);
+pub fn verification_hash(vk_path: String) -> anyhow::Result<()> {
+    let vk = deserialize_from_file(&vk_path).context("Can't deserialize VK")?;
     let vk_hash = calculate_verification_key_hash(vk);
-    println!("VK hash: {vk_hash:?}");
+    tracing::info!("VK hash: {vk_hash:?}");
+    Ok(())
 }

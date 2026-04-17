@@ -175,7 +175,7 @@ fn test_blake2s_round_function() {
 //     // let worker = zkos_verifier_worker::Worker::new_with_num_threads(4);
 //     // let (mut _seed, pow_nonce) = zkos_verifier::transcript::Blake2sTranscript::search_pow(&seed, POW_BITS, &worker);
 //     let pow_nonce: u64 = 280946043;
-//     println!("pow_nonce: {}", pow_nonce);
+//     tracing::info!("pow_nonce: {}", pow_nonce);
 //     // let mut transcript_hasher = zkos_verifier::blake2s_u32::Blake2sState::new();
 //     risc_verifier::transcript::Blake2sTranscript::verify_pow_using_hasher(
 //         &mut transcript_hasher,
@@ -397,7 +397,7 @@ fn test_leaf_inclusion() {
     let cs = &mut owned_cs;
 
     // read proof and set iterator
-    let risc_proof = deserialize_from_file(RISC_PROOF_PATH);
+    let risc_proof = deserialize_from_file(RISC_PROOF_PATH).unwrap();
     let shuffle_ram_inits_and_teardowns_len =
         crate::inner_verifiers::unified_reduced::imports::VERIFIER_COMPILED_LAYOUT
             .memory_layout
