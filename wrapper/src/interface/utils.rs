@@ -13,15 +13,6 @@ use bellman::worker::Worker as BellmanWorker;
 use crate::{Bn256, L1_VERIFIER_DOMAIN_SIZE_LOG, get_trusted_setup};
 use crate::{circuits::BinaryCommitment, deserialize_from_file};
 
-// ==============================================================================
-// Local Execution Helpers
-// ==============================================================================
-//
-// The interface commands mostly orchestrate already-existing proving APIs.
-// These helpers keep the orchestration code focused on the pipeline itself:
-// worker selection, filesystem setup, shared timing logs, and loading optional
-// assets that are reused across multiple commands.
-
 pub(super) fn create_boojum_worker(threads: Option<usize>) -> BoojumWorker {
     match threads {
         Some(n) => {

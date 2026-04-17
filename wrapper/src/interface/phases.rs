@@ -20,14 +20,6 @@ pub enum VerifyStage {
     Snark,
 }
 
-// ==============================================================================
-// Pipeline Phase Implementations
-// ==============================================================================
-//
-// Each phase function owns one boundary in the wrapper pipeline. The command
-// layer is responsible for CLI-oriented concerns such as paths and persistence,
-// while this module focuses on the actual proving, setup, and verification flow.
-
 pub fn run_phase1_risc_wrapper(
     program_proof: UnrolledProgramProof,
     bin: &Option<PathBuf>,
