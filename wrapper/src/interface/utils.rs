@@ -1,3 +1,4 @@
+use anyhow::Context as _;
 use boojum::worker::Worker as BoojumWorker;
 use execution_utils::unrolled::UnrolledProgramProof;
 use std::path::{Path, PathBuf};
@@ -46,14 +47,16 @@ pub(super) fn print_elapsed(label: &str, start: Instant) {
 pub(super) fn load_binary_commitment(
     bin: &Option<PathBuf>,
     text: &Option<PathBuf>,
-) -> Result<BinaryCommitment, Box<dyn std::error::Error>> {
+) -> anyhow::Result<BinaryCommitment> {
     match (bin, text) {
         (Some(bin_path), Some(text_path)) => {
             tracing::info!("Loading binary from {}", bin_path.display());
-            let binary = std::fs::read(bin_path)
-                .map_err(|e| format!("Failed to read .bin file {}: {e}", bin_path.display()))?;
-            let text_data = std::fs::read(text_path)
-                .map_err(|e| format!("Failed to read .text file {}: {e}", text_path.display()))?;
+            let binary = std::fs::read(bin_path).map_err(|e| {
+                anyhow::anyhow!("Failed to read .bin file {}: {e}", bin_path.display())
+            })?;
+            let text_data = std::fs::read(text_path).map_err(|e| {
+                anyhow::anyhow!("Failed to read .text file {}: {e}", text_path.display())
+            })?;
             Ok(BinaryCommitment::from_binary(&binary, &text_data))
         }
         _ => {
@@ -63,33 +66,36 @@ pub(super) fn load_binary_commitment(
     }
 }
 
-/// Loads and deserialized the proof from file.
-pub fn load_proof(proof_path: &Path) -> UnrolledProgramProof {
+/// Loads and deserializes the proof from file.
+pub fn load_proof(proof_path: &Path) -> anyhow::Result<UnrolledProgramProof> {
     tracing::info!("Loading FRI proof from {}", proof_path.display());
-    deserialize_from_file(proof_path.to_str().unwrap())
+    deserialize_from_file(proof_path.to_str().expect("Non-unicode file path"))
 }
 
-pub(super) fn ensure_output_dir(path: &Path) -> Result<(), Box<dyn std::error::Error>> {
-    std::fs::create_dir_all(path)
-        .map_err(|e| format!("Failed to create output directory {}: {e}", path.display()))?;
+pub(super) fn ensure_output_dir(path: &Path) -> anyhow::Result<()> {
+    std::fs::create_dir_all(path).map_err(|e| {
+        anyhow::anyhow!("Failed to create output directory {}: {e}", path.display())
+    })?;
     Ok(())
 }
 
 #[cfg(not(feature = "gpu"))]
-pub(super) fn load_crs(trusted_setup: &Option<PathBuf>) -> Crs<Bn256, CrsForMonomialForm> {
+pub(super) fn load_crs(
+    trusted_setup: &Option<PathBuf>,
+) -> anyhow::Result<Crs<Bn256, CrsForMonomialForm>> {
     match trusted_setup {
         Some(path) => {
             tracing::info!("Loading trusted setup from {}", path.display());
-            get_trusted_setup(&path.to_string_lossy().to_string())
+            get_trusted_setup(&path.to_string_lossy().to_string()).context("Trusted setup")
         }
         None => {
             tracing::info!(
                 "WARNING: Using fake crs_42 trusted setup (testing only, NOT for production!)"
             );
-            Crs::<Bn256, CrsForMonomialForm>::crs_42(
+            Ok(Crs::<Bn256, CrsForMonomialForm>::crs_42(
                 1 << L1_VERIFIER_DOMAIN_SIZE_LOG,
                 &BellmanWorker::new(),
-            )
+            ))
         }
     }
 }

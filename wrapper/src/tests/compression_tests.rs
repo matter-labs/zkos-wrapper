@@ -4,8 +4,9 @@ use super::*;
 pub(crate) fn compression_full_test() {
     let worker = boojum::worker::Worker::new();
 
-    let risc_wrapper_proof = deserialize_from_file(RISC_WRAPPER_PROOF_PATH);
-    let risc_wrapper_vk: crate::RiscWrapperVK = deserialize_from_file(RISC_WRAPPER_VK_PATH);
+    let risc_wrapper_proof = deserialize_from_file(RISC_WRAPPER_PROOF_PATH).unwrap();
+    let risc_wrapper_vk: crate::RiscWrapperVK =
+        deserialize_from_file(RISC_WRAPPER_VK_PATH).unwrap();
 
     #[cfg(not(feature = "gpu"))]
     let (compression_proof, compression_vk) = {
@@ -62,15 +63,15 @@ pub(crate) fn compression_full_test() {
         (compression_proof, gpu_vk)
     };
 
-    serialize_to_file(&compression_proof, COMPRESSION_PROOF_PATH);
-    serialize_to_file(&compression_vk, COMPRESSION_VK_PATH);
+    serialize_to_file(&compression_proof, COMPRESSION_PROOF_PATH).unwrap();
+    serialize_to_file(&compression_vk, COMPRESSION_VK_PATH).unwrap();
 }
 
 #[test]
 pub(crate) fn compression_setup_test() {
     let worker = boojum::worker::Worker::new();
 
-    let risc_wrapper_vk = deserialize_from_file(RISC_WRAPPER_VK_PATH);
+    let risc_wrapper_vk = deserialize_from_file(RISC_WRAPPER_VK_PATH).unwrap();
 
     let (
         finalization_hint,
@@ -84,5 +85,5 @@ pub(crate) fn compression_setup_test() {
 
     dbg!(finalization_hint);
 
-    serialize_to_file(&compression_vk, COMPRESSION_VK_PATH);
+    serialize_to_file(&compression_vk, COMPRESSION_VK_PATH).unwrap();
 }

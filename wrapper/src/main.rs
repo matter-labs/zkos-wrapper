@@ -1,7 +1,6 @@
 #![feature(allocator_api)]
 
 use clap::{Parser, Subcommand, ValueEnum};
-use std::error::Error;
 use std::path::PathBuf;
 use tracing::level_filters::LevelFilter;
 use tracing_subscriber::EnvFilter;
@@ -173,7 +172,7 @@ impl From<VerifyStage> for zkos_wrapper::interface::VerifyStage {
 }
 
 // `INFO` logs are enabled by default, but `RUST_LOG` overrides are supported as well.
-fn init_tracing() -> Result<(), Box<dyn Error>> {
+fn init_tracing() -> anyhow::Result<()> {
     let env_filter = EnvFilter::builder()
         .with_default_directive(LevelFilter::INFO.into())
         .from_env_lossy();
@@ -181,12 +180,12 @@ fn init_tracing() -> Result<(), Box<dyn Error>> {
     tracing_subscriber::fmt()
         .with_env_filter(env_filter)
         .try_init()
-        .map_err(|error| format!("Failed to initialize tracing subscriber: {error}"))?;
+        .map_err(|error| anyhow::anyhow!("Failed to initialize tracing subscriber: {error}"))?;
 
     Ok(())
 }
 
-fn main() -> Result<(), Box<dyn Error>> {
+fn main() -> anyhow::Result<()> {
     init_tracing()?;
 
     let cli = Cli::parse();

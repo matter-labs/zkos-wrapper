@@ -5,8 +5,8 @@ use bellman::kate_commitment::{Crs, CrsForMonomialForm};
 pub(crate) fn snark_wrapper_full_test() {
     let worker = crate::BellmanWorker::new();
 
-    let compression_proof = deserialize_from_file(COMPRESSION_PROOF_PATH);
-    let compression_vk: crate::CompressionVK = deserialize_from_file(COMPRESSION_VK_PATH);
+    let compression_proof = deserialize_from_file(COMPRESSION_PROOF_PATH).unwrap();
+    let compression_vk: crate::CompressionVK = deserialize_from_file(COMPRESSION_VK_PATH).unwrap();
     let crs_mons = Crs::<crate::Bn256, CrsForMonomialForm>::crs_42(
         1 << crate::L1_VERIFIER_DOMAIN_SIZE_LOG,
         &worker,
@@ -28,15 +28,15 @@ pub(crate) fn snark_wrapper_full_test() {
 
     assert!(is_valid);
 
-    serialize_to_file(&snark_wrapper_proof, SNARK_WRAPPER_PROOF_PATH);
-    serialize_to_file(&snark_wrapper_vk, SNARK_WRAPPER_VK_PATH);
+    serialize_to_file(&snark_wrapper_proof, SNARK_WRAPPER_PROOF_PATH).unwrap();
+    serialize_to_file(&snark_wrapper_vk, SNARK_WRAPPER_VK_PATH).unwrap();
 }
 
 #[test]
 pub(crate) fn snark_wrapper_setup_test() {
     let worker = crate::BellmanWorker::new();
 
-    let compression_vk = deserialize_from_file(COMPRESSION_VK_PATH);
+    let compression_vk = deserialize_from_file(COMPRESSION_VK_PATH).unwrap();
     let crs_mons = Crs::<crate::Bn256, CrsForMonomialForm>::crs_42(
         1 << crate::L1_VERIFIER_DOMAIN_SIZE_LOG,
         &worker,
@@ -45,5 +45,5 @@ pub(crate) fn snark_wrapper_setup_test() {
     let (_snark_wrapper_setup, snark_wrapper_vk) =
         crate::get_snark_wrapper_setup(compression_vk, &crs_mons, &worker);
 
-    serialize_to_file(&snark_wrapper_vk, SNARK_WRAPPER_VK_PATH);
+    serialize_to_file(&snark_wrapper_vk, SNARK_WRAPPER_VK_PATH).unwrap();
 }

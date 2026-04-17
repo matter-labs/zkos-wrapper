@@ -49,6 +49,8 @@ use std::alloc::Global;
 use std::path::Path;
 use wrapper_utils::verifier_traits::CircuitBlake2sForEverythingVerifier;
 
+use anyhow::Context as _;
+
 pub type GL = boojum::field::goldilocks::GoldilocksField;
 pub type GLExt2 = boojum::field::goldilocks::GoldilocksExt2;
 pub type RiscLeafInclusionVerifier = CircuitBlake2sForEverythingVerifier<GL>;
@@ -509,21 +511,29 @@ pub fn calculate_verification_key_hash(verification_key: SnarkWrapperVK) -> H256
 }
 
 /// Uploads trusted setup file to the RAM
-pub fn get_trusted_setup(crs_file_str: &String) -> Crs<Bn256, CrsForMonomialForm> {
+pub fn get_trusted_setup(crs_file_str: &String) -> anyhow::Result<Crs<Bn256, CrsForMonomialForm>> {
     let crs_file_path = std::path::Path::new(crs_file_str);
     let crs_file = std::fs::File::open(&crs_file_path)
-        .expect(format!("Trying to open CRS FILE: {:?}", crs_file_path).as_str());
-    Crs::read(&crs_file).expect(format!("Trying to read CRS FILE: {:?}", crs_file_path).as_str())
+        .with_context(|| format!("Can't open CRS FILE: {:?}", crs_file_path))?;
+    Crs::read(&crs_file).with_context(|| format!("Can't read CRS FILE: {:?}", crs_file_path))
 }
 
-pub fn serialize_to_file<T: serde::ser::Serialize>(content: &T, filename: &str) {
-    let src = std::fs::File::create(filename).expect(filename);
-    serde_json::to_writer_pretty(src, content).expect(filename);
+pub fn serialize_to_file<T: serde::ser::Serialize>(
+    content: &T,
+    filename: &str,
+) -> anyhow::Result<()> {
+    let src =
+        std::fs::File::create(filename).with_context(|| format!("Can't create file {filename}"))?;
+    serde_json::to_writer_pretty(src, content)
+        .with_context(|| format!("Can't serialize {filename}"))?;
+    Ok(())
 }
 
-pub fn deserialize_from_file<T: serde::de::DeserializeOwned>(filename: &str) -> T {
-    let src = std::fs::File::open(filename).expect(filename);
-    serde_json::from_reader(src).expect(filename)
+pub fn deserialize_from_file<T: serde::de::DeserializeOwned>(filename: &str) -> anyhow::Result<T> {
+    let src =
+        std::fs::File::open(filename).with_context(|| format!("Can't open file {filename}"))?;
+    serde_json::from_reader(src)
+        .with_context(|| format!("Can't deserialize the contents of file {filename}"))
 }
 
 pub fn prove_risc_wrapper_with_snark(
@@ -537,7 +547,7 @@ pub fn prove_risc_wrapper_with_snark(
     // TODO!: Remove by end of Q4 2025.
     // Currently in place to allow a easy revert in case ZK proving causes issues.
     use_zk: bool,
-) -> Result<(SnarkWrapperProof, SnarkWrapperVK), Box<dyn std::error::Error>> {
+) -> anyhow::Result<(SnarkWrapperProof, SnarkWrapperVK)> {
     let worker = boojum::worker::Worker::new();
     tracing::info!("=== Phase 2: Creating compression proof");
 
@@ -588,7 +598,7 @@ pub fn prove_risc_wrapper_with_snark(
     let is_valid = verify_compression_proof(&compression_proof, &compression_vk);
 
     if !is_valid {
-        return Err("Compression proof is not valid".into());
+        return Err(anyhow::anyhow!("Compression proof is not valid"));
     }
 
     tracing::info!("=== Phase 3: Creating SNARK proof");
@@ -626,7 +636,7 @@ pub fn prove_risc_wrapper_with_snark(
     #[cfg(not(feature = "gpu"))]
     {
         let crs_mons = match trusted_setup_file {
-            Some(ref crs_file_str) => get_trusted_setup(crs_file_str),
+            Some(ref crs_file_str) => get_trusted_setup(crs_file_str)?,
             None => Crs::<Bn256, CrsForMonomialForm>::crs_42(
                 1 << L1_VERIFIER_DOMAIN_SIZE_LOG,
                 &BellmanWorker::new(),
@@ -651,7 +661,7 @@ pub fn prove_risc_wrapper_with_snark(
             let is_valid = verify_snark_wrapper_proof(&snark_wrapper_proof, &snark_wrapper_vk);
 
             if !is_valid {
-                return Err("Snark wrapper proof is not valid".into());
+                return Err(anyhow::anyhow!("Snark wrapper proof is not valid"));
             }
             Ok((snark_wrapper_proof, snark_wrapper_vk))
         }
@@ -887,8 +897,9 @@ pub fn prove_risc_wrapper_with_snark(
 //     Ok(verification_key)
 // }
 
-pub fn verification_hash(vk_path: String) {
-    let vk = deserialize_from_file(&vk_path);
+pub fn verification_hash(vk_path: String) -> anyhow::Result<()> {
+    let vk = deserialize_from_file(&vk_path).context("Can't deserialize VK")?;
     let vk_hash = calculate_verification_key_hash(vk);
     tracing::info!("VK hash: {vk_hash:?}");
+    Ok(())
 }

@@ -1,3 +1,4 @@
+use anyhow::Context as _;
 use boojum::worker::Worker as BoojumWorker;
 use execution_utils::unrolled::UnrolledProgramProof;
 use std::path::PathBuf;
@@ -32,7 +33,7 @@ pub fn run_phase1_risc_wrapper(
     bin: &Option<PathBuf>,
     text: &Option<PathBuf>,
     worker: &BoojumWorker,
-) -> Result<(crate::RiscWrapperProof, crate::RiscWrapperVK), Box<dyn std::error::Error>> {
+) -> anyhow::Result<(crate::RiscWrapperProof, crate::RiscWrapperVK)> {
     tracing::info!("=== Phase 1 - binary commitment: starting...");
     let start = Instant::now();
     let binary_commitment = load_binary_commitment(bin, text)?;
@@ -106,7 +107,7 @@ pub fn run_phase1_risc_wrapper(
     let is_valid = crate::verify_risc_wrapper_proof(&risc_wrapper_proof, &risc_wrapper_vk);
     print_elapsed("Phase 1 - verify", start);
     if !is_valid {
-        return Err("RISC wrapper proof verification failed".into());
+        return Err(anyhow::anyhow!("RISC wrapper proof verification failed"));
     }
     tracing::info!("Phase 1 proof verified successfully");
 
@@ -117,7 +118,7 @@ pub fn run_phase2_compression(
     risc_wrapper_proof: crate::RiscWrapperProof,
     risc_wrapper_vk: crate::RiscWrapperVK,
     worker: &BoojumWorker,
-) -> Result<(crate::CompressionProof, crate::CompressionVK), Box<dyn std::error::Error>> {
+) -> anyhow::Result<(crate::CompressionProof, crate::CompressionVK)> {
     #[cfg(not(feature = "gpu"))]
     let (compression_proof, compression_vk) = {
         tracing::info!("=== Phase 2 - setup (CPU): starting...");
@@ -184,7 +185,7 @@ pub fn run_phase2_compression(
     let is_valid = crate::verify_compression_proof(&compression_proof, &compression_vk);
     print_elapsed("Phase 2 - verify", start);
     if !is_valid {
-        return Err("Compression proof verification failed".into());
+        return Err(anyhow::anyhow!("Compression proof verification failed"));
     }
     tracing::info!("Phase 2 proof verified successfully");
 
@@ -196,12 +197,12 @@ pub fn run_phase3_snark(
     compression_vk: crate::CompressionVK,
     trusted_setup: &Option<PathBuf>,
     use_zk: bool,
-) -> Result<(crate::SnarkWrapperProof, crate::SnarkWrapperVK), Box<dyn std::error::Error>> {
+) -> anyhow::Result<(crate::SnarkWrapperProof, crate::SnarkWrapperVK)> {
     #[cfg(not(feature = "gpu"))]
     let (snark_proof, snark_vk) = {
         tracing::info!("=== Phase 3 - load CRS: starting...");
         let start = Instant::now();
-        let crs_mons = load_crs(trusted_setup);
+        let crs_mons = load_crs(trusted_setup).context("crs")?;
         print_elapsed("Phase 3 - load CRS", start);
 
         let bellman_worker = BellmanWorker::new();
@@ -261,7 +262,7 @@ pub fn run_phase3_snark(
     let is_valid = crate::verify_snark_wrapper_proof(&snark_proof, &snark_vk);
     print_elapsed("Phase 3 - verify", start);
     if !is_valid {
-        return Err("SNARK wrapper proof verification failed".into());
+        return Err(anyhow::anyhow!("SNARK wrapper proof verification failed"));
     }
     tracing::info!("Phase 3 proof verified successfully");
 
