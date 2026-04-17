@@ -1,5 +1,6 @@
 use boojum::worker::Worker as BoojumWorker;
-use std::path::{Path, PathBuf};
+use execution_utils::unrolled::UnrolledProgramProof;
+use std::path::PathBuf;
 use std::time::Instant;
 
 #[cfg(not(feature = "gpu"))]
@@ -8,7 +9,6 @@ use super::utils::load_crs;
 use bellman::worker::Worker as BellmanWorker;
 
 use crate::circuits::RiscWrapperWitness;
-use crate::deserialize_from_file;
 
 use super::utils::{load_binary_commitment, print_elapsed};
 
@@ -28,7 +28,7 @@ pub enum VerifyStage {
 // while this module focuses on the actual proving, setup, and verification flow.
 
 pub fn run_phase1_risc_wrapper(
-    proof_path: &Path,
+    program_proof: UnrolledProgramProof,
     bin: &Option<PathBuf>,
     text: &Option<PathBuf>,
     worker: &BoojumWorker,
@@ -37,10 +37,6 @@ pub fn run_phase1_risc_wrapper(
     let start = Instant::now();
     let binary_commitment = load_binary_commitment(bin, text)?;
     print_elapsed("Phase 1 - binary commitment", start);
-
-    tracing::info!("Loading FRI proof from {}", proof_path.display());
-    let program_proof: execution_utils::unrolled::UnrolledProgramProof =
-        deserialize_from_file(proof_path.to_str().unwrap());
 
     tracing::info!("=== Phase 1 - witness generation: starting...");
     let start = Instant::now();

@@ -1,4 +1,5 @@
 use boojum::worker::Worker as BoojumWorker;
+use execution_utils::unrolled::UnrolledProgramProof;
 use std::path::{Path, PathBuf};
 use std::time::Instant;
 
@@ -7,9 +8,9 @@ use bellman::kate_commitment::{Crs, CrsForMonomialForm};
 #[cfg(not(feature = "gpu"))]
 use bellman::worker::Worker as BellmanWorker;
 
-use crate::circuits::BinaryCommitment;
 #[cfg(not(feature = "gpu"))]
 use crate::{Bn256, L1_VERIFIER_DOMAIN_SIZE_LOG, get_trusted_setup};
+use crate::{circuits::BinaryCommitment, deserialize_from_file};
 
 // ==============================================================================
 // Local Execution Helpers
@@ -60,6 +61,12 @@ pub(super) fn load_binary_commitment(
             Ok(BinaryCommitment::from_default_binary())
         }
     }
+}
+
+/// Loads and deserialized the proof from file.
+pub fn load_proof(proof_path: &Path) -> UnrolledProgramProof {
+    tracing::info!("Loading FRI proof from {}", proof_path.display());
+    deserialize_from_file(proof_path.to_str().unwrap())
 }
 
 pub(super) fn ensure_output_dir(path: &Path) -> Result<(), Box<dyn std::error::Error>> {

@@ -12,7 +12,8 @@ use super::phases::{
     VerifyStage, run_phase1_risc_wrapper, run_phase2_compression, run_phase3_snark,
 };
 use super::utils::{
-    create_boojum_worker, ensure_output_dir, load_binary_commitment, output_path, print_elapsed,
+    create_boojum_worker, ensure_output_dir, load_binary_commitment, load_proof, output_path,
+    print_elapsed,
 };
 
 // ==============================================================================
@@ -36,11 +37,12 @@ pub fn cmd_prove_all(
     ensure_output_dir(&output_dir)?;
     let total_start = Instant::now();
     let worker = create_boojum_worker(threads);
+    let program_proof = load_proof(&proof);
 
     // Drive the full pipeline in order so callers can optionally persist the
     // boundaries between phases for later debugging or reuse.
     let (risc_wrapper_proof, risc_wrapper_vk) =
-        run_phase1_risc_wrapper(&proof, &bin, &text, &worker)?;
+        run_phase1_risc_wrapper(program_proof, &bin, &text, &worker)?;
 
     if save_intermediates {
         serialize_to_file(
@@ -96,9 +98,10 @@ pub fn cmd_prove_risc_wrapper(
 ) -> Result<(), Box<dyn std::error::Error>> {
     ensure_output_dir(&output_dir)?;
     let worker = create_boojum_worker(threads);
+    let program_proof = load_proof(&proof);
 
     let (risc_wrapper_proof, risc_wrapper_vk) =
-        run_phase1_risc_wrapper(&proof, &bin, &text, &worker)?;
+        run_phase1_risc_wrapper(program_proof, &bin, &text, &worker)?;
 
     serialize_to_file(
         &risc_wrapper_proof,
