@@ -471,8 +471,10 @@ pub(crate) fn prepare_unrolled_proof_for_wrapper<
     WrappedProofSkeletonInstance<F>,
     [WrappedQueryValuesInstance<F>; NUM_QUERIES],
 ) {
-    let compiled_circuit: CompiledCircuitArtifact<Mersenne31Field> =
-        serde_json::from_str(include_str!("../inner_verifiers/unified_reduced/imports/circuit_layout.json")).unwrap();
+    let compiled_circuit: CompiledCircuitArtifact<Mersenne31Field> = serde_json::from_str(
+        include_str!("../inner_verifiers/unified_reduced/imports/circuit_layout.json"),
+    )
+    .unwrap();
 
     set_iterator_from_unrolled_proof(proof, compiled_circuit);
 
@@ -545,8 +547,10 @@ pub(crate) fn verify_risc_proof<V: LeafInclusionVerifier>(
     >,
     ProofPublicInputs<NUM_STATE_ELEMENTS>,
 ) {
-    let compiled_circuit: CompiledCircuitArtifact<Mersenne31Field> =
-        serde_json::from_str(include_str!("../inner_verifiers/unified_reduced/imports/circuit_layout.json")).unwrap();
+    let compiled_circuit: CompiledCircuitArtifact<Mersenne31Field> = serde_json::from_str(
+        include_str!("../inner_verifiers/unified_reduced/imports/circuit_layout.json"),
+    )
+    .unwrap();
 
     set_iterator_from_unrolled_proof(proof, compiled_circuit);
 

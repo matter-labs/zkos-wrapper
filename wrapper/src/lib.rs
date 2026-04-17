@@ -4,6 +4,7 @@
 
 pub mod circuits;
 mod inner_verifiers;
+pub mod interface;
 pub mod transcript;
 pub mod wrapper_utils;
 
@@ -411,7 +412,7 @@ pub fn prove_snark_wrapper(
     wrapper_circuit.synthesize(&mut assembly).unwrap();
 
     if use_zk {
-        println!("using zk (padding) proving");
+        tracing::info!("using zk (padding) proving");
         const NUM_PADDING_TERMS: usize = 2 + 2 + 2; // worst case witness polys are opened at 2 points, plus there are
         // indirect openings of grand product for permutation and for lookup
         let mut rng = rand::rngs::OsRng;
@@ -421,7 +422,7 @@ pub fn prove_snark_wrapper(
             &mut rng,
         );
     } else {
-        println!("using non-zk (no padding) proving");
+        tracing::info!("using non-zk (no padding) proving");
         assembly.finalize_to_size_log_2(L1_VERIFIER_DOMAIN_SIZE_LOG);
     }
 
@@ -538,11 +539,12 @@ pub fn prove_risc_wrapper_with_snark(
     use_zk: bool,
 ) -> Result<(SnarkWrapperProof, SnarkWrapperVK), Box<dyn std::error::Error>> {
     let worker = boojum::worker::Worker::new();
-    println!("=== Phase 2: Creating compression proof");
+    tracing::info!("=== Phase 2: Creating compression proof");
 
     #[cfg(feature = "gpu")]
     let (compression_proof, compression_vk) = {
-        let config = shivini::ProverContextConfig::default().with_smallest_supported_domain_size(1 << 15);
+        let config =
+            shivini::ProverContextConfig::default().with_smallest_supported_domain_size(1 << 15);
         let _prover_context = shivini::ProverContext::create_with_config(config).unwrap();
 
         let (setup, compression_vk, finalization) =
@@ -589,11 +591,11 @@ pub fn prove_risc_wrapper_with_snark(
         return Err("Compression proof is not valid".into());
     }
 
-    println!("=== Phase 3: Creating SNARK proof");
+    tracing::info!("=== Phase 3: Creating SNARK proof");
 
     #[cfg(feature = "gpu")]
     {
-        println!("Using GPU for SNARK proof generation");
+        tracing::info!("Using GPU for SNARK proof generation");
         let crs_file =
             trusted_setup_file.expect("Trusted setup must be set for GPU (and it must be compat");
 
@@ -601,7 +603,7 @@ pub fn prove_risc_wrapper_with_snark(
 
         let (setup_data, vk) = match precomputations {
             Some((setup_data, vk)) => {
-                println!("Using provided precomputations");
+                tracing::info!("Using provided precomputations");
                 (setup_data, vk)
             }
             None => {
@@ -659,7 +661,7 @@ pub fn prove_risc_wrapper_with_snark(
 // pub fn prove_fri_risc_wrapper(
 //     program_proof: ProgramProof,
 // ) -> Result<(RiscWrapperProof, RiscWrapperVK), Box<dyn std::error::Error>> {
-//     println!("=== Phase 1: Creating the Risc wrapper proof");
+//     tracing::info!("=== Phase 1: Creating the Risc wrapper proof");
 
 //     let worker = boojum::worker::Worker::new();
 
@@ -828,7 +830,7 @@ pub fn prove_risc_wrapper_with_snark(
 // ) -> Result<H256, Box<dyn std::error::Error>> {
 //     let boojum_worker = boojum::worker::Worker::new();
 
-//     println!("=== Phase 1: Creating the Risc wrapper key");
+//     tracing::info!("=== Phase 1: Creating the Risc wrapper key");
 
 //     let risc_wrapper_vk = generate_risk_wrapper_vk(
 //         input_binary,
@@ -837,15 +839,15 @@ pub fn prove_risc_wrapper_with_snark(
 //         &boojum_worker,
 //     )?;
 
-//     println!("=== Phase 2: Creating the Compression key");
+//     tracing::info!("=== Phase 2: Creating the Compression key");
 //     let (_, _, _, compression_vk, _, _, _) =
 //         get_compression_setup(risc_wrapper_vk.clone(), &boojum_worker);
 
-//     println!("=== Phase 3: Creating the SNARK key");
+//     tracing::info!("=== Phase 3: Creating the SNARK key");
 
 //     #[cfg(feature = "gpu")]
 //     let snark_wrapper_vk = {
-//         println!("Using GPU for SNARK key generation");
+//         tracing::info!("Using GPU for SNARK key generation");
 //         let crs_file =
 //             trusted_setup_file.expect("Trusted setup must be set for GPU (and it must be compat");
 //         let (preprocessing, snark_wrapper_vk) =
@@ -880,7 +882,7 @@ pub fn prove_risc_wrapper_with_snark(
 //     );
 
 //     let verification_key = calculate_verification_key_hash(snark_wrapper_vk);
-//     println!("VK key hash: {verification_key:?}");
+//     tracing::info!("VK key hash: {verification_key:?}");
 
 //     Ok(verification_key)
 // }
@@ -888,5 +890,5 @@ pub fn prove_risc_wrapper_with_snark(
 pub fn verification_hash(vk_path: String) {
     let vk = deserialize_from_file(&vk_path);
     let vk_hash = calculate_verification_key_hash(vk);
-    println!("VK hash: {vk_hash:?}");
+    tracing::info!("VK hash: {vk_hash:?}");
 }

@@ -175,7 +175,7 @@ fn test_blake2s_round_function() {
 //     // let worker = zkos_verifier_worker::Worker::new_with_num_threads(4);
 //     // let (mut _seed, pow_nonce) = zkos_verifier::transcript::Blake2sTranscript::search_pow(&seed, POW_BITS, &worker);
 //     let pow_nonce: u64 = 280946043;
-//     println!("pow_nonce: {}", pow_nonce);
+//     tracing::info!("pow_nonce: {}", pow_nonce);
 //     // let mut transcript_hasher = zkos_verifier::blake2s_u32::Blake2sState::new();
 //     risc_verifier::transcript::Blake2sTranscript::verify_pow_using_hasher(
 //         &mut transcript_hasher,

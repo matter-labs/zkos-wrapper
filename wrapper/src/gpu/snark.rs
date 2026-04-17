@@ -154,7 +154,7 @@ pub fn gpu_snark_prove(
     assert!(proving_assembly.is_satisfied());
     assert!(finalization_hint.is_power_of_two());
     if use_zk {
-        println!("using zk (padding) proving");
+        tracing::info!("using zk (padding) proving");
         const NUM_PADDING_TERMS: usize = 2 + 2 + 2; // worst case witness polys are opened at 2 points, plus there are
         // indirect openings of grand product for permutation and for lookup
         let mut rng = rand::rngs::OsRng;
@@ -164,7 +164,7 @@ pub fn gpu_snark_prove(
             &mut rng,
         );
     } else {
-        println!("using non-zk (no padding) proving");
+        tracing::info!("using non-zk (no padding) proving");
         proving_assembly.finalize_to_size_log_2(finalization_hint.trailing_zeros() as usize);
     }
     let domain_size = proving_assembly.n() + 1;
@@ -181,7 +181,7 @@ pub fn gpu_snark_prove(
     >(&proving_assembly, &mut ctx, &worker, precomputation, None)
     .unwrap();
 
-    println!("plonk proving takes {} s", start.elapsed().as_secs());
+    tracing::info!("plonk proving takes {} s", start.elapsed().as_secs());
     ctx.free_all_slots();
 
     let result = zksync_gpu_prover::bellman::plonk::better_better_cs::verifier::verify::<
