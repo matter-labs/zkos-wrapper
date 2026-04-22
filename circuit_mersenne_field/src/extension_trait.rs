@@ -13,18 +13,22 @@ pub trait CircuitFieldExpression<F: SmallField, BaseField> {
 }
 
 impl<F: SmallField> CircuitFieldExpression<F, MersenneField<F>> for MersenneField<F> {
+    #[inline(never)]
     fn add_base<CS: ConstraintSystem<F>>(&self, cs: &mut CS, base: &MersenneField<F>) -> Self {
         self.add(cs, base)
     }
 
+    #[inline(never)]
     fn sub_base<CS: ConstraintSystem<F>>(&self, cs: &mut CS, base: &MersenneField<F>) -> Self {
         self.sub(cs, base)
     }
 
+    #[inline(never)]
     fn mul_by_base<CS: ConstraintSystem<F>>(&self, cs: &mut CS, base: &MersenneField<F>) -> Self {
         self.mul(cs, base)
     }
 
+    #[inline(never)]
     fn mul_by_base_and_add<CS: ConstraintSystem<F>>(
         &self,
         cs: &mut CS,
@@ -36,6 +40,7 @@ impl<F: SmallField> CircuitFieldExpression<F, MersenneField<F>> for MersenneFiel
 }
 
 impl<F: SmallField> CircuitFieldExpression<F, MersenneField<F>> for MersenneComplex<F> {
+    #[inline(never)]
     fn add_base<CS: ConstraintSystem<F>>(&self, cs: &mut CS, base: &MersenneField<F>) -> Self {
         Self {
             x: self.x.add(cs, base),
@@ -43,6 +48,7 @@ impl<F: SmallField> CircuitFieldExpression<F, MersenneField<F>> for MersenneComp
         }
     }
 
+    #[inline(never)]
     fn sub_base<CS: ConstraintSystem<F>>(&self, cs: &mut CS, base: &MersenneField<F>) -> Self {
         Self {
             x: self.x.sub(cs, base),
@@ -50,6 +56,7 @@ impl<F: SmallField> CircuitFieldExpression<F, MersenneField<F>> for MersenneComp
         }
     }
 
+    #[inline(never)]
     fn mul_by_base<CS: ConstraintSystem<F>>(&self, cs: &mut CS, base: &MersenneField<F>) -> Self {
         Self {
             x: self.x.mul(cs, base),
@@ -57,6 +64,7 @@ impl<F: SmallField> CircuitFieldExpression<F, MersenneField<F>> for MersenneComp
         }
     }
 
+    #[inline(never)]
     fn mul_by_base_and_add<CS: ConstraintSystem<F>>(
         &self,
         cs: &mut CS,
@@ -71,6 +79,7 @@ impl<F: SmallField> CircuitFieldExpression<F, MersenneField<F>> for MersenneComp
 }
 
 impl<F: SmallField> CircuitFieldExpression<F, MersenneField<F>> for MersenneQuartic<F> {
+    #[inline(never)]
     fn add_base<CS: ConstraintSystem<F>>(&self, cs: &mut CS, base: &MersenneField<F>) -> Self {
         Self {
             x: self.x.add_base(cs, base),
@@ -78,6 +87,7 @@ impl<F: SmallField> CircuitFieldExpression<F, MersenneField<F>> for MersenneQuar
         }
     }
 
+    #[inline(never)]
     fn sub_base<CS: ConstraintSystem<F>>(&self, cs: &mut CS, base: &MersenneField<F>) -> Self {
         Self {
             x: self.x.sub_base(cs, base),
@@ -85,6 +95,7 @@ impl<F: SmallField> CircuitFieldExpression<F, MersenneField<F>> for MersenneQuar
         }
     }
 
+    #[inline(never)]
     fn mul_by_base<CS: ConstraintSystem<F>>(&self, cs: &mut CS, base: &MersenneField<F>) -> Self {
         Self {
             x: self.x.mul_by_base(cs, base),
@@ -92,6 +103,7 @@ impl<F: SmallField> CircuitFieldExpression<F, MersenneField<F>> for MersenneQuar
         }
     }
 
+    #[inline(never)]
     fn mul_by_base_and_add<CS: ConstraintSystem<F>>(
         &self,
         cs: &mut CS,
@@ -106,18 +118,22 @@ impl<F: SmallField> CircuitFieldExpression<F, MersenneField<F>> for MersenneQuar
 }
 
 impl<F: SmallField> CircuitFieldExpression<F, MersenneComplex<F>> for MersenneComplex<F> {
+    #[inline(never)]
     fn add_base<CS: ConstraintSystem<F>>(&self, cs: &mut CS, base: &MersenneComplex<F>) -> Self {
         self.add(cs, base)
     }
 
+    #[inline(never)]
     fn sub_base<CS: ConstraintSystem<F>>(&self, cs: &mut CS, base: &MersenneComplex<F>) -> Self {
         self.sub(cs, base)
     }
 
+    #[inline(never)]
     fn mul_by_base<CS: ConstraintSystem<F>>(&self, cs: &mut CS, base: &MersenneComplex<F>) -> Self {
         self.mul(cs, base)
     }
 
+    #[inline(never)]
     fn mul_by_base_and_add<CS: ConstraintSystem<F>>(
         &self,
         cs: &mut CS,
@@ -129,6 +145,7 @@ impl<F: SmallField> CircuitFieldExpression<F, MersenneComplex<F>> for MersenneCo
 }
 
 impl<F: SmallField> CircuitFieldExpression<F, MersenneComplex<F>> for MersenneQuartic<F> {
+    #[inline(never)]
     fn add_base<CS: ConstraintSystem<F>>(&self, cs: &mut CS, base: &MersenneComplex<F>) -> Self {
         Self {
             x: self.x.add(cs, base),
@@ -136,6 +153,7 @@ impl<F: SmallField> CircuitFieldExpression<F, MersenneComplex<F>> for MersenneQu
         }
     }
 
+    #[inline(never)]
     fn sub_base<CS: ConstraintSystem<F>>(&self, cs: &mut CS, base: &MersenneComplex<F>) -> Self {
         Self {
             x: self.x.sub(cs, base),
@@ -143,6 +161,7 @@ impl<F: SmallField> CircuitFieldExpression<F, MersenneComplex<F>> for MersenneQu
         }
     }
 
+    #[inline(never)]
     fn mul_by_base<CS: ConstraintSystem<F>>(&self, cs: &mut CS, base: &MersenneComplex<F>) -> Self {
         Self {
             x: self.x.mul(cs, base),
@@ -150,6 +169,7 @@ impl<F: SmallField> CircuitFieldExpression<F, MersenneComplex<F>> for MersenneQu
         }
     }
 
+    #[inline(never)]
     fn mul_by_base_and_add<CS: ConstraintSystem<F>>(
         &self,
         cs: &mut CS,
@@ -164,18 +184,22 @@ impl<F: SmallField> CircuitFieldExpression<F, MersenneComplex<F>> for MersenneQu
 }
 
 impl<F: SmallField> CircuitFieldExpression<F, MersenneQuartic<F>> for MersenneQuartic<F> {
+    #[inline(never)]
     fn add_base<CS: ConstraintSystem<F>>(&self, cs: &mut CS, base: &MersenneQuartic<F>) -> Self {
         self.add(cs, base)
     }
 
+    #[inline(never)]
     fn sub_base<CS: ConstraintSystem<F>>(&self, cs: &mut CS, base: &MersenneQuartic<F>) -> Self {
         self.sub(cs, base)
     }
 
+    #[inline(never)]
     fn mul_by_base<CS: ConstraintSystem<F>>(&self, cs: &mut CS, base: &MersenneQuartic<F>) -> Self {
         self.mul(cs, base)
     }
 
+    #[inline(never)]
     fn mul_by_base_and_add<CS: ConstraintSystem<F>>(
         &self,
         cs: &mut CS,

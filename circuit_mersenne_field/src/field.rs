@@ -12,6 +12,7 @@ pub struct MersenneField<F: SmallField> {
 }
 
 impl<F: SmallField> MersenneField<F> {
+    #[inline(never)]
     pub fn zero<CS: ConstraintSystem<F>>(cs: &mut CS) -> Self {
         let variable = cs.allocate_constant(F::from_u64_unchecked(0));
 
@@ -22,6 +23,7 @@ impl<F: SmallField> MersenneField<F> {
         }
     }
 
+    #[inline(never)]
     pub fn one<CS: ConstraintSystem<F>>(cs: &mut CS) -> Self {
         let variable = cs.allocate_constant(F::from_u64_unchecked(1));
 
@@ -59,6 +61,7 @@ impl<F: SmallField> MersenneField<F> {
     }
 
     /// The value should be in range [0, 2^31 - 2]
+    #[inline(never)]
     pub fn from_variable_checked<CS: ConstraintSystem<F>>(
         cs: &mut CS,
         variable: Variable,
@@ -80,6 +83,7 @@ impl<F: SmallField> MersenneField<F> {
     }
 
     /// The value should be in range [0, 2^31 - 2]
+    #[inline(never)]
     pub fn allocate_checked_without_value<CS: ConstraintSystem<F>>(
         cs: &mut CS,
         reduced: bool,
@@ -89,6 +93,7 @@ impl<F: SmallField> MersenneField<F> {
         Self::from_variable_checked(cs, variable, reduced)
     }
 
+    #[inline(never)]
     pub fn allocate_checked<CS: ConstraintSystem<F>>(
         cs: &mut CS,
         witness: Mersenne31Field,
@@ -101,6 +106,7 @@ impl<F: SmallField> MersenneField<F> {
         Self::from_variable_checked(cs, variable, reduced)
     }
 
+    #[inline(never)]
     pub fn from_uint32_with_reduction<CS: ConstraintSystem<F>>(
         cs: &mut CS,
         value: UInt32<F>,
@@ -202,6 +208,10 @@ impl<F: SmallField> MersenneField<F> {
         self.reduced = true;
     }
 
+    // The generated inner verifiers call these arithmetic entry points thousands of
+    // times. Keeping them out-of-line avoids cloning their constraint-building logic
+    // into already enormous verifier functions.
+    #[inline(never)]
     pub fn add<CS: ConstraintSystem<F>>(&self, cs: &mut CS, other: &Self) -> Self {
         // We will use the following system of constraints:
         // (1) self + other = tmp
@@ -255,6 +265,7 @@ impl<F: SmallField> MersenneField<F> {
         result
     }
 
+    #[inline(never)]
     pub fn double<CS: ConstraintSystem<F>>(&self, cs: &mut CS) -> Self {
         // We will use the following system of constraints:
         // (1) 2 * self - reduce * modulus = result
@@ -306,6 +317,7 @@ impl<F: SmallField> MersenneField<F> {
         result
     }
 
+    #[inline(never)]
     pub fn negated<CS: ConstraintSystem<F>>(&self, cs: &mut CS) -> Self {
         // We will use the following system of constraints:
         // (1) -self + reduce * modulus = result
@@ -358,6 +370,7 @@ impl<F: SmallField> MersenneField<F> {
         zero.sub(cs, self)
     }
 
+    #[inline(never)]
     pub fn sub<CS: ConstraintSystem<F>>(&self, cs: &mut CS, other: &Self) -> Self {
         // We will use the following system of constraints:
         // (1) self - other = tmp
@@ -412,6 +425,7 @@ impl<F: SmallField> MersenneField<F> {
         result
     }
 
+    #[inline(never)]
     pub fn mul<CS: ConstraintSystem<F>>(&self, cs: &mut CS, other: &Self) -> Self {
         // We will use the following system of constraints:
         // (1) self * other = result + reduce * modulus
@@ -628,6 +642,7 @@ impl<F: SmallField> MersenneField<F> {
     }
 
     /// Computes self * other_mul + other_add
+    #[inline(never)]
     pub fn mul_and_add<CS: ConstraintSystem<F>>(
         &self,
         cs: &mut CS,

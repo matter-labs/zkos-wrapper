@@ -10,6 +10,7 @@ pub struct MersenneQuartic<F: SmallField> {
 }
 
 impl<F: SmallField> MersenneQuartic<F> {
+    #[inline(never)]
     pub fn zero<CS: ConstraintSystem<F>>(cs: &mut CS) -> Self {
         Self {
             x: MersenneComplex::zero(cs),
@@ -17,6 +18,7 @@ impl<F: SmallField> MersenneQuartic<F> {
         }
     }
 
+    #[inline(never)]
     pub fn one<CS: ConstraintSystem<F>>(cs: &mut CS) -> Self {
         Self {
             x: MersenneComplex::one(cs),
@@ -66,6 +68,7 @@ impl<F: SmallField> MersenneQuartic<F> {
         [self.x.x, self.x.y, self.y.x, self.y.y]
     }
 
+    #[inline(never)]
     pub fn from_coeffs(coefficients: [MersenneField<F>; 4]) -> Self {
         Self {
             x: MersenneComplex::from_coeffs(coefficients[0..2].try_into().unwrap()),
@@ -109,6 +112,7 @@ impl<F: SmallField> MersenneQuartic<F> {
         self.y.enforce_reduced(cs);
     }
 
+    #[inline(never)]
     pub fn from_base<CS: ConstraintSystem<F>>(cs: &mut CS, value: MersenneField<F>) -> Self {
         Self {
             x: MersenneComplex::from_base(cs, value),
@@ -116,6 +120,7 @@ impl<F: SmallField> MersenneQuartic<F> {
         }
     }
 
+    #[inline(never)]
     pub fn from_complex<CS: ConstraintSystem<F>>(cs: &mut CS, value: MersenneComplex<F>) -> Self {
         Self {
             x: value,
@@ -123,6 +128,9 @@ impl<F: SmallField> MersenneQuartic<F> {
         }
     }
 
+    // The generated quotient evaluators are dominated by quartic arithmetic. Marking
+    // these wrappers as out-of-line keeps LLVM from duplicating them at every call site.
+    #[inline(never)]
     pub fn add<CS: ConstraintSystem<F>>(&self, cs: &mut CS, other: &Self) -> Self {
         Self {
             x: self.x.add(cs, &other.x),
@@ -130,6 +138,7 @@ impl<F: SmallField> MersenneQuartic<F> {
         }
     }
 
+    #[inline(never)]
     pub fn double<CS: ConstraintSystem<F>>(&self, cs: &mut CS) -> Self {
         Self {
             x: self.x.double(cs),
@@ -137,6 +146,7 @@ impl<F: SmallField> MersenneQuartic<F> {
         }
     }
 
+    #[inline(never)]
     pub fn sub<CS: ConstraintSystem<F>>(&self, cs: &mut CS, other: &Self) -> Self {
         Self {
             x: self.x.sub(cs, &other.x),
@@ -144,6 +154,7 @@ impl<F: SmallField> MersenneQuartic<F> {
         }
     }
 
+    #[inline(never)]
     pub fn negated<CS: ConstraintSystem<F>>(&self, cs: &mut CS) -> Self {
         Self {
             x: self.x.negated(cs),
@@ -151,6 +162,7 @@ impl<F: SmallField> MersenneQuartic<F> {
         }
     }
 
+    #[inline(never)]
     pub fn mul<CS: ConstraintSystem<F>>(&self, cs: &mut CS, other: &Self) -> Self {
         // (a + bj)(c + dj) = (ac + kbd) + (ad + bc)j
         let kbd = self.y.mul(cs, &other.y).mul_by_non_residue(cs);
@@ -162,6 +174,7 @@ impl<F: SmallField> MersenneQuartic<F> {
         }
     }
 
+    #[inline(never)]
     pub fn mul_and_add<CS: ConstraintSystem<F>>(
         &self,
         cs: &mut CS,

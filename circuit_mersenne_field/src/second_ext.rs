@@ -10,6 +10,7 @@ pub struct MersenneComplex<F: SmallField> {
 }
 
 impl<F: SmallField> MersenneComplex<F> {
+    #[inline(never)]
     pub fn zero<CS: ConstraintSystem<F>>(cs: &mut CS) -> Self {
         Self {
             x: MersenneField::zero(cs),
@@ -17,6 +18,7 @@ impl<F: SmallField> MersenneComplex<F> {
         }
     }
 
+    #[inline(never)]
     pub fn one<CS: ConstraintSystem<F>>(cs: &mut CS) -> Self {
         Self {
             x: MersenneField::one(cs),
@@ -91,6 +93,7 @@ impl<F: SmallField> MersenneComplex<F> {
         self.y.enforce_reduced(cs);
     }
 
+    #[inline(never)]
     pub fn from_coeffs(coefficients: [MersenneField<F>; 2]) -> Self {
         Self {
             x: coefficients[0],
@@ -98,6 +101,7 @@ impl<F: SmallField> MersenneComplex<F> {
         }
     }
 
+    #[inline(never)]
     pub fn from_base<CS: ConstraintSystem<F>>(cs: &mut CS, value: MersenneField<F>) -> Self {
         Self {
             x: value,
@@ -105,6 +109,9 @@ impl<F: SmallField> MersenneComplex<F> {
         }
     }
 
+    // Quartic arithmetic funnels through the quadratic extension, so these wrappers
+    // are also hot compile-time expansion points when verifier code is generated.
+    #[inline(never)]
     pub fn add<CS: ConstraintSystem<F>>(&self, cs: &mut CS, other: &Self) -> Self {
         Self {
             x: self.x.add(cs, &other.x),
@@ -112,6 +119,7 @@ impl<F: SmallField> MersenneComplex<F> {
         }
     }
 
+    #[inline(never)]
     pub fn double<CS: ConstraintSystem<F>>(&self, cs: &mut CS) -> Self {
         Self {
             x: self.x.double(cs),
@@ -119,6 +127,7 @@ impl<F: SmallField> MersenneComplex<F> {
         }
     }
 
+    #[inline(never)]
     pub fn sub<CS: ConstraintSystem<F>>(&self, cs: &mut CS, other: &Self) -> Self {
         Self {
             x: self.x.sub(cs, &other.x),
@@ -126,6 +135,7 @@ impl<F: SmallField> MersenneComplex<F> {
         }
     }
 
+    #[inline(never)]
     pub fn negated<CS: ConstraintSystem<F>>(&self, cs: &mut CS) -> Self {
         Self {
             x: self.x.negated(cs),
@@ -133,6 +143,7 @@ impl<F: SmallField> MersenneComplex<F> {
         }
     }
 
+    #[inline(never)]
     pub fn mul<CS: ConstraintSystem<F>>(&self, cs: &mut CS, other: &Self) -> Self {
         Self {
             x: self.x.two_mul_and_sub(cs, &other.x, &other.y, &self.y),
@@ -140,6 +151,7 @@ impl<F: SmallField> MersenneComplex<F> {
         }
     }
 
+    #[inline(never)]
     pub fn mul_and_add<CS: ConstraintSystem<F>>(
         &self,
         cs: &mut CS,
