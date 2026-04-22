@@ -1,5 +1,6 @@
 #![feature(allocator_api)]
 #![allow(incomplete_features)]
+#![allow(unsafe_op_in_unsafe_fn)]
 #![feature(generic_const_exprs)]
 
 pub mod circuits;
