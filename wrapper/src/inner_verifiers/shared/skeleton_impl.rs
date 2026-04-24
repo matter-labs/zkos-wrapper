@@ -610,6 +610,21 @@ impl<F: SmallField> WrappedQueryValuesInstance<F> {
         // for all except FRI the following is valid
         let tree_index = UInt32::allocate_checked(cs, source.query_index & TREE_INDEX_MASK);
         let coset_index = UInt32::allocate_checked(cs, source.query_index >> TRACE_LEN_LOG2);
+
+        let chunks = [
+            (tree_index.get_variable(), F::ONE),
+            (
+                coset_index.get_variable(),
+                F::from_u64(1 << TRACE_LEN_LOG2).unwrap(),
+            ),
+        ];
+        use boojum::gadgets::impls::lc::linear_combination_collapse;
+        linear_combination_collapse(
+            cs,
+            &mut chunks.into_iter(),
+            Some(query.query_index.get_variable()),
+        );
+
         let coset_index = coset_index
             .into_num()
             .spread_into_bits::<CS, FRI_FACTOR_LOG2>(cs);

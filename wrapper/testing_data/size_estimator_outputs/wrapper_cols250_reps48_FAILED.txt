@@ -1,8 +1,0 @@
-Parameters: num_columns=250, num_repetitions=48
-
-Panic message:
-can not place more specialized instances of gate boojum::cs::gates::lookup_marker::LookupFormalGate: max trace length is 1048576, but trying to use row 1048576
-
-Panic hook info:
-panicked at /home/oh/.cargo/git/checkouts/zksync-crypto-00d363a409815104/0cc4191/crates/boojum/src/cs/implementations/cs.rs:617:9:
-can not place more specialized instances of gate boojum::cs::gates::lookup_marker::LookupFormalGate: max trace length is 1048576, but trying to use row 1048576

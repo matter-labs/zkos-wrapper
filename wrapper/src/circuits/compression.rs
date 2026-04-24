@@ -144,6 +144,9 @@ impl CompressionCircuit {
             fri_lde_factor: 2,
             merkle_tree_cap_size: 16,
             fri_folding_schedule: None,
+            #[cfg(feature = "security_80")]
+            security_level: 80,
+            #[cfg(feature = "security_100")]
             security_level: 100,
             pow_bits: 0,
         }
