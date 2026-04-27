@@ -95,6 +95,9 @@ use crate::inner_verifiers::blake_delegation::verifier_common::ProofOutput;
 use blake_verifier::*;
 
 #[allow(invalid_value)]
+// Kept for ad-hoc debugging of the delegated proof outside the main wrapping
+// pipeline, which now verifies explicitly at the outer API boundary.
+#[allow(dead_code)]
 pub(crate) fn verify_blake_proof<V: LeafInclusionVerifier>(
     proof: &RiscProof,
 ) -> (

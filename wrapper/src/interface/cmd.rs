@@ -1,30 +1,45 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::time::Instant;
 
 use anyhow::Context as _;
+use serde::de::DeserializeOwned;
 
-#[cfg(not(feature = "gpu"))]
-use super::utils::load_crs;
-#[cfg(not(feature = "gpu"))]
-use bellman::worker::Worker as BellmanWorker;
-
-use crate::{calculate_verification_key_hash, deserialize_from_file, serialize_to_file};
-
-use super::phases::{
-    VerifyStage, run_phase1_risc_wrapper, run_phase2_compression, run_phase3_snark,
+use crate::{
+    SnarkWrapper, SnarkWrapperConfig, calculate_verification_key_hash, deserialize_from_file,
+    serialize_to_file,
 };
-use super::utils::{
-    create_boojum_worker, ensure_output_dir, load_binary_commitment, load_proof, output_path,
-    print_elapsed,
-};
+
+use super::utils::{ensure_output_dir, load_proof, output_path};
+
+#[derive(Clone)]
+pub enum VerifyStage {
+    RiscWrapper,
+    Compression,
+    Snark,
+}
 
 // ==============================================================================
 // Public Command Entry Points
 // ==============================================================================
 //
-// These functions represent the "commands" that can be done via CLI; you can
-// treat them as reusable high-level entrypoints. However, outside of CLI-like
-// utilities, it is recommended to use `phases` module directly instead.
+// The stateful SnarkWrapper is the main library API now. Even mid-pipeline
+// resume commands flow through it, with optional VK artifacts seeding the
+// reusable setup chain when the caller already has them on disk.
+
+fn load_json_artifact<T: DeserializeOwned>(path: &Path, label: &str) -> anyhow::Result<T> {
+    tracing::info!("Loading {label} from {}", path.display());
+    deserialize_from_file(&path.to_string_lossy())
+        .with_context(|| format!("while attempting to load {label}"))
+}
+
+fn load_optional_json_artifact<T: DeserializeOwned>(
+    path: &Option<PathBuf>,
+    label: &str,
+) -> anyhow::Result<Option<T>> {
+    path.as_ref()
+        .map(|path| load_json_artifact(path, label))
+        .transpose()
+}
 
 pub fn cmd_prove_all(
     proof: PathBuf,
@@ -38,13 +53,18 @@ pub fn cmd_prove_all(
 ) -> anyhow::Result<()> {
     ensure_output_dir(&output_dir)?;
     let total_start = Instant::now();
-    let worker = create_boojum_worker(threads);
     let program_proof = load_proof(&proof).context("Can't load the proof")?;
+    let mut wrapper = SnarkWrapper::new(SnarkWrapperConfig {
+        bin,
+        text,
+        trusted_setup,
+        threads,
+        risc_wrapper_vk: None,
+        compression_vk: None,
+        snark_vk: None,
+    })?;
 
-    // Drive the full pipeline in order so callers can optionally persist the
-    // boundaries between phases for later debugging or reuse.
-    let (risc_wrapper_proof, risc_wrapper_vk) =
-        run_phase1_risc_wrapper(program_proof, &bin, &text, &worker)?;
+    let risc_wrapper_proof = wrapper.prove_risc_wrapper(program_proof)?;
 
     if save_intermediates {
         serialize_to_file(
@@ -52,14 +72,13 @@ pub fn cmd_prove_all(
             &output_path(&output_dir, "risc_wrapper_proof.json"),
         )?;
         serialize_to_file(
-            &risc_wrapper_vk,
+            wrapper.risc_wrapper_vk()?,
             &output_path(&output_dir, "risc_wrapper_vk.json"),
         )?;
         tracing::info!("Saved intermediate Phase 1 outputs");
     }
 
-    let (compression_proof, compression_vk) =
-        run_phase2_compression(risc_wrapper_proof, risc_wrapper_vk, &worker)?;
+    let compression_proof = wrapper.prove_compression(risc_wrapper_proof)?;
 
     if save_intermediates {
         serialize_to_file(
@@ -67,25 +86,25 @@ pub fn cmd_prove_all(
             &output_path(&output_dir, "compression_proof.json"),
         )?;
         serialize_to_file(
-            &compression_vk,
+            wrapper.compression_vk()?,
             &output_path(&output_dir, "compression_vk.json"),
         )?;
         tracing::info!("Saved intermediate Phase 2 outputs");
     }
 
-    let (snark_proof, snark_vk) =
-        run_phase3_snark(compression_proof, compression_vk, &trusted_setup, use_zk)?;
+    let snark_proof = wrapper.prove_snark(compression_proof, use_zk)?;
 
     serialize_to_file(&snark_proof, &output_path(&output_dir, "snark_proof.json"))?;
-    serialize_to_file(&snark_vk, &output_path(&output_dir, "snark_vk.json"))?;
+    serialize_to_file(
+        wrapper.snark_vk()?,
+        &output_path(&output_dir, "snark_vk.json"),
+    )?;
 
-    let vk_hash = calculate_verification_key_hash(snark_vk);
+    let vk_hash = calculate_verification_key_hash(wrapper.snark_vk()?.clone());
     tracing::info!("SNARK VK hash: {vk_hash:?}");
-
-    let total_elapsed = total_start.elapsed();
     tracing::info!(
         "=== Total pipeline time: {:.1}s",
-        total_elapsed.as_secs_f64()
+        total_start.elapsed().as_secs_f64()
     );
 
     Ok(())
@@ -99,18 +118,25 @@ pub fn cmd_prove_risc_wrapper(
     threads: Option<usize>,
 ) -> anyhow::Result<()> {
     ensure_output_dir(&output_dir)?;
-    let worker = create_boojum_worker(threads);
     let program_proof = load_proof(&proof).context("Can't load the proof")?;
+    let mut wrapper = SnarkWrapper::new(SnarkWrapperConfig {
+        bin,
+        text,
+        trusted_setup: None,
+        threads,
+        risc_wrapper_vk: None,
+        compression_vk: None,
+        snark_vk: None,
+    })?;
 
-    let (risc_wrapper_proof, risc_wrapper_vk) =
-        run_phase1_risc_wrapper(program_proof, &bin, &text, &worker)?;
+    let risc_wrapper_proof = wrapper.prove_risc_wrapper(program_proof)?;
 
     serialize_to_file(
         &risc_wrapper_proof,
         &output_path(&output_dir, "risc_wrapper_proof.json"),
     )?;
     serialize_to_file(
-        &risc_wrapper_vk,
+        wrapper.risc_wrapper_vk()?,
         &output_path(&output_dir, "risc_wrapper_vk.json"),
     )?;
 
@@ -119,35 +145,36 @@ pub fn cmd_prove_risc_wrapper(
 
 pub fn cmd_prove_compression(
     risc_wrapper_proof_path: PathBuf,
-    risc_wrapper_vk_path: PathBuf,
+    risc_wrapper_vk_path: Option<PathBuf>,
+    bin: Option<PathBuf>,
+    text: Option<PathBuf>,
     output_dir: PathBuf,
     threads: Option<usize>,
 ) -> anyhow::Result<()> {
     ensure_output_dir(&output_dir)?;
-    let worker = create_boojum_worker(threads);
+    let risc_wrapper_proof = load_json_artifact(&risc_wrapper_proof_path, "RISC wrapper proof")?;
+    let risc_wrapper_vk = load_optional_json_artifact::<crate::RiscWrapperVK>(
+        &risc_wrapper_vk_path,
+        "RISC wrapper VK",
+    )?;
+    let mut wrapper = SnarkWrapper::new(SnarkWrapperConfig {
+        bin,
+        text,
+        trusted_setup: None,
+        threads,
+        risc_wrapper_vk,
+        compression_vk: None,
+        snark_vk: None,
+    })?;
 
-    tracing::info!(
-        "Loading RISC wrapper proof from {}",
-        risc_wrapper_proof_path.display()
-    );
-    let risc_wrapper_proof = deserialize_from_file(risc_wrapper_proof_path.to_str().unwrap())
-        .context("risk_wrapper_proof")?;
-    tracing::info!(
-        "Loading RISC wrapper VK from {}",
-        risc_wrapper_vk_path.display()
-    );
-    let risc_wrapper_vk =
-        deserialize_from_file(risc_wrapper_vk_path.to_str().unwrap()).context("risk_wrapper_vk")?;
-
-    let (compression_proof, compression_vk) =
-        run_phase2_compression(risc_wrapper_proof, risc_wrapper_vk, &worker)?;
+    let compression_proof = wrapper.prove_compression(risc_wrapper_proof)?;
 
     serialize_to_file(
         &compression_proof,
         &output_path(&output_dir, "compression_proof.json"),
     )?;
     serialize_to_file(
-        &compression_vk,
+        wrapper.compression_vk()?,
         &output_path(&output_dir, "compression_vk.json"),
     )?;
 
@@ -156,33 +183,39 @@ pub fn cmd_prove_compression(
 
 pub fn cmd_prove_snark(
     compression_proof_path: PathBuf,
-    compression_vk_path: PathBuf,
+    compression_vk_path: Option<PathBuf>,
+    bin: Option<PathBuf>,
+    text: Option<PathBuf>,
     output_dir: PathBuf,
     trusted_setup: Option<PathBuf>,
     use_zk: bool,
+    threads: Option<usize>,
 ) -> anyhow::Result<()> {
     ensure_output_dir(&output_dir)?;
+    let compression_proof = load_json_artifact(&compression_proof_path, "compression proof")?;
+    let compression_vk = load_optional_json_artifact::<crate::CompressionVK>(
+        &compression_vk_path,
+        "compression VK",
+    )?;
+    let mut wrapper = SnarkWrapper::new(SnarkWrapperConfig {
+        bin,
+        text,
+        trusted_setup,
+        threads,
+        risc_wrapper_vk: None,
+        compression_vk,
+        snark_vk: None,
+    })?;
 
-    tracing::info!(
-        "Loading compression proof from {}",
-        compression_proof_path.display()
-    );
-    let compression_proof = deserialize_from_file(compression_proof_path.to_str().unwrap())
-        .context("compression proof")?;
-    tracing::info!(
-        "Loading compression VK from {}",
-        compression_vk_path.display()
-    );
-    let compression_vk =
-        deserialize_from_file(compression_vk_path.to_str().unwrap()).context("compression vk")?;
-
-    let (snark_proof, snark_vk) =
-        run_phase3_snark(compression_proof, compression_vk, &trusted_setup, use_zk)?;
+    let snark_proof = wrapper.prove_snark(compression_proof, use_zk)?;
 
     serialize_to_file(&snark_proof, &output_path(&output_dir, "snark_proof.json"))?;
-    serialize_to_file(&snark_vk, &output_path(&output_dir, "snark_vk.json"))?;
+    serialize_to_file(
+        wrapper.snark_vk()?,
+        &output_path(&output_dir, "snark_vk.json"),
+    )?;
 
-    let vk_hash = calculate_verification_key_hash(snark_vk);
+    let vk_hash = calculate_verification_key_hash(wrapper.snark_vk()?.clone());
     tracing::info!("SNARK VK hash: {vk_hash:?}");
 
     Ok(())
@@ -196,86 +229,35 @@ pub fn cmd_generate_vk(
     threads: Option<usize>,
 ) -> anyhow::Result<()> {
     ensure_output_dir(&output_dir)?;
-    let worker = create_boojum_worker(threads);
+    let mut wrapper = SnarkWrapper::new(SnarkWrapperConfig {
+        bin,
+        text,
+        trusted_setup,
+        threads,
+        risc_wrapper_vk: None,
+        compression_vk: None,
+        snark_vk: None,
+    })?;
 
-    // Build the verification key chain directly without requiring a proof input.
-    tracing::info!("=== VK generation - binary commitment: starting...");
-    let start = Instant::now();
-    let binary_commitment = load_binary_commitment(&bin, &text).context("binary commitment")?;
-    print_elapsed("VK generation - binary commitment", start);
-
-    tracing::info!("=== VK generation - Phase 1 (RISC wrapper): starting...");
-    let start = Instant::now();
-    #[cfg(not(feature = "gpu"))]
-    let risc_wrapper_vk = {
-        let (_, _, _, risc_wrapper_vk, _, _, _) =
-            crate::get_risc_wrapper_setup(&worker, binary_commitment);
-        risc_wrapper_vk
-    };
-    #[cfg(feature = "gpu")]
-    let risc_wrapper_vk = {
-        let (_, gpu_vk, _) =
-            crate::gpu::risc_wrapper::get_risc_wrapper_setup(&worker, binary_commitment);
-        gpu_vk
-    };
-    print_elapsed("VK generation - Phase 1 (RISC wrapper)", start);
     serialize_to_file(
-        &risc_wrapper_vk,
+        wrapper.risc_wrapper_vk()?,
         &output_path(&output_dir, "risc_wrapper_vk.json"),
     )?;
     tracing::info!("Saved risc_wrapper_vk.json");
 
-    tracing::info!("=== VK generation - Phase 2 (compression): starting...");
-    let start = Instant::now();
-    #[cfg(not(feature = "gpu"))]
-    let compression_vk = {
-        let (_, _, _, compression_vk, _, _, _) =
-            crate::get_compression_setup(risc_wrapper_vk, &worker);
-        compression_vk
-    };
-    #[cfg(feature = "gpu")]
-    let compression_vk = {
-        let config =
-            shivini::ProverContextConfig::default().with_smallest_supported_domain_size(1 << 15);
-        let _prover_context = shivini::ProverContext::create_with_config(config).unwrap();
-
-        let (_, gpu_vk, _) =
-            crate::gpu::compression::get_compression_setup(&worker, risc_wrapper_vk);
-        gpu_vk
-    };
-    print_elapsed("VK generation - Phase 2 (compression)", start);
     serialize_to_file(
-        &compression_vk,
+        wrapper.compression_vk()?,
         &output_path(&output_dir, "compression_vk.json"),
     )?;
     tracing::info!("Saved compression_vk.json");
 
-    tracing::info!("=== VK generation - Phase 3 (SNARK): starting...");
-    let start = Instant::now();
-    #[cfg(not(feature = "gpu"))]
-    let snark_vk = {
-        let crs_mons = load_crs(&trusted_setup)?;
-        let bellman_worker = BellmanWorker::new();
-        let (_, snark_vk) =
-            crate::get_snark_wrapper_setup(compression_vk, &crs_mons, &bellman_worker);
-        snark_vk
-    };
-    #[cfg(feature = "gpu")]
-    let snark_vk = {
-        let crs_file = trusted_setup
-            .as_ref()
-            .expect("GPU VK generation requires a trusted setup file path (--trusted-setup)")
-            .to_string_lossy()
-            .to_string();
-        let (_, snark_vk) =
-            crate::gpu::snark::gpu_create_snark_setup_data(&compression_vk, &crs_file);
-        snark_vk
-    };
-    print_elapsed("VK generation - Phase 3 (SNARK)", start);
-    serialize_to_file(&snark_vk, &output_path(&output_dir, "snark_vk.json"))?;
+    serialize_to_file(
+        wrapper.snark_vk()?,
+        &output_path(&output_dir, "snark_vk.json"),
+    )?;
     tracing::info!("Saved snark_vk.json");
 
-    let vk_hash = calculate_verification_key_hash(snark_vk);
+    let vk_hash = calculate_verification_key_hash(wrapper.snark_vk()?.clone());
     tracing::info!("SNARK VK hash: {vk_hash:?}");
 
     Ok(())
