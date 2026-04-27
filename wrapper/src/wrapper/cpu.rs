@@ -1,4 +1,5 @@
 use std::path::PathBuf;
+use std::time::Instant;
 
 use anyhow::Context as _;
 use bellman::kate_commitment::{Crs, CrsForMonomialForm};
@@ -75,9 +76,15 @@ impl BackendState {
         binary_commitment: BinaryCommitment,
         worker: &BoojumWorker,
     ) -> anyhow::Result<RiscWrapperProof> {
+        let start = Instant::now();
         let cache = self.ensure_risc_wrapper_setup(binary_commitment, worker)?;
+        tracing::info!(
+            "Phase 1 setup ready in {:.3}s",
+            start.elapsed().as_secs_f64()
+        );
 
-        Ok(crate::prove_risc_wrapper(
+        let start = Instant::now();
+        let proof = crate::prove_risc_wrapper(
             witness,
             &cache.finalization_hint,
             &cache.setup_base,
@@ -88,7 +95,10 @@ impl BackendState {
             &cache.witness_hints,
             worker,
             binary_commitment,
-        ))
+        );
+        tracing::info!("Phase 1 proving took {:.3}s", start.elapsed().as_secs_f64());
+
+        Ok(proof)
     }
 
     pub(crate) fn risc_wrapper_vk(
@@ -96,9 +106,14 @@ impl BackendState {
         binary_commitment: BinaryCommitment,
         worker: &BoojumWorker,
     ) -> anyhow::Result<&RiscWrapperVK> {
-        Ok(&self
-            .ensure_risc_wrapper_setup(binary_commitment, worker)?
-            .vk)
+        let start = Instant::now();
+        let cache = self.ensure_risc_wrapper_setup(binary_commitment, worker)?;
+        tracing::info!(
+            "Phase 1 setup ready in {:.3}s",
+            start.elapsed().as_secs_f64()
+        );
+
+        Ok(&cache.vk)
     }
 
     pub(crate) fn prove_compression(
@@ -107,9 +122,15 @@ impl BackendState {
         risc_wrapper_vk: RiscWrapperVK,
         worker: &BoojumWorker,
     ) -> anyhow::Result<CompressionProof> {
+        let start = Instant::now();
         let cache = self.ensure_compression_setup(risc_wrapper_vk.clone(), worker)?;
+        tracing::info!(
+            "Phase 2 setup ready in {:.3}s",
+            start.elapsed().as_secs_f64()
+        );
 
-        Ok(crate::prove_compression(
+        let start = Instant::now();
+        let proof = crate::prove_compression(
             risc_wrapper_proof,
             risc_wrapper_vk,
             &cache.finalization_hint,
@@ -120,7 +141,10 @@ impl BackendState {
             &cache.vars_hint,
             &cache.witness_hints,
             worker,
-        ))
+        );
+        tracing::info!("Phase 2 proving took {:.3}s", start.elapsed().as_secs_f64());
+
+        Ok(proof)
     }
 
     pub(crate) fn compression_vk(
@@ -128,7 +152,14 @@ impl BackendState {
         risc_wrapper_vk: RiscWrapperVK,
         worker: &BoojumWorker,
     ) -> anyhow::Result<&CompressionVK> {
-        Ok(&self.ensure_compression_setup(risc_wrapper_vk, worker)?.vk)
+        let start = Instant::now();
+        let cache = self.ensure_compression_setup(risc_wrapper_vk, worker)?;
+        tracing::info!(
+            "Phase 2 setup ready in {:.3}s",
+            start.elapsed().as_secs_f64()
+        );
+
+        Ok(&cache.vk)
     }
 
     pub(crate) fn prove_snark(
@@ -139,17 +170,26 @@ impl BackendState {
         provided_snark_vk: Option<&SnarkWrapperVK>,
         use_zk: bool,
     ) -> anyhow::Result<SnarkWrapperProof> {
+        let start = Instant::now();
         let cache =
             self.ensure_snark_setup(trusted_setup, compression_vk.clone(), provided_snark_vk)?;
+        tracing::info!(
+            "Phase 3 setup ready in {:.3}s",
+            start.elapsed().as_secs_f64()
+        );
 
-        Ok(crate::prove_snark_wrapper(
+        let start = Instant::now();
+        let proof = crate::prove_snark_wrapper(
             compression_proof,
             compression_vk,
             &cache.snark_setup,
             &cache.crs_mons,
             &cache.worker,
             use_zk,
-        ))
+        );
+        tracing::info!("Phase 3 proving took {:.3}s", start.elapsed().as_secs_f64());
+
+        Ok(proof)
     }
 
     pub(crate) fn snark_vk(
@@ -157,9 +197,14 @@ impl BackendState {
         trusted_setup: &Option<PathBuf>,
         compression_vk: CompressionVK,
     ) -> anyhow::Result<&SnarkWrapperVK> {
-        Ok(&self
-            .ensure_snark_setup(trusted_setup, compression_vk, None)?
-            .vk)
+        let start = Instant::now();
+        let cache = self.ensure_snark_setup(trusted_setup, compression_vk, None)?;
+        tracing::info!(
+            "Phase 3 setup ready in {:.3}s",
+            start.elapsed().as_secs_f64()
+        );
+
+        Ok(&cache.vk)
     }
 
     fn ensure_risc_wrapper_setup(

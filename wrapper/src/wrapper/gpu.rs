@@ -1,4 +1,5 @@
 use std::path::PathBuf;
+use std::time::Instant;
 
 use anyhow::Context as _;
 use proof_compression::serialization::PlonkSnarkVerifierCircuitDeviceSetupWrapper;
@@ -71,18 +72,30 @@ impl BackendState {
         binary_commitment: BinaryCommitment,
         worker: &BoojumWorker,
     ) -> anyhow::Result<RiscWrapperProof> {
+        let start = Instant::now();
         self.ensure_stark_context()
             .context("while attempting to prepare the STARK GPU context")?;
         let cache = self.ensure_risc_wrapper_setup(binary_commitment, worker)?;
+        tracing::info!(
+            "Phase 1 GPU setup ready in {:.3}s",
+            start.elapsed().as_secs_f64()
+        );
 
-        Ok(crate::gpu::risc_wrapper::prove_risc_wrapper(
+        let start = Instant::now();
+        let proof = crate::gpu::risc_wrapper::prove_risc_wrapper(
             witness,
             &cache.finalization_hint,
             &cache.gpu_setup,
             &cache.vk,
             worker,
             binary_commitment,
-        ))
+        );
+        tracing::info!(
+            "Phase 1 GPU proving took {:.3}s",
+            start.elapsed().as_secs_f64()
+        );
+
+        Ok(proof)
     }
 
     pub(crate) fn risc_wrapper_vk(
@@ -90,9 +103,14 @@ impl BackendState {
         binary_commitment: BinaryCommitment,
         worker: &BoojumWorker,
     ) -> anyhow::Result<&RiscWrapperVK> {
-        Ok(&self
-            .ensure_risc_wrapper_setup(binary_commitment, worker)?
-            .vk)
+        let start = Instant::now();
+        let cache = self.ensure_risc_wrapper_setup(binary_commitment, worker)?;
+        tracing::info!(
+            "Phase 1 GPU setup ready in {:.3}s",
+            start.elapsed().as_secs_f64()
+        );
+
+        Ok(&cache.vk)
     }
 
     pub(crate) fn prove_compression(
@@ -101,18 +119,30 @@ impl BackendState {
         risc_wrapper_vk: RiscWrapperVK,
         worker: &BoojumWorker,
     ) -> anyhow::Result<CompressionProof> {
+        let start = Instant::now();
         self.ensure_stark_context()
             .context("while attempting to prepare the STARK GPU context")?;
         let cache = self.ensure_compression_setup(risc_wrapper_vk.clone(), worker)?;
+        tracing::info!(
+            "Phase 2 GPU setup ready in {:.3}s",
+            start.elapsed().as_secs_f64()
+        );
 
-        Ok(crate::gpu::compression::prove_compression(
+        let start = Instant::now();
+        let proof = crate::gpu::compression::prove_compression(
             risc_wrapper_proof,
             risc_wrapper_vk,
             &cache.finalization_hint,
             &cache.gpu_setup,
             &cache.vk,
             worker,
-        ))
+        );
+        tracing::info!(
+            "Phase 2 GPU proving took {:.3}s",
+            start.elapsed().as_secs_f64()
+        );
+
+        Ok(proof)
     }
 
     pub(crate) fn compression_vk(
@@ -120,7 +150,14 @@ impl BackendState {
         risc_wrapper_vk: RiscWrapperVK,
         worker: &BoojumWorker,
     ) -> anyhow::Result<&CompressionVK> {
-        Ok(&self.ensure_compression_setup(risc_wrapper_vk, worker)?.vk)
+        let start = Instant::now();
+        let cache = self.ensure_compression_setup(risc_wrapper_vk, worker)?;
+        tracing::info!(
+            "Phase 2 GPU setup ready in {:.3}s",
+            start.elapsed().as_secs_f64()
+        );
+
+        Ok(&cache.vk)
     }
 
     pub(crate) fn prove_snark(
@@ -133,6 +170,7 @@ impl BackendState {
     ) -> anyhow::Result<SnarkWrapperProof> {
         self.release_stark_context();
 
+        let start = Instant::now();
         let mut device_manager = {
             let crs = self.ensure_snark_crs(trusted_setup)?;
             crate::gpu::snark::gpu_create_snark_device_manager(crs)
@@ -143,15 +181,26 @@ impl BackendState {
             provided_snark_vk,
             &mut device_manager,
         )?;
+        tracing::info!(
+            "Phase 3 GPU setup ready in {:.3}s",
+            start.elapsed().as_secs_f64()
+        );
 
-        crate::gpu::snark::gpu_snark_prove_with_manager(
+        let start = Instant::now();
+        let proof = crate::gpu::snark::gpu_snark_prove_with_manager(
             &cache.precomputation,
             &cache.vk,
             compression_proof,
             compression_vk,
             &mut device_manager,
             use_zk,
-        )
+        )?;
+        tracing::info!(
+            "Phase 3 GPU proving took {:.3}s",
+            start.elapsed().as_secs_f64()
+        );
+
+        Ok(proof)
     }
 
     pub(crate) fn snark_vk(
@@ -160,9 +209,14 @@ impl BackendState {
         compression_vk: CompressionVK,
     ) -> anyhow::Result<&SnarkWrapperVK> {
         self.release_stark_context();
-        Ok(&self
-            .create_snark_setup(trusted_setup, compression_vk, None)?
-            .vk)
+        let start = Instant::now();
+        let cache = self.create_snark_setup(trusted_setup, compression_vk, None)?;
+        tracing::info!(
+            "Phase 3 GPU setup ready in {:.3}s",
+            start.elapsed().as_secs_f64()
+        );
+
+        Ok(&cache.vk)
     }
 
     fn ensure_risc_wrapper_setup(

@@ -1,16 +1,7 @@
 use execution_utils::unrolled::UnrolledProgramProof;
 use std::path::Path;
-use std::time::Instant;
 
 use crate::deserialize_from_file;
-
-/// Emits a consistent timing line after a named step completes.
-pub(super) fn print_elapsed(label: &str, start: Instant) {
-    tracing::info!(
-        "=== {label}: completed in {:.1}s",
-        start.elapsed().as_secs_f64()
-    );
-}
 
 /// Loads and deserializes the proof from file.
 pub fn load_proof(proof_path: &Path) -> anyhow::Result<UnrolledProgramProof> {

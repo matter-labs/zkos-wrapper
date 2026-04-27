@@ -1,4 +1,5 @@
 use std::path::PathBuf;
+use std::time::Instant;
 
 use anyhow::Context as _;
 use execution_utils::unrolled::UnrolledProgramProof;
@@ -80,17 +81,27 @@ impl SnarkWrapper {
         program_proof: UnrolledProgramProof,
     ) -> anyhow::Result<RiscWrapperProof> {
         let binary_commitment = self.binary_commitment()?;
+        let start = Instant::now();
         let witness = RiscWrapperWitness::from_full_proof(program_proof, &binary_commitment);
+        tracing::info!(
+            "Phase 1 witness generation took {:.3}s",
+            start.elapsed().as_secs_f64()
+        );
 
         let proof = self
             .backend
             .prove_risc_wrapper(witness, binary_commitment, &self.worker)?;
+        let start = Instant::now();
         if !self
             .verify_risc_wrapper(&proof)
             .context("while attempting to verify generated RISC wrapper proof")?
         {
             anyhow::bail!("RISC wrapper proof verification failed");
         }
+        tracing::info!(
+            "Phase 1 verification took {:.3}s",
+            start.elapsed().as_secs_f64()
+        );
 
         Ok(proof)
     }
@@ -135,12 +146,17 @@ impl SnarkWrapper {
         let proof =
             self.backend
                 .prove_compression(risc_wrapper_proof, risc_wrapper_vk, &self.worker)?;
+        let start = Instant::now();
         if !self
             .verify_compression(&proof)
             .context("while attempting to verify generated compression proof")?
         {
             anyhow::bail!("Compression proof verification failed");
         }
+        tracing::info!(
+            "Phase 2 verification took {:.3}s",
+            start.elapsed().as_secs_f64()
+        );
 
         Ok(proof)
     }
@@ -189,12 +205,17 @@ impl SnarkWrapper {
             self.config.snark_vk.as_ref(),
             use_zk,
         )?;
+        let start = Instant::now();
         if !self
             .verify_snark(&proof)
             .context("while attempting to verify generated SNARK proof")?
         {
             anyhow::bail!("SNARK wrapper proof verification failed");
         }
+        tracing::info!(
+            "Phase 3 verification took {:.3}s",
+            start.elapsed().as_secs_f64()
+        );
 
         Ok(proof)
     }
@@ -205,9 +226,16 @@ impl SnarkWrapper {
         program_proof: UnrolledProgramProof,
         use_zk: bool,
     ) -> anyhow::Result<SnarkWrapperProof> {
+        let start = Instant::now();
         let risc_wrapper_proof = self.prove_risc_wrapper(program_proof)?;
         let compression_proof = self.prove_compression(risc_wrapper_proof)?;
-        self.prove_snark(compression_proof, use_zk)
+        let snark_proof = self.prove_snark(compression_proof, use_zk)?;
+        tracing::info!(
+            "Full FRI-to-SNARK pipeline took {:.3}s",
+            start.elapsed().as_secs_f64()
+        );
+
+        Ok(snark_proof)
     }
 
     /// Verifies an existing phase-3 proof against this wrapper's resolved SNARK VK.
@@ -242,7 +270,12 @@ impl SnarkWrapper {
             return Ok(binary_commitment);
         }
 
+        let start = Instant::now();
         let binary_commitment = load_binary_commitment(&self.config.bin, &self.config.text)?;
+        tracing::info!(
+            "Binary commitment loading took {:.3}s",
+            start.elapsed().as_secs_f64()
+        );
         self.binary_commitment = Some(binary_commitment);
 
         Ok(binary_commitment)

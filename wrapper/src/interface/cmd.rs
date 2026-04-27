@@ -9,7 +9,7 @@ use crate::{
     serialize_to_file,
 };
 
-use super::utils::{ensure_output_dir, load_proof, output_path, print_elapsed};
+use super::utils::{ensure_output_dir, load_proof, output_path};
 
 #[derive(Clone)]
 pub enum VerifyStage {
@@ -64,10 +64,7 @@ pub fn cmd_prove_all(
         snark_vk: None,
     })?;
 
-    tracing::info!("=== Phase 1 - prove and verify: starting...");
-    let start = Instant::now();
     let risc_wrapper_proof = wrapper.prove_risc_wrapper(program_proof)?;
-    print_elapsed("Phase 1 - prove and verify", start);
 
     if save_intermediates {
         serialize_to_file(
@@ -81,10 +78,7 @@ pub fn cmd_prove_all(
         tracing::info!("Saved intermediate Phase 1 outputs");
     }
 
-    tracing::info!("=== Phase 2 - prove and verify: starting...");
-    let start = Instant::now();
     let compression_proof = wrapper.prove_compression(risc_wrapper_proof)?;
-    print_elapsed("Phase 2 - prove and verify", start);
 
     if save_intermediates {
         serialize_to_file(
@@ -98,10 +92,7 @@ pub fn cmd_prove_all(
         tracing::info!("Saved intermediate Phase 2 outputs");
     }
 
-    tracing::info!("=== Phase 3 - prove and verify: starting...");
-    let start = Instant::now();
     let snark_proof = wrapper.prove_snark(compression_proof, use_zk)?;
-    print_elapsed("Phase 3 - prove and verify", start);
 
     serialize_to_file(&snark_proof, &output_path(&output_dir, "snark_proof.json"))?;
     serialize_to_file(
@@ -138,10 +129,7 @@ pub fn cmd_prove_risc_wrapper(
         snark_vk: None,
     })?;
 
-    tracing::info!("=== Phase 1 - prove and verify: starting...");
-    let start = Instant::now();
     let risc_wrapper_proof = wrapper.prove_risc_wrapper(program_proof)?;
-    print_elapsed("Phase 1 - prove and verify", start);
 
     serialize_to_file(
         &risc_wrapper_proof,
@@ -179,10 +167,7 @@ pub fn cmd_prove_compression(
         snark_vk: None,
     })?;
 
-    tracing::info!("=== Phase 2 - prove and verify: starting...");
-    let start = Instant::now();
     let compression_proof = wrapper.prove_compression(risc_wrapper_proof)?;
-    print_elapsed("Phase 2 - prove and verify", start);
 
     serialize_to_file(
         &compression_proof,
@@ -222,10 +207,7 @@ pub fn cmd_prove_snark(
         snark_vk: None,
     })?;
 
-    tracing::info!("=== Phase 3 - prove and verify: starting...");
-    let start = Instant::now();
     let snark_proof = wrapper.prove_snark(compression_proof, use_zk)?;
-    print_elapsed("Phase 3 - prove and verify", start);
 
     serialize_to_file(&snark_proof, &output_path(&output_dir, "snark_proof.json"))?;
     serialize_to_file(
@@ -257,31 +239,22 @@ pub fn cmd_generate_vk(
         snark_vk: None,
     })?;
 
-    tracing::info!("=== VK generation - Phase 1 (RISC wrapper): starting...");
-    let start = Instant::now();
     serialize_to_file(
         wrapper.risc_wrapper_vk()?,
         &output_path(&output_dir, "risc_wrapper_vk.json"),
     )?;
-    print_elapsed("VK generation - Phase 1 (RISC wrapper)", start);
     tracing::info!("Saved risc_wrapper_vk.json");
 
-    tracing::info!("=== VK generation - Phase 2 (compression): starting...");
-    let start = Instant::now();
     serialize_to_file(
         wrapper.compression_vk()?,
         &output_path(&output_dir, "compression_vk.json"),
     )?;
-    print_elapsed("VK generation - Phase 2 (compression)", start);
     tracing::info!("Saved compression_vk.json");
 
-    tracing::info!("=== VK generation - Phase 3 (SNARK): starting...");
-    let start = Instant::now();
     serialize_to_file(
         wrapper.snark_vk()?,
         &output_path(&output_dir, "snark_vk.json"),
     )?;
-    print_elapsed("VK generation - Phase 3 (SNARK)", start);
     tracing::info!("Saved snark_vk.json");
 
     let vk_hash = calculate_verification_key_hash(wrapper.snark_vk()?.clone());
