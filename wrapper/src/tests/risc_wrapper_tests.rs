@@ -58,6 +58,7 @@ pub(crate) fn risc_wrapper_full_test() {
 
     #[cfg(feature = "gpu")]
     let (risc_wrapper_proof, risc_wrapper_vk) = {
+        let _prover_context = shivini::ProverContext::create().unwrap();
         let (gpu_setup, gpu_vk, finalization_hint) =
             crate::gpu::risc_wrapper::get_risc_wrapper_setup(&worker, binary_commitment.clone());
 
@@ -203,7 +204,7 @@ fn test_verifier_inner_function() {
 
     use crate::RiscWrapper;
 
-    let circuit = RiscWrapper::new(Some(risc_wrapper_witness), true, binary_commitment);
+    let circuit = RiscWrapper::new(Some(risc_wrapper_witness), binary_commitment);
 
     circuit.synthesize_into_cs(cs);
 

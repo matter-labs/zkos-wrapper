@@ -12,7 +12,6 @@ use boojum::{
     worker::Worker,
 };
 use shivini::{
-    ProverContext,
     cs::{GpuSetup, gpu_setup_and_vk_from_base_setup_vk_params_and_hints},
     gpu_proof_config::GpuProofConfig,
     gpu_prove_from_external_witness_data,
@@ -35,11 +34,7 @@ pub fn get_risc_wrapper_setup(
 ) {
     let start = std::time::Instant::now();
 
-    // Currently the GPU context is initialized here, but it should be done at a higher level.
-    let _prover_context = ProverContext::create().unwrap();
-
-    let verify_inner_proof: bool = false;
-    let circuit = RiscWrapper::new(None, verify_inner_proof, binary_commitment);
+    let circuit = RiscWrapper::new(None, binary_commitment);
 
     let geometry = RiscWrapper::geometry();
     let (max_trace_len, num_vars) = circuit.size_hint();
@@ -94,16 +89,7 @@ pub fn prove_risc_wrapper(
     binary_commitment: BinaryCommitment,
 ) -> RiscWrapperProof {
     let start = std::time::Instant::now();
-
-    // Currently the GPU context is initialized here, but it should be done at a higher level.
-    let _prover_context = ProverContext::create().unwrap();
-
-    let verify_inner_proof = true;
-    let circuit = RiscWrapper::new(
-        Some(risc_wrapper_witness),
-        verify_inner_proof,
-        binary_commitment,
-    );
+    let circuit = RiscWrapper::new(Some(risc_wrapper_witness), binary_commitment);
 
     let geometry = RiscWrapper::geometry();
     let (max_trace_len, num_vars) = circuit.size_hint();

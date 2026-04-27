@@ -80,9 +80,17 @@ enum Commands {
         #[arg(long)]
         risc_wrapper_proof: PathBuf,
 
-        /// Path to risc_wrapper_vk.json
+        /// Optional path to risc_wrapper_vk.json to reuse a saved phase-1 VK
         #[arg(long)]
-        risc_wrapper_vk: PathBuf,
+        risc_wrapper_vk: Option<PathBuf>,
+
+        /// Path to the RISC-V .bin file (omit to use default recursion verifier)
+        #[arg(long, requires = "text")]
+        bin: Option<PathBuf>,
+
+        /// Path to the RISC-V .text file (omit to use default recursion verifier)
+        #[arg(long, requires = "bin")]
+        text: Option<PathBuf>,
 
         /// Output directory
         #[arg(short, long)]
@@ -95,9 +103,17 @@ enum Commands {
         #[arg(long)]
         compression_proof: PathBuf,
 
-        /// Path to compression_vk.json
+        /// Optional path to compression_vk.json to reuse a saved phase-2 VK
         #[arg(long)]
-        compression_vk: PathBuf,
+        compression_vk: Option<PathBuf>,
+
+        /// Path to the RISC-V .bin file (omit to use default recursion verifier)
+        #[arg(long, requires = "text")]
+        bin: Option<PathBuf>,
+
+        /// Path to the RISC-V .text file (omit to use default recursion verifier)
+        #[arg(long, requires = "bin")]
+        text: Option<PathBuf>,
 
         /// Output directory
         #[arg(short, long)]
@@ -220,10 +236,14 @@ fn main() -> anyhow::Result<()> {
         Commands::ProveCompression {
             risc_wrapper_proof,
             risc_wrapper_vk,
+            bin,
+            text,
             output_dir,
         } => interface::cmd_prove_compression(
             risc_wrapper_proof,
             risc_wrapper_vk,
+            bin,
+            text,
             output_dir,
             cli.threads,
         ),
@@ -231,15 +251,20 @@ fn main() -> anyhow::Result<()> {
         Commands::ProveSnark {
             compression_proof,
             compression_vk,
+            bin,
+            text,
             output_dir,
             trusted_setup,
             use_zk,
         } => interface::cmd_prove_snark(
             compression_proof,
             compression_vk,
+            bin,
+            text,
             output_dir,
             trusted_setup,
             use_zk,
+            cli.threads,
         ),
 
         Commands::GenerateVk {

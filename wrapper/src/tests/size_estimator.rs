@@ -100,7 +100,7 @@ fn try_synthesize_wrapper_with_params(
 
         let binary_commitment = BinaryCommitment::from_default_binary();
         use crate::RiscWrapper;
-        let circuit = RiscWrapper::new(None, false, binary_commitment);
+        let circuit = RiscWrapper::new(None, binary_commitment);
         circuit.add_tables(&mut owned_cs);
         circuit.synthesize_into_cs(&mut owned_cs);
         owned_cs.pad_and_shrink();
@@ -255,7 +255,7 @@ fn try_synthesize_compression_with_params(
 
         let mut owned_cs = builder.build(1 << 24);
 
-        let circuit = crate::circuits::CompressionCircuit::new(None, vk.clone(), false);
+        let circuit = crate::circuits::CompressionCircuit::new(None, vk.clone());
         circuit.synthesize_into_cs(&mut owned_cs);
         owned_cs.pad_and_shrink();
     }));
