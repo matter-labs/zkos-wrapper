@@ -1,8 +1,0 @@
-Parameters: num_columns=130, num_repetitions=125
-
-Panic message:
-exhausted general purpose columns capacity trying to add gate boojum::cs::gates::fma_gate_without_constant::FmaGateInBaseFieldWithoutConstant<boojum::field::goldilocks::GoldilocksField>
-
-Panic hook info:
-panicked at /home/oh/.cargo/git/checkouts/zksync-crypto-00d363a409815104/0cc4191/crates/boojum/src/cs/implementations/cs.rs:469:9:
-exhausted general purpose columns capacity trying to add gate boojum::cs::gates::fma_gate_without_constant::FmaGateInBaseFieldWithoutConstant<boojum::field::goldilocks::GoldilocksField>

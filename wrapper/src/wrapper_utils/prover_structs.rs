@@ -46,6 +46,14 @@ impl<F: SmallField, const N: usize> WrappedMerkleTreeCap<F, N> {
         assert!(head.is_empty() && tail.is_empty());
         middle
     }
+
+    pub(crate) fn enforce_equal<CS: ConstraintSystem<F>>(&self, cs: &mut CS, other: &Self) {
+        for i in 0..N {
+            for j in 0..DIGEST_SIZE_U32_WORDS {
+                Num::enforce_equal(cs, &self.cap[i][j].into_num(), &other.cap[i][j].into_num());
+            }
+        }
+    }
 }
 
 impl<F: SmallField, const N: usize> CSAllocatable<F> for WrappedMerkleTreeCap<F, N> {
@@ -68,6 +76,12 @@ impl<F: SmallField, const N: usize> CSAllocatable<F> for WrappedMerkleTreeCap<F,
     }
     fn allocate<CS: ConstraintSystem<F>>(cs: &mut CS, witness: Self::Witness) -> Self {
         let cap = witness.cap.map(|row| row.map(|x| UInt32::allocate(cs, x)));
+        Self { cap }
+    }
+    fn allocate_constant<CS: ConstraintSystem<F>>(cs: &mut CS, witness: Self::Witness) -> Self {
+        let cap = witness
+            .cap
+            .map(|row| row.map(|x| UInt32::allocate_constant(cs, x)));
         Self { cap }
     }
 }

@@ -59,11 +59,16 @@ use execution_utils::unrolled::UnrolledProgramProof;
 
 const NUM_RISC_WRAPPER_PUBLIC_INPUTS: usize = 4;
 
+#[cfg(feature = "security_80")]
+const NUM_UNIFIED_PROOFS: usize = 1;
+#[cfg(feature = "security_100")]
+const NUM_UNIFIED_PROOFS: usize = 2;
+
 pub struct RiscWrapperWitness {
     pub final_pc: u32,
     pub final_timestamp: [u32; 2],
     pub final_registers_state: [u32; NUM_REGISTERS * 3],
-    pub proof: RiscUnrolledProof,
+    pub unified_proofs: [RiscUnrolledProof; NUM_UNIFIED_PROOFS],
     pub blake_proof: RiscProof,
     pub pow_challenge: u64,
 }
@@ -149,17 +154,17 @@ impl RiscWrapperWitness {
             .collect();
 
         let mut cf_iter = circuit_families_proofs.into_iter();
-        let unified_proof = {
+        let unified_proofs = {
             let unified_proofs = cf_iter.next().unwrap();
             assert!(
                 unified_proofs.0 == REDUCED_MACHINE_CIRCUIT_FAMILY_IDX,
                 "Expected unified reduced circuit family"
             );
             assert!(
-                unified_proofs.1.len() == 1,
-                "Expected only one unified proof"
+                unified_proofs.1.len() == NUM_UNIFIED_PROOFS,
+                "Expected exact number of unified proofs"
             );
-            unified_proofs.1.into_iter().next().unwrap()
+            unified_proofs.1.try_into().unwrap()
         };
         assert!(cf_iter.next().is_none(), "Too many circuit family proofs");
 
@@ -184,7 +189,7 @@ impl RiscWrapperWitness {
             final_pc,
             final_timestamp: [final_timestamp_low, final_timestamp_high],
             final_registers_state: final_registers_state.try_into().unwrap(),
-            proof: unified_proof,
+            unified_proofs,
             blake_proof,
             pow_challenge,
         }
@@ -210,7 +215,7 @@ impl<F: SmallField, V: CircuitLeafInclusionVerifier<F>> CircuitBuilder<F>
             }
         } else if cfg!(feature = "security_100") {
             CSGeometry {
-                num_columns_under_copy_permutation: 187,
+                num_columns_under_copy_permutation: 255,
                 num_witness_columns: 0,
                 num_constant_columns: 4,
                 max_allowed_constraint_degree: 4,
@@ -230,7 +235,7 @@ impl<F: SmallField, V: CircuitLeafInclusionVerifier<F>> CircuitBuilder<F>
         } else if cfg!(feature = "security_100") {
             LookupParameters::UseSpecializedColumnsWithTableIdAsConstant {
                 width: 3,
-                num_repetitions: 75,
+                num_repetitions: 103,
                 share_table_id: true,
             }
         } else {
@@ -303,7 +308,24 @@ impl<F: SmallField, V: CircuitLeafInclusionVerifier<F>> CircuitBuilder<F>
 }
 
 impl<F: SmallField, V: CircuitLeafInclusionVerifier<F>> RiscWrapperCircuit<F, V> {
-    pub fn new(witness: Option<RiscWrapperWitness>, binary_commitment: BinaryCommitment) -> Self {
+    pub fn new(
+        witness: Option<RiscWrapperWitness>,
+        verify_inner_proof: bool,
+        binary_commitment: BinaryCommitment,
+    ) -> Self {
+        if verify_inner_proof {
+            if let Some(witness) = &witness {
+                for proof in witness.unified_proofs.iter() {
+                    verify_risc_proof::<V::OutOfCircuitImpl>(proof);
+                }
+                crate::inner_verifiers::blake_delegation::verify_blake_proof::<V::OutOfCircuitImpl>(
+                    &witness.blake_proof,
+                );
+            } else {
+                panic!("Proof is required for verification");
+            }
+        }
+
         Self {
             witness,
             binary_commitment,
@@ -351,6 +373,9 @@ impl<F: SmallField, V: CircuitLeafInclusionVerifier<F>> RiscWrapperCircuit<F, V>
             fri_lde_factor: 2,
             merkle_tree_cap_size: 16,
             fri_folding_schedule: None,
+            #[cfg(feature = "security_80")]
+            security_level: 80,
+            #[cfg(feature = "security_100")]
             security_level: 100,
             pow_bits: 0,
         }
@@ -385,28 +410,34 @@ impl<F: SmallField, V: CircuitLeafInclusionVerifier<F>> RiscWrapperCircuit<F, V>
         let final_registers_state =
             <[UInt32<F>; NUM_REGISTERS * 3]>::allocate(cs, final_registers_state_witness);
 
-        let (skeleton, queries) = if let Some(witness) = &self.witness {
-            prepare_unrolled_proof_for_wrapper::<_, _, V>(cs, &witness.proof)
+        let unified_proof_parts = if let Some(witness) = &self.witness {
+            witness
+                .unified_proofs
+                .each_ref()
+                .map(|proof| prepare_unrolled_proof_for_wrapper::<_, _, V>(cs, proof))
         } else {
-            // allocate from placeholder
-            let skeleton_witness = WrappedProofSkeletonInstance::<F>::placeholder_witness();
-            let skeleton = WrappedProofSkeletonInstance::allocate(cs, skeleton_witness);
+            [(); NUM_UNIFIED_PROOFS].map(|_| {
+                // allocate from placeholder
+                let skeleton_witness = WrappedProofSkeletonInstance::<F>::placeholder_witness();
+                let skeleton = WrappedProofSkeletonInstance::allocate(cs, skeleton_witness);
 
-            let mut leaf_inclusion_verifier = V::new(cs);
+                let mut leaf_inclusion_verifier = V::new(cs);
 
-            let queries: [_; NUM_QUERIES] = std::array::from_fn(|_idx| unsafe {
-                WrappedQueryValuesInstance::from_non_determinism_source::<_, PlaceholderSource, _>(
-                    cs,
-                    &skeleton,
-                    &mut leaf_inclusion_verifier,
-                )
-            });
+                let queries: [_; NUM_QUERIES] = std::array::from_fn(|_idx| unsafe {
+                    WrappedQueryValuesInstance::from_non_determinism_source::<_, PlaceholderSource, _>(
+                        cs,
+                        &skeleton,
+                        &mut leaf_inclusion_verifier,
+                    )
+                });
 
-            (skeleton, queries)
+                (skeleton, queries)
+            })
         };
 
-        let (proof_state, proof_input) =
-            crate::inner_verifiers::unified_reduced::verify(cs, skeleton, queries);
+        let unified_proofs_states = unified_proof_parts.map(|(skeleton, queries)| {
+            crate::inner_verifiers::unified_reduced::verify(cs, skeleton, queries).0
+        });
 
         let (skeleton, queries) = if let Some(witness) = &self.witness {
             crate::inner_verifiers::blake_delegation::prepare_blake_proof_for_wrapper::<_, _, V>(
@@ -434,8 +465,7 @@ impl<F: SmallField, V: CircuitLeafInclusionVerifier<F>> RiscWrapperCircuit<F, V>
             final_pc,
             final_timestamp,
             final_registers_state,
-            &proof_state,
-            &proof_input,
+            &unified_proofs_states,
             &blake_state,
             pow_challenge,
             &self.binary_commitment,
@@ -614,15 +644,14 @@ pub(crate) fn check_proof_state<F: SmallField, CS: ConstraintSystem<F>>(
     final_pc: UInt32<F>,
     final_timestamp: [UInt32<F>; 2],
     final_registers_state: [UInt32<F>; NUM_REGISTERS * 3],
-    proof_state: &WrappedProofOutput<
+    unified_proofs_states: &[WrappedProofOutput<
         F,
         TREE_CAP_SIZE,
         NUM_COSETS,
         NUM_DELEGATION_CHALLENGES,
         NUM_AUX_BOUNDARY_VALUES,
         NUM_MACHINE_STATE_PERMUTATION_CHALLENGES,
-    >,
-    _public_input: &WrappedProofPublicInputs<F, NUM_STATE_ELEMENTS>,
+    >; NUM_UNIFIED_PROOFS],
     blake_state: &WrappedBlakeProofOutput<F>,
     pow_challenge: [UInt32<F>; 2],
     binary_commitment: &BinaryCommitment,
@@ -650,25 +679,122 @@ pub(crate) fn check_proof_state<F: SmallField, CS: ConstraintSystem<F>>(
     buffer[0] = UInt32::allocated_constant(cs, REDUCED_MACHINE_CIRCUIT_FAMILY_IDX as u32);
     transcript.absorb(cs, &buffer);
 
-    Num::enforce_equal(cs, &proof_state.circuit_sequence.into_num(), &zero);
-    Num::enforce_equal(cs, &proof_state.delegation_type.into_num(), &zero);
+    unified_proofs_states.iter().for_each(|proof_state| {
+        Num::enforce_equal(cs, &proof_state.circuit_sequence.into_num(), &zero);
+        Num::enforce_equal(cs, &proof_state.delegation_type.into_num(), &zero);
 
-    // assert!(MerkleTreeCap::compare(
-    //     unified_circuit_setup,
-    //     &current.setup_caps
-    // ));s
-
-    for cap in proof_state.memory_caps.iter() {
-        for chunk in cap.cap.iter() {
-            transcript.absorb(cs, chunk);
+        for cap in proof_state.memory_caps.iter() {
+            for chunk in cap.cap.iter() {
+                transcript.absorb(cs, chunk);
+            }
         }
-    }
 
-    grand_product_accumulator =
-        grand_product_accumulator.mul(cs, &proof_state.grand_product_accumulator);
-    if NUM_DELEGATION_CHALLENGES > 0 {
-        delegation_set_accumulator =
-            delegation_set_accumulator.add(cs, &proof_state.delegation_argument_accumulator[0]);
+        grand_product_accumulator =
+            grand_product_accumulator.mul(cs, &proof_state.grand_product_accumulator);
+        if NUM_DELEGATION_CHALLENGES > 0 {
+            delegation_set_accumulator =
+                delegation_set_accumulator.add(cs, &proof_state.delegation_argument_accumulator[0]);
+        }
+    });
+
+    for (current, previous) in unified_proofs_states
+        .iter()
+        .skip(1)
+        .zip(unified_proofs_states.iter())
+    {
+        for (l, r) in current.setup_caps.iter().zip(previous.setup_caps.iter()) {
+            l.enforce_equal(cs, r);
+        }
+
+        current
+            .memory_challenges
+            .enforce_equal(cs, &previous.memory_challenges);
+        for (l, r) in current
+            .delegation_challenges
+            .iter()
+            .zip(previous.delegation_challenges.iter())
+        {
+            l.enforce_equal(cs, r);
+        }
+        for (l, r) in current
+            .machine_state_permutation_challenges
+            .iter()
+            .zip(previous.machine_state_permutation_challenges.iter())
+        {
+            l.enforce_equal(cs, r);
+        }
+
+        // and we also check inits/teardowns
+        // check lazy inits
+        fn unit32_from_two_16_bit_mersenne<F: SmallField, CS: ConstraintSystem<F>>(
+            cs: &mut CS,
+            chunks: &[MersenneField<F>; 2],
+        ) -> UInt32<F> {
+            // Only for local usage
+            // We know that lazy_init_boundary_values have 16 bits (checked in quotient)
+            use boojum::cs::gates::ConstantAllocatableCS;
+            use boojum::gadgets::impls::limbs_decompose::reduce_terms;
+
+            if cs.gate_is_allowed::<ReductionGate<F, 2>>() {
+                let terms = [chunks[0].get_variable(), chunks[1].get_variable()];
+                unsafe { UInt32::from_variable_unchecked(reduce_terms(cs, F::SHIFTS[16], terms)) }
+            } else if cs.gate_is_allowed::<ReductionGate<F, 4>>() {
+                let zero_var = cs.allocate_constant(F::ZERO);
+                let terms = [
+                    chunks[0].get_variable(),
+                    chunks[1].get_variable(),
+                    zero_var,
+                    zero_var,
+                ];
+                unsafe { UInt32::from_variable_unchecked(reduce_terms(cs, F::SHIFTS[16], terms)) }
+            } else {
+                unimplemented!();
+            }
+        }
+
+        let last_previous = unit32_from_two_16_bit_mersenne(
+            cs,
+            &previous.lazy_init_boundary_values[0].lazy_init_one_before_last_row,
+        );
+
+        let first_current = unit32_from_two_16_bit_mersenne(
+            cs,
+            &current.lazy_init_boundary_values[0].lazy_init_first_row,
+        );
+
+        // it should be either
+        // flag = first_current > last_previous
+        let (_, order_flag) = last_previous.overflowing_sub(cs, first_current);
+
+        // or
+        let mut other_flags = vec![];
+
+        other_flags.push(last_previous.is_zero(cs));
+        other_flags.push(
+            previous.lazy_init_boundary_values[0].teardown_value_one_before_last_row[0]
+                .clone()
+                .is_zero(cs),
+        );
+        other_flags.push(
+            previous.lazy_init_boundary_values[0].teardown_value_one_before_last_row[1]
+                .clone()
+                .is_zero(cs),
+        );
+        other_flags.push(
+            previous.lazy_init_boundary_values[0].teardown_timestamp_one_before_last_row[0]
+                .clone()
+                .is_zero(cs),
+        );
+        other_flags.push(
+            previous.lazy_init_boundary_values[0].teardown_timestamp_one_before_last_row[1]
+                .clone()
+                .is_zero(cs),
+        );
+
+        use boojum::gadgets::boolean::Boolean;
+        let true_flag = Boolean::allocated_constant(cs, true);
+        let final_flag = Boolean::multi_and(cs, &other_flags).or(cs, order_flag);
+        Boolean::enforce_equal(cs, &final_flag, &true_flag);
     }
 
     // Now delegation circuit
@@ -685,10 +811,19 @@ pub(crate) fn check_proof_state<F: SmallField, CS: ConstraintSystem<F>>(
             &blake_delegation_type.into_num(),
         );
 
-        // assert!(MerkleTreeCap::compare(
-        //     &delegation_proof_output.setup_caps,
-        //     setup_caps
-        // ));
+        let expected_setup_caps =
+            <[WrappedMerkleTreeCap<F, TREE_CAP_SIZE>; NUM_COSETS]>::allocate_constant(
+                cs,
+                setups::all_parameters::ALL_DELEGATION_CIRCUITS_PARAMS[0].2,
+            );
+
+        for (cap, expected_cap) in blake_state
+            .setup_caps
+            .iter()
+            .zip(expected_setup_caps.iter())
+        {
+            cap.enforce_equal(cs, expected_cap);
+        }
 
         for cap in blake_state.memory_caps.iter() {
             for chunk in cap.cap.iter() {
@@ -698,11 +833,11 @@ pub(crate) fn check_proof_state<F: SmallField, CS: ConstraintSystem<F>>(
 
         blake_state
             .memory_challenges
-            .enforce_equal(cs, &proof_state.memory_challenges);
+            .enforce_equal(cs, &unified_proofs_states[0].memory_challenges);
         for (l, r) in blake_state
             .delegation_challenges
             .iter()
-            .zip(proof_state.delegation_challenges.iter())
+            .zip(unified_proofs_states[0].delegation_challenges.iter())
         {
             l.enforce_equal(cs, r);
         }
@@ -726,21 +861,21 @@ pub(crate) fn check_proof_state<F: SmallField, CS: ConstraintSystem<F>>(
         pow_challenge,
     );
 
-    memory_argument_challenges.enforce_equal(cs, &proof_state.memory_challenges);
-    if NUM_DELEGATION_CHALLENGES > 0 {
-        delegation_argument_challenges.enforce_equal(cs, &proof_state.delegation_challenges[0]);
-    }
-    machine_state_permutation_challenges
-        .enforce_equal(cs, &proof_state.machine_state_permutation_challenges[0]);
+    unified_proofs_states.iter().for_each(|proof_state| {
+        memory_argument_challenges.enforce_equal(cs, &proof_state.memory_challenges);
+        if NUM_DELEGATION_CHALLENGES > 0 {
+            delegation_argument_challenges.enforce_equal(cs, &proof_state.delegation_challenges[0]);
+        }
+        machine_state_permutation_challenges
+            .enforce_equal(cs, &proof_state.machine_state_permutation_challenges[0]);
+    });
 
     // conclude that our memory argument is valid
     let register_contribution = produce_register_contribution_into_memory_accumulator_raw(
         cs,
         &final_registers_state,
-        proof_state
-            .memory_challenges
-            .memory_argument_linearization_challenges,
-        proof_state.memory_challenges.memory_argument_gamma,
+        memory_argument_challenges.memory_argument_linearization_challenges,
+        memory_argument_challenges.memory_argument_gamma,
     );
     let machine_state_contribution = produce_pc_into_permutation_accumulator_raw(
         cs,
@@ -748,8 +883,8 @@ pub(crate) fn check_proof_state<F: SmallField, CS: ConstraintSystem<F>>(
         split_timestamp(INITIAL_TIMESTAMP),
         final_pc,
         (final_timestamp[0], final_timestamp[1]),
-        &proof_state.machine_state_permutation_challenges[0].linearization_challenges,
-        &proof_state.machine_state_permutation_challenges[0].additive_term,
+        &machine_state_permutation_challenges.linearization_challenges,
+        &machine_state_permutation_challenges.additive_term,
     );
 
     grand_product_accumulator = grand_product_accumulator.mul(cs, &register_contribution);
@@ -770,7 +905,7 @@ pub(crate) fn check_proof_state<F: SmallField, CS: ConstraintSystem<F>>(
 
     let mut result_hasher = Blake2sWrappedBufferingTranscript::new(cs);
     result_hasher.absorb(cs, &final_pc_buffer);
-    for cap in proof_state.setup_caps.iter() {
+    for cap in unified_proofs_states[0].setup_caps.iter() {
         for chunk in cap.cap.iter() {
             result_hasher.absorb(cs, chunk);
         }

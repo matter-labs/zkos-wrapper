@@ -100,7 +100,7 @@ fn try_synthesize_wrapper_with_params(
 
         let binary_commitment = BinaryCommitment::from_default_binary();
         use crate::RiscWrapper;
-        let circuit = RiscWrapper::new(None, binary_commitment);
+        let circuit = RiscWrapper::new(None, false, binary_commitment);
         circuit.add_tables(&mut owned_cs);
         circuit.synthesize_into_cs(&mut owned_cs);
         owned_cs.pad_and_shrink();
@@ -126,10 +126,9 @@ fn find_minimum_cs_parameters_for_wrapper() {
         .and_then(|v| v.parse().ok())
         .unwrap_or(180);
 
-    tracing::info!(
+    println!(
         "Starting parameters: num_columns={}, num_repetitions={}",
-        num_columns,
-        num_repetitions
+        num_columns, num_repetitions
     );
 
     // Clear/create output directory
@@ -146,7 +145,7 @@ fn find_minimum_cs_parameters_for_wrapper() {
     }));
 
     // Search 1: minimum num_columns_under_copy_permutation (with fixed num_repetitions)
-    tracing::info!(
+    println!(
         "=== Searching for minimum num_columns_under_copy_permutation (num_repetitions={}) ===",
         num_repetitions
     );
@@ -157,11 +156,11 @@ fn find_minimum_cs_parameters_for_wrapper() {
         print!("  Trying num_columns={}... ", mid);
         match try_synthesize_wrapper_with_params(mid, num_repetitions) {
             Ok(()) => {
-                tracing::info!("OK");
+                println!("OK");
                 high = mid;
             }
             Err(msg) => {
-                tracing::info!("FAILED");
+                println!("FAILED");
                 let hook_info = panic_buf.lock().unwrap().clone();
                 let filename = format!(
                     "{}/wrapper_cols{}_reps{}_FAILED.txt",
@@ -180,10 +179,10 @@ fn find_minimum_cs_parameters_for_wrapper() {
             }
         }
     }
-    tracing::info!("Minimum num_columns_under_copy_permutation: {}\n", low);
+    println!("Minimum num_columns_under_copy_permutation: {}\n", low);
 
     // Search 2: minimum num_repetitions (with fixed num_columns)
-    tracing::info!(
+    println!(
         "=== Searching for minimum num_repetitions (num_columns_under_copy_permutation={}) ===",
         num_columns
     );
@@ -194,11 +193,11 @@ fn find_minimum_cs_parameters_for_wrapper() {
         print!("  Trying num_repetitions={}... ", mid);
         match try_synthesize_wrapper_with_params(num_columns, mid) {
             Ok(()) => {
-                tracing::info!("OK");
+                println!("OK");
                 high = mid;
             }
             Err(msg) => {
-                tracing::info!("FAILED");
+                println!("FAILED");
                 let hook_info = panic_buf.lock().unwrap().clone();
                 let filename = format!(
                     "{}/wrapper_cols{}_reps{}_FAILED.txt",
@@ -217,7 +216,7 @@ fn find_minimum_cs_parameters_for_wrapper() {
             }
         }
     }
-    tracing::info!("Minimum num_repetitions: {}", low);
+    println!("Minimum num_repetitions: {}", low);
 
     // Restore default panic hook
     std::panic::set_hook(default_hook);
@@ -285,7 +284,7 @@ fn find_minimum_cs_parameters_for_compression() {
         // Linear scan: for each possible num_columns_under_copy_permutation,
         // test with num_witness_columns = num_total_columns - copy_cols.
         // The working range may not be contiguous — it could be [x..y].
-        tracing::info!(
+        println!(
             "=== Scanning all splits for num_total_columns={} ===",
             num_total_columns
         );
@@ -300,12 +299,12 @@ fn find_minimum_cs_parameters_for_compression() {
             );
             match try_synthesize_compression_with_params(copy_cols, witness_cols, &vk) {
                 Ok(()) => {
-                    tracing::info!("OK");
+                    println!("OK");
                     min_copy_cols = Some(copy_cols);
                     break;
                 }
                 Err(msg) => {
-                    tracing::info!("FAILED");
+                    println!("FAILED");
                     let hook_info = panic_buf.lock().unwrap().clone();
                     let filename = format!(
                         "{}/compression_cols{}_wcols{}_FAILED.txt",
@@ -324,17 +323,17 @@ fn find_minimum_cs_parameters_for_compression() {
             }
         }
 
-        tracing::info!(
+        println!(
             "\n=== Results for CompressionCircuit (num_total_columns={}) ===",
             num_total_columns
         );
         if let Some(copy_cols) = min_copy_cols {
             let witness_cols = num_total_columns - copy_cols;
-            tracing::info!("  min num_columns_under_copy_permutation: {}", copy_cols);
-            tracing::info!("  max num_witness_columns: {}", witness_cols);
+            println!("  min num_columns_under_copy_permutation: {}", copy_cols);
+            println!("  max num_witness_columns: {}", witness_cols);
             break;
         } else {
-            tracing::info!("  No working configuration found, trying next total...");
+            println!("  No working configuration found, trying next total...");
         }
     }
 

@@ -34,7 +34,7 @@ pub fn get_risc_wrapper_setup(
 ) {
     let start = std::time::Instant::now();
 
-    let circuit = RiscWrapper::new(None, binary_commitment);
+    let circuit = RiscWrapper::new(None, false, binary_commitment);
 
     let geometry = RiscWrapper::geometry();
     let (max_trace_len, num_vars) = circuit.size_hint();
@@ -89,7 +89,7 @@ pub fn prove_risc_wrapper(
     binary_commitment: BinaryCommitment,
 ) -> RiscWrapperProof {
     let start = std::time::Instant::now();
-    let circuit = RiscWrapper::new(Some(risc_wrapper_witness), binary_commitment);
+    let circuit = RiscWrapper::new(Some(risc_wrapper_witness), true, binary_commitment);
 
     let geometry = RiscWrapper::geometry();
     let (max_trace_len, num_vars) = circuit.size_hint();

@@ -204,7 +204,7 @@ fn test_verifier_inner_function() {
 
     use crate::RiscWrapper;
 
-    let circuit = RiscWrapper::new(Some(risc_wrapper_witness), binary_commitment);
+    let circuit = RiscWrapper::new(Some(risc_wrapper_witness), true, binary_commitment);
 
     circuit.synthesize_into_cs(cs);
 
