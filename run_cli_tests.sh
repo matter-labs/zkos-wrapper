@@ -176,10 +176,13 @@ bench() {
 }
 
 echo "--- prove-risc-wrapper ---"
+RISC_APP_FLAGS=()
+if [ "$SECURITY" == "80" ]; then
+    RISC_APP_FLAGS=(--bin "$RISC_APP_BIN" --text "$RISC_APP_TEXT")
+fi
 if bench prove-risc-wrapper $BIN prove-risc-wrapper \
     --proof "$RISC_PROOF" \
-    --bin "$RISC_APP_BIN" \
-    --text "$RISC_APP_TEXT" \
+    "${RISC_APP_FLAGS[@]}" \
     -o "$TMP/risc" \
   && [ -f "$TMP/risc/risc_wrapper_proof.json" ] \
   && [ -f "$TMP/risc/risc_wrapper_vk.json" ]; then

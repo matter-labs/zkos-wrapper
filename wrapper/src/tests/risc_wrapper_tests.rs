@@ -7,16 +7,22 @@ pub(crate) fn risc_wrapper_full_test() {
     use std::io::Read;
     let worker = boojum::worker::Worker::new_with_num_threads(32);
 
-    let mut binary = vec![];
-    let mut file = std::fs::File::open(RISC_PROGRAM_BIN_PATH).unwrap();
-    file.read_to_end(&mut binary).unwrap();
+    let binary_commitment = if cfg!(feature = "security_80") {
+        let mut binary = vec![];
+        let mut file = std::fs::File::open(RISC_PROGRAM_BIN_PATH).unwrap();
+        file.read_to_end(&mut binary).unwrap();
 
-    let mut text = vec![];
-    let mut file = std::fs::File::open(RISC_PROGRAM_TEXT_PATH).unwrap();
-    file.read_to_end(&mut text).unwrap();
+        let mut text = vec![];
+        let mut file = std::fs::File::open(RISC_PROGRAM_TEXT_PATH).unwrap();
+        file.read_to_end(&mut text).unwrap();
 
-    // We use a prove of hashed fibonacci for testing
-    let binary_commitment = BinaryCommitment::from_binary(&binary, &text);
+        // We use a prove of hashed fibonacci for testing
+        BinaryCommitment::from_binary(&binary, &text)
+    } else if cfg!(feature = "security_100") {
+        BinaryCommitment::from_default_binary()
+    } else {
+        panic!("Please specify a security level feature");
+    };
     dbg!(binary_commitment);
 
     let program_proof: execution_utils::unrolled::UnrolledProgramProof =

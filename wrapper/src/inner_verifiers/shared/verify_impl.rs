@@ -15,10 +15,11 @@ pub fn verify<F: SmallField, CS: ConstraintSystem<F>>(
 ) {
     // now drive the transcript and continue
     let mut transcript_hasher = Blake2sStateGate::<F>::new(cs);
+    let input = skeleton.transcript_elements_before_stage2(cs);
     let mut seed = Blake2sWrappedTranscript::commit_initial_using_hasher(
         cs,
         &mut transcript_hasher,
-        &skeleton.transcript_elements_before_stage2(),
+        &input,
     );
 
     if SECURITY_CONFIG.lookup_pow_bits > 0 {
@@ -97,11 +98,12 @@ pub fn verify<F: SmallField, CS: ConstraintSystem<F>>(
         };
 
     // commit stage 2 artifacts - tree and memory grand product / delegation set accumulator
+    let input = skeleton.transcript_elements_stage2_to_stage3(cs);
     Blake2sWrappedTranscript::commit_with_seed_using_hasher(
         cs,
         &mut transcript_hasher,
         &mut seed,
-        &skeleton.transcript_elements_stage2_to_stage3(),
+        &input,
     );
 
     if SECURITY_CONFIG.quotient_alpha_pow_bits > 0 {
@@ -191,11 +193,12 @@ pub fn verify<F: SmallField, CS: ConstraintSystem<F>>(
     );
 
     // commit evaluations
+    let input = skeleton.transcript_elements_evaluations_at_z(cs);
     Blake2sWrappedTranscript::commit_with_seed_using_hasher(
         cs,
         &mut transcript_hasher,
         &mut seed,
-        &skeleton.transcript_elements_evaluations_at_z(),
+        &input,
     );
 
     if SECURITY_CONFIG.deep_poly_alpha_pow_bits > 0 {
@@ -290,11 +293,12 @@ pub fn verify<F: SmallField, CS: ConstraintSystem<F>>(
 
     if LAST_FRI_STEP_EXPOSE_LEAFS {
         let dst = &mut fri_folding_challenges[NUM_FRI_STEPS - 1];
+        let input = skeleton.transcript_elements_last_fri_step_leaf_values(cs);
         Blake2sWrappedTranscript::commit_with_seed_using_hasher(
             cs,
             &mut transcript_hasher,
             &mut seed,
-            &skeleton.transcript_elements_last_fri_step_leaf_values(),
+            &input,
         );
 
         if SECURITY_CONFIG.foldings_pow_bits[NUM_FRI_STEPS - 1] > 0 {
@@ -334,11 +338,12 @@ pub fn verify<F: SmallField, CS: ConstraintSystem<F>>(
     }
 
     // commit monomial coefficients before drawing queries
+    let input = skeleton.transcript_elements_monomial_coefficients(cs);
     Blake2sWrappedTranscript::commit_with_seed_using_hasher(
         cs,
         &mut transcript_hasher,
         &mut seed,
-        &skeleton.transcript_elements_monomial_coefficients(),
+        &input,
     );
 
     // now we can verify PoW
@@ -547,7 +552,6 @@ pub fn verify<F: SmallField, CS: ConstraintSystem<F>>(
             memory_timestamp_high_from_circuit_sequence,
         );
 
-        // TODO: should we check if delegation type is valid or should we reduce?
         let delegation_type = MersenneField::from_variable_checked(
             cs,
             skeleton.delegation_type.get_variable(),

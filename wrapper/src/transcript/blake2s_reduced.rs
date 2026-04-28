@@ -85,6 +85,8 @@ impl<F: SmallField> Blake2sStateGate<F> {
         input_size_words: usize,
         last_round: bool,
     ) {
+        assert!(REDUCED_ROUNDS, "Only reduced rounds are supported");
+
         self.t += input_size_words as u32 * core::mem::size_of::<u32>() as u32;
         blake2s_reduced_round_function(
             cs,

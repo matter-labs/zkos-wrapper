@@ -36,8 +36,8 @@ impl CircuitBuilder<GL> for CompressionCircuit {
             }
         } else if cfg!(feature = "security_100") {
             CSGeometry {
-                num_columns_under_copy_permutation: 68,
-                num_witness_columns: 62,
+                num_columns_under_copy_permutation: 100,
+                num_witness_columns: 30,
                 num_constant_columns: 4,
                 max_allowed_constraint_degree: 8,
             }

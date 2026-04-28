@@ -208,14 +208,6 @@ pub fn prove_risc_wrapper(
     cs.pad_and_shrink_using_hint(finalization_hint);
     let mut cs = cs.into_assembly::<Global>();
     dbg!(cs.check_if_satisfied(&worker));
-    cs.print_gate_stats();
-
-    dbg!(cs.lookup_multiplicities.len());
-
-    for mul in &cs.lookup_multiplicities {
-        dbg!(mul.len());
-    }
-    let witness_vec = cs.witness.as_ref().unwrap().all_values.clone();
 
     let proof_config = RiscWrapper::get_proof_config();
 
@@ -273,7 +265,7 @@ pub fn get_compression_setup(
         fri_lde_factor,
         merkle_tree_cap_size,
         ..
-    } = RiscWrapper::get_proof_config();
+    } = CompressionCircuit::get_proof_config();
     let cs = cs.into_assembly::<Global>();
 
     let (setup_base, setup, vk, setup_tree, vars_hint, witness_hints) =

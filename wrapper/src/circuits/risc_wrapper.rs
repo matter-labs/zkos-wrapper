@@ -235,7 +235,7 @@ impl<F: SmallField, V: CircuitLeafInclusionVerifier<F>> CircuitBuilder<F>
         } else if cfg!(feature = "security_100") {
             LookupParameters::UseSpecializedColumnsWithTableIdAsConstant {
                 width: 3,
-                num_repetitions: 103,
+                num_repetitions: 101,
                 share_table_id: true,
             }
         } else {
@@ -756,7 +756,66 @@ pub(crate) fn check_proof_state<F: SmallField, CS: ConstraintSystem<F>>(
 
         // it should be either
         // flag = first_current > last_previous
-        let (_, order_flag) = last_previous.overflowing_sub(cs, first_current);
+        fn greater<F: SmallField, CS: ConstraintSystem<F>>(
+            cs: &mut CS,
+            a: UInt32<F>,
+            b: UInt32<F>,
+        ) -> Boolean<F> {
+            // res = a > b <=> b - a + 2^32 * res = diff is in [0, 2^32)
+
+            let res = Boolean::allocate_without_value(cs);
+            let diff = UInt32::allocate_without_value(cs);
+
+            use boojum::{config::*, cs::*};
+            if <CS::Config as CSConfig>::WitnessConfig::EVALUATE_WITNESS {
+                let value_fn = move |inputs: [F; 2]| {
+                    let a = inputs[0].as_u64_reduced();
+                    let b = inputs[1].as_u64_reduced();
+                    if a > b {
+                        [
+                            F::from_u64_with_reduction(1),
+                            F::from_u64_with_reduction((1 << 32) + b - a),
+                        ]
+                    } else {
+                        [
+                            F::from_u64_with_reduction(0),
+                            F::from_u64_with_reduction(b - a),
+                        ]
+                    }
+                };
+
+                cs.set_values_with_dependencies(
+                    &[a.variable.into(), b.variable.into()],
+                    &Place::from_variables([res.get_variable().into(), diff.variable.into()]),
+                    value_fn,
+                );
+            }
+
+            if <CS::Config as CSConfig>::SetupConfig::KEEP_SETUP == true {
+                use boojum::cs::gates::ConstantAllocatableCS;
+
+                let reduction_constants = [F::MINUS_ONE, F::ONE, F::from_u64_unchecked(1 << 32), F::ZERO];
+                let output_variables = [
+                    a.variable,
+                    b.variable,
+                    res.get_variable(),
+                    cs.allocate_constant(F::ZERO),
+                ];
+
+                let gate = boojum::cs::gates::ReductionGate::<F, 4> {
+                    params: boojum::cs::gates::ReductionGateParams {
+                        reduction_constants,
+                    },
+                    terms: output_variables,
+                    reduction_result: diff.variable,
+                };
+                gate.add_to_cs(cs);
+            }
+
+            res
+        }
+
+        let order_flag = greater(cs, first_current, last_previous);
 
         // or
         let mut other_flags = vec![];
@@ -971,9 +1030,9 @@ pub fn produce_register_contribution_into_memory_accumulator_raw<
     for (reg_idx, value_and_timestamp) in register_final_data.chunks(3).enumerate() {
         let [value_low, value_high] = split_uint32_into_pair_mersenne(cs, &value_and_timestamp[0]);
         let timestamp_low =
-            MersenneField::from_variable_checked(cs, value_and_timestamp[1].get_variable(), false);
+            MersenneField::from_variable_checked(cs, value_and_timestamp[1].get_variable(), true);
         let timestamp_high =
-            MersenneField::from_variable_checked(cs, value_and_timestamp[2].get_variable(), false);
+            MersenneField::from_variable_checked(cs, value_and_timestamp[2].get_variable(), true);
 
         let mut contribution = MersenneQuartic::one(cs); // is_register == 1, without challenge
         let mut t =

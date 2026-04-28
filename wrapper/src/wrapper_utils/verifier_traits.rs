@@ -112,7 +112,7 @@ impl<F: SmallField> CircuitLeafInclusionVerifier<F> for CircuitBlake2sForEveryth
                     .zip(input_slice)
                     .for_each(|(dst, src)| {
                         *dst = Word {
-                            inner: src.into_uint32().to_le_bytes(cs),
+                            inner: src.into_uint32(cs).to_le_bytes(cs),
                         };
                     });
 
@@ -132,7 +132,7 @@ impl<F: SmallField> CircuitLeafInclusionVerifier<F> for CircuitBlake2sForEveryth
                     .zip(input_slice)
                     .for_each(|(dst, src)| {
                         *dst = Word {
-                            inner: src.into_uint32().to_le_bytes(cs),
+                            inner: src.into_uint32(cs).to_le_bytes(cs),
                         };
                     });
                 self.hasher.input_buffer[last_round_len..]
