@@ -230,8 +230,7 @@ echo "--- prove-all --save-intermediates ---"
 if bench prove-all $BIN prove-all \
     $TRUSTED_SETUP_FLAG \
     --proof "$RISC_PROOF" \
-    --bin "$RISC_APP_BIN" \
-    --text "$RISC_APP_TEXT" \
+    "${RISC_APP_FLAGS[@]}" \
     --save-intermediates \
     -o "$TMP/all" \
   && [ -f "$TMP/all/snark_proof.json" ] \
