@@ -544,7 +544,7 @@ checksum = "8d696c370c750c948ada61c69a0ee2cbbb9c50b1019ddb86d9317157a99c2cae"
 [[package]]
 name = "boojum"
 version = "0.32.10"
-source = "git+https://github.com/matter-labs/zksync-crypto.git?branch=main#cb466ac4e480126a63b102b88b9c2755105a91ae"
+source = "git+https://github.com/matter-labs/zksync-crypto.git?branch=oh_for_wrapper#bf2797e4ca13475bf797aa43e085389cdd6732f9"
 dependencies = [
  "arrayvec 0.7.6",
  "bincode",
@@ -574,7 +574,7 @@ dependencies = [
 [[package]]
 name = "boojum-cuda"
 version = "0.156.0"
-source = "git+https://github.com/matter-labs/zksync-crypto-gpu.git?branch=oh_for_wrapper#9f78398bf4685063521e2da10dae115108682aa5"
+source = "git+https://github.com/matter-labs/zksync-crypto-gpu.git?branch=oh_for_wrapper#62a38f541810a32ab2e65ba8ba20683c7e0eec6b"
 dependencies = [
  "boojum",
  "cmake",
@@ -642,7 +642,7 @@ checksum = "9330f8b2ff13f34540b44e946ef35111825727b38d33286ef986142615121801"
 [[package]]
 name = "circuit_definitions"
 version = "0.153.9"
-source = "git+https://github.com/matter-labs/zksync-protocol?branch=oh_for_wrapper#da2d401b980b0c304a37eed1edb2c1d136394e3c"
+source = "git+https://github.com/matter-labs/zksync-protocol?branch=oh_for_wrapper#8aaeb00e3c6a676122546e3a4be8b5d7ff614177"
 dependencies = [
  "circuit_encodings",
  "crossbeam",
@@ -655,7 +655,7 @@ dependencies = [
 [[package]]
 name = "circuit_encodings"
 version = "0.153.9"
-source = "git+https://github.com/matter-labs/zksync-protocol?branch=oh_for_wrapper#da2d401b980b0c304a37eed1edb2c1d136394e3c"
+source = "git+https://github.com/matter-labs/zksync-protocol?branch=oh_for_wrapper#8aaeb00e3c6a676122546e3a4be8b5d7ff614177"
 dependencies = [
  "derivative",
  "serde",
@@ -1096,7 +1096,7 @@ dependencies = [
 [[package]]
 name = "era_cudart"
 version = "0.156.0"
-source = "git+https://github.com/matter-labs/zksync-crypto-gpu.git?branch=oh_for_wrapper#9f78398bf4685063521e2da10dae115108682aa5"
+source = "git+https://github.com/matter-labs/zksync-crypto-gpu.git?branch=oh_for_wrapper#62a38f541810a32ab2e65ba8ba20683c7e0eec6b"
 dependencies = [
  "bitflags",
  "era_cudart_sys 0.156.0 (git+https://github.com/matter-labs/zksync-crypto-gpu.git?branch=oh_for_wrapper)",
@@ -1115,7 +1115,7 @@ dependencies = [
 [[package]]
 name = "era_cudart_sys"
 version = "0.156.0"
-source = "git+https://github.com/matter-labs/zksync-crypto-gpu.git?branch=oh_for_wrapper#9f78398bf4685063521e2da10dae115108682aa5"
+source = "git+https://github.com/matter-labs/zksync-crypto-gpu.git?branch=oh_for_wrapper#62a38f541810a32ab2e65ba8ba20683c7e0eec6b"
 dependencies = [
  "regex-lite",
 ]
@@ -1218,7 +1218,7 @@ dependencies = [
 [[package]]
 name = "fflonk"
 version = "0.32.10"
-source = "git+https://github.com/matter-labs/zksync-crypto.git?branch=main#cb466ac4e480126a63b102b88b9c2755105a91ae"
+source = "git+https://github.com/matter-labs/zksync-crypto.git?branch=oh_for_wrapper#bf2797e4ca13475bf797aa43e085389cdd6732f9"
 dependencies = [
  "bincode",
  "byteorder",
@@ -1235,7 +1235,7 @@ dependencies = [
 [[package]]
 name = "fflonk-cuda"
 version = "0.156.0"
-source = "git+https://github.com/matter-labs/zksync-crypto-gpu.git?branch=oh_for_wrapper#9f78398bf4685063521e2da10dae115108682aa5"
+source = "git+https://github.com/matter-labs/zksync-crypto-gpu.git?branch=oh_for_wrapper#62a38f541810a32ab2e65ba8ba20683c7e0eec6b"
 dependencies = [
  "bincode",
  "byteorder",
@@ -1310,7 +1310,7 @@ checksum = "d9c4f5dac5e15c24eb999c26181a6ca40b39fe946cbe4c263c7209467bc83af2"
 [[package]]
 name = "franklin-crypto"
 version = "0.32.10"
-source = "git+https://github.com/matter-labs/zksync-crypto.git?branch=main#cb466ac4e480126a63b102b88b9c2755105a91ae"
+source = "git+https://github.com/matter-labs/zksync-crypto.git?branch=oh_for_wrapper#bf2797e4ca13475bf797aa43e085389cdd6732f9"
 dependencies = [
  "arr_macro",
  "bit-vec",
@@ -2376,7 +2376,7 @@ dependencies = [
 [[package]]
 name = "proof-compression"
 version = "0.156.0"
-source = "git+https://github.com/matter-labs/zksync-crypto-gpu.git?branch=oh_for_wrapper#9f78398bf4685063521e2da10dae115108682aa5"
+source = "git+https://github.com/matter-labs/zksync-crypto-gpu.git?branch=oh_for_wrapper#62a38f541810a32ab2e65ba8ba20683c7e0eec6b"
 dependencies = [
  "anyhow",
  "bincode",
@@ -2607,7 +2607,7 @@ checksum = "dc897dd8d9e8bd1ed8cdad82b5966c3e0ecae09fb1907d58efaa013543185d0a"
 [[package]]
 name = "rescue_poseidon"
 version = "0.32.10"
-source = "git+https://github.com/matter-labs/zksync-crypto.git?branch=main#cb466ac4e480126a63b102b88b9c2755105a91ae"
+source = "git+https://github.com/matter-labs/zksync-crypto.git?branch=oh_for_wrapper#bf2797e4ca13475bf797aa43e085389cdd6732f9"
 dependencies = [
  "addchain",
  "arrayvec 0.7.6",
@@ -2993,7 +2993,7 @@ dependencies = [
 [[package]]
 name = "shivini"
 version = "0.156.0"
-source = "git+https://github.com/matter-labs/zksync-crypto-gpu.git?branch=oh_for_wrapper#9f78398bf4685063521e2da10dae115108682aa5"
+source = "git+https://github.com/matter-labs/zksync-crypto-gpu.git?branch=oh_for_wrapper#62a38f541810a32ab2e65ba8ba20683c7e0eec6b"
 dependencies = [
  "bincode",
  "boojum",
@@ -3043,7 +3043,7 @@ dependencies = [
 [[package]]
 name = "snark_wrapper"
 version = "0.32.10"
-source = "git+https://github.com/matter-labs/zksync-crypto.git?branch=main#cb466ac4e480126a63b102b88b9c2755105a91ae"
+source = "git+https://github.com/matter-labs/zksync-crypto.git?branch=oh_for_wrapper#bf2797e4ca13475bf797aa43e085389cdd6732f9"
 dependencies = [
  "derivative",
  "rand 0.8.6",
@@ -3740,7 +3740,7 @@ dependencies = [
 [[package]]
 name = "zk_evm"
 version = "0.153.9"
-source = "git+https://github.com/matter-labs/zksync-protocol?branch=oh_for_wrapper#da2d401b980b0c304a37eed1edb2c1d136394e3c"
+source = "git+https://github.com/matter-labs/zksync-protocol?branch=oh_for_wrapper#8aaeb00e3c6a676122546e3a4be8b5d7ff614177"
 dependencies = [
  "anyhow",
  "lazy_static",
@@ -3754,7 +3754,7 @@ dependencies = [
 [[package]]
 name = "zk_evm_abstractions"
 version = "0.153.9"
-source = "git+https://github.com/matter-labs/zksync-protocol?branch=oh_for_wrapper#da2d401b980b0c304a37eed1edb2c1d136394e3c"
+source = "git+https://github.com/matter-labs/zksync-protocol?branch=oh_for_wrapper#8aaeb00e3c6a676122546e3a4be8b5d7ff614177"
 dependencies = [
  "anyhow",
  "num_enum",
@@ -3766,7 +3766,7 @@ dependencies = [
 [[package]]
 name = "zkevm_circuits"
 version = "0.153.9"
-source = "git+https://github.com/matter-labs/zksync-protocol?branch=oh_for_wrapper#da2d401b980b0c304a37eed1edb2c1d136394e3c"
+source = "git+https://github.com/matter-labs/zksync-protocol?branch=oh_for_wrapper#8aaeb00e3c6a676122546e3a4be8b5d7ff614177"
 dependencies = [
  "arrayvec 0.7.6",
  "boojum",
@@ -3786,7 +3786,7 @@ dependencies = [
 [[package]]
 name = "zkevm_opcode_defs"
 version = "0.153.9"
-source = "git+https://github.com/matter-labs/zksync-protocol?branch=oh_for_wrapper#da2d401b980b0c304a37eed1edb2c1d136394e3c"
+source = "git+https://github.com/matter-labs/zksync-protocol?branch=oh_for_wrapper#8aaeb00e3c6a676122546e3a4be8b5d7ff614177"
 dependencies = [
  "bitflags",
  "blake2 0.10.6",
@@ -3832,7 +3832,7 @@ dependencies = [
 [[package]]
 name = "zksync-gpu-ffi"
 version = "0.156.0"
-source = "git+https://github.com/matter-labs/zksync-crypto-gpu.git?branch=oh_for_wrapper#9f78398bf4685063521e2da10dae115108682aa5"
+source = "git+https://github.com/matter-labs/zksync-crypto-gpu.git?branch=oh_for_wrapper#62a38f541810a32ab2e65ba8ba20683c7e0eec6b"
 dependencies = [
  "cmake",
  "crossbeam",
@@ -3846,7 +3846,7 @@ dependencies = [
 [[package]]
 name = "zksync-gpu-prover"
 version = "0.156.0"
-source = "git+https://github.com/matter-labs/zksync-crypto-gpu.git?branch=oh_for_wrapper#9f78398bf4685063521e2da10dae115108682aa5"
+source = "git+https://github.com/matter-labs/zksync-crypto-gpu.git?branch=oh_for_wrapper#62a38f541810a32ab2e65ba8ba20683c7e0eec6b"
 dependencies = [
  "bit-vec",
  "cfg-if",
@@ -3861,7 +3861,7 @@ dependencies = [
 [[package]]
 name = "zksync_bellman"
 version = "0.32.10"
-source = "git+https://github.com/matter-labs/zksync-crypto.git?branch=main#cb466ac4e480126a63b102b88b9c2755105a91ae"
+source = "git+https://github.com/matter-labs/zksync-crypto.git?branch=oh_for_wrapper#bf2797e4ca13475bf797aa43e085389cdd6732f9"
 dependencies = [
  "arrayvec 0.7.6",
  "bit-vec",
@@ -3885,7 +3885,7 @@ dependencies = [
 [[package]]
 name = "zksync_cs_derive"
 version = "0.32.10"
-source = "git+https://github.com/matter-labs/zksync-crypto.git?branch=main#cb466ac4e480126a63b102b88b9c2755105a91ae"
+source = "git+https://github.com/matter-labs/zksync-crypto.git?branch=oh_for_wrapper#bf2797e4ca13475bf797aa43e085389cdd6732f9"
 dependencies = [
  "proc-macro-error",
  "proc-macro2 1.0.106",
@@ -3896,7 +3896,7 @@ dependencies = [
 [[package]]
 name = "zksync_ff"
 version = "0.32.10"
-source = "git+https://github.com/matter-labs/zksync-crypto.git?branch=main#cb466ac4e480126a63b102b88b9c2755105a91ae"
+source = "git+https://github.com/matter-labs/zksync-crypto.git?branch=oh_for_wrapper#bf2797e4ca13475bf797aa43e085389cdd6732f9"
 dependencies = [
  "byteorder",
  "hex",
@@ -3909,7 +3909,7 @@ dependencies = [
 [[package]]
 name = "zksync_ff_derive"
 version = "0.32.10"
-source = "git+https://github.com/matter-labs/zksync-crypto.git?branch=main#cb466ac4e480126a63b102b88b9c2755105a91ae"
+source = "git+https://github.com/matter-labs/zksync-crypto.git?branch=oh_for_wrapper#bf2797e4ca13475bf797aa43e085389cdd6732f9"
 dependencies = [
  "num-bigint 0.4.6",
  "num-integer",
@@ -3923,7 +3923,7 @@ dependencies = [
 [[package]]
 name = "zksync_pairing"
 version = "0.32.10"
-source = "git+https://github.com/matter-labs/zksync-crypto.git?branch=main#cb466ac4e480126a63b102b88b9c2755105a91ae"
+source = "git+https://github.com/matter-labs/zksync-crypto.git?branch=oh_for_wrapper#bf2797e4ca13475bf797aa43e085389cdd6732f9"
 dependencies = [
  "byteorder",
  "cfg-if",

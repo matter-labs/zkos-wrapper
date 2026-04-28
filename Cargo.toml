@@ -19,10 +19,10 @@ categories = ["cryptography"]
 
 circuit_mersenne_field = { path = "circuit_mersenne_field" }
 
-boojum = { git = "https://github.com/matter-labs/zksync-crypto.git", package = "boojum", branch = "main" }
-bellman = { git = "https://github.com/matter-labs/zksync-crypto.git", package = "zksync_bellman", branch = "main" }
-rescue_poseidon = { git = "https://github.com/matter-labs/zksync-crypto.git", package = "rescue_poseidon", branch = "main" }
-snark_wrapper = { git = "https://github.com/matter-labs/zksync-crypto.git", package = "snark_wrapper", branch = "main" }
+boojum = { git = "https://github.com/matter-labs/zksync-crypto.git", package = "boojum", branch = "oh_for_wrapper" }
+bellman = { git = "https://github.com/matter-labs/zksync-crypto.git", package = "zksync_bellman", branch = "oh_for_wrapper" }
+rescue_poseidon = { git = "https://github.com/matter-labs/zksync-crypto.git", package = "rescue_poseidon", branch = "oh_for_wrapper" }
+snark_wrapper = { git = "https://github.com/matter-labs/zksync-crypto.git", package = "snark_wrapper", branch = "oh_for_wrapper" }
 
 unified_reduced_machine_verifier = { git = "https://github.com/matter-labs/zksync-airbender.git", package = "unified_reduced_machine_verifier", features = [
   "proof_utils",
