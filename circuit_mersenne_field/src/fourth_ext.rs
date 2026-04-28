@@ -740,13 +740,13 @@ fn range_check_33_bits<F: SmallField, CS: ConstraintSystem<F>>(cs: &mut CS, vari
         }
 
         if <CS::Config as CSConfig>::SetupConfig::KEEP_SETUP == true {
-            let reduction_constants = [F::ONE, F::from_u64_unchecked(1 << 16), F::from_u64_unchecked(1 << 32), F::ZERO];
-            let output_variables = [
-                limbs[0],
-                limbs[1],
-                limbs[2],
-                cs.allocate_constant(F::ZERO),
+            let reduction_constants = [
+                F::ONE,
+                F::from_u64_unchecked(1 << 16),
+                F::from_u64_unchecked(1 << 32),
+                F::ZERO,
             ];
+            let output_variables = [limbs[0], limbs[1], limbs[2], cs.allocate_constant(F::ZERO)];
 
             let gate = ReductionGate::<F, 4> {
                 params: ReductionGateParams {

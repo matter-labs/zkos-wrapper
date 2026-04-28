@@ -794,7 +794,12 @@ pub(crate) fn check_proof_state<F: SmallField, CS: ConstraintSystem<F>>(
             if <CS::Config as CSConfig>::SetupConfig::KEEP_SETUP == true {
                 use boojum::cs::gates::ConstantAllocatableCS;
 
-                let reduction_constants = [F::MINUS_ONE, F::ONE, F::from_u64_unchecked(1 << 32), F::ZERO];
+                let reduction_constants = [
+                    F::MINUS_ONE,
+                    F::ONE,
+                    F::from_u64_unchecked(1 << 32),
+                    F::ZERO,
+                ];
                 let output_variables = [
                     a.variable,
                     b.variable,
@@ -822,19 +827,23 @@ pub(crate) fn check_proof_state<F: SmallField, CS: ConstraintSystem<F>>(
 
         other_flags.push(last_previous.is_zero(cs));
         other_flags.push(
-            previous.lazy_init_boundary_values[0].teardown_value_one_before_last_row[0].clone()
+            previous.lazy_init_boundary_values[0].teardown_value_one_before_last_row[0]
+                .clone()
                 .is_zero(cs),
         );
         other_flags.push(
-            previous.lazy_init_boundary_values[0].teardown_value_one_before_last_row[1].clone()
+            previous.lazy_init_boundary_values[0].teardown_value_one_before_last_row[1]
+                .clone()
                 .is_zero(cs),
         );
         other_flags.push(
-            previous.lazy_init_boundary_values[0].teardown_timestamp_one_before_last_row[0].clone()
+            previous.lazy_init_boundary_values[0].teardown_timestamp_one_before_last_row[0]
+                .clone()
                 .is_zero(cs),
         );
         other_flags.push(
-            previous.lazy_init_boundary_values[0].teardown_timestamp_one_before_last_row[1].clone()
+            previous.lazy_init_boundary_values[0].teardown_timestamp_one_before_last_row[1]
+                .clone()
                 .is_zero(cs),
         );
 

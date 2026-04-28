@@ -277,7 +277,11 @@ impl<F: SmallField> WrappedAuxArgumentsBoundaryValues<F> {
         result.extend_from_slice(&self.lazy_init_first_row.map(|x| x.into_uint32(cs)));
         result.extend_from_slice(&self.teardown_value_first_row.map(|x| x.into_uint32(cs)));
         result.extend_from_slice(&self.teardown_timestamp_first_row.map(|x| x.into_uint32(cs)));
-        result.extend_from_slice(&self.lazy_init_one_before_last_row.map(|x| x.into_uint32(cs)));
+        result.extend_from_slice(
+            &self
+                .lazy_init_one_before_last_row
+                .map(|x| x.into_uint32(cs)),
+        );
         result.extend_from_slice(
             &self
                 .teardown_value_one_before_last_row
