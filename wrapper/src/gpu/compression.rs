@@ -34,8 +34,7 @@ pub fn get_compression_setup(
 ) {
     let start = std::time::Instant::now();
 
-    let verify_inner_proof: bool = false;
-    let circuit = CompressionCircuit::new(None, risc_wrapper_vk, verify_inner_proof);
+    let circuit = CompressionCircuit::new(None, risc_wrapper_vk);
 
     let geometry = CompressionCircuit::geometry();
     let (max_trace_len, num_vars) = circuit.size_hint();
@@ -90,12 +89,7 @@ pub fn prove_compression(
 ) -> CompressionProof {
     let start = std::time::Instant::now();
 
-    let verify_inner_proof = true;
-    let circuit = CompressionCircuit::new(
-        Some(risc_wrapper_proof),
-        risc_wrapper_vk,
-        verify_inner_proof,
-    );
+    let circuit = CompressionCircuit::new(Some(risc_wrapper_proof), risc_wrapper_vk);
 
     let geometry = CompressionCircuit::geometry();
     let (max_trace_len, num_vars) = circuit.size_hint();

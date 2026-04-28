@@ -1,4 +1,3 @@
-use blake_verifier::verifier_common::non_determinism_source::NonDeterminismSource;
 use boojum::{
     cs::{
         CSGeometry, GateConfigurationHolder, LookupParameters, StaticToolboxHolder,
@@ -18,7 +17,7 @@ use boojum::{
             byte_split::{ByteSplitTable, create_byte_split_table},
             xor8::{Xor8Table, create_xor8_table},
         },
-        traits::allocatable::{CSAllocatable, CSPlaceholder},
+        traits::allocatable::CSAllocatable,
         u16::UInt16,
         u32::UInt32,
     },
@@ -27,6 +26,7 @@ use circuit_mersenne_field::{
     MersenneField, MersenneQuartic, extension_trait::CircuitFieldExpression,
 };
 use std::mem::MaybeUninit;
+use std::sync::OnceLock;
 
 use crate::inner_verifiers::unified_reduced::skeleton::{
     WrappedProofSkeletonInstance, WrappedQueryValuesInstance,
@@ -45,7 +45,7 @@ use risc_verifier::prover::cs::definitions::*;
 
 use risc_verifier::verifier_common::{
     DefaultNonDeterminismSource, ProofOutput, ProofPublicInputs,
-    cs::one_row_compiler::CompiledCircuitArtifact, transcript::Blake2sBufferingTranscript,
+    cs::one_row_compiler::CompiledCircuitArtifact,
 };
 
 use boojum::gadgets::tables::RangeCheck15BitsTable;
@@ -55,7 +55,7 @@ use boojum::gadgets::tables::create_range_check_16_bits_table;
 use risc_verifier::prover::prover_stages::Proof as RiscProof;
 use risc_verifier::prover::prover_stages::unrolled_prover::UnrolledModeProof as RiscUnrolledProof;
 
-use execution_utils::{ProgramProof, unrolled::UnrolledProgramProof};
+use execution_utils::unrolled::UnrolledProgramProof;
 
 const NUM_RISC_WRAPPER_PUBLIC_INPUTS: usize = 4;
 
@@ -113,7 +113,7 @@ impl BinaryCommitment {
 impl RiscWrapperWitness {
     pub fn from_full_proof(
         full_proof: UnrolledProgramProof,
-        binary_commitment: &BinaryCommitment,
+        _binary_commitment: &BinaryCommitment,
     ) -> Self {
         let UnrolledProgramProof {
             final_pc,
@@ -122,8 +122,8 @@ impl RiscWrapperWitness {
             inits_and_teardowns_proofs,
             delegation_proofs,
             register_final_values,
-            recursion_chain_preimage,
-            recursion_chain_hash,
+            recursion_chain_preimage: _,
+            recursion_chain_hash: _,
             pow_challenge,
         } = full_proof;
 
@@ -486,12 +486,7 @@ pub(crate) fn prepare_unrolled_proof_for_wrapper<
     WrappedProofSkeletonInstance<F>,
     [WrappedQueryValuesInstance<F>; NUM_QUERIES],
 ) {
-    let compiled_circuit: CompiledCircuitArtifact<Mersenne31Field> = serde_json::from_str(
-        include_str!("../inner_verifiers/unified_reduced/imports/circuit_layout.json"),
-    )
-    .unwrap();
-
-    set_iterator_from_unrolled_proof(proof, compiled_circuit);
+    set_iterator_from_unrolled_proof(proof, unified_reduced_compiled_circuit());
 
     let skeleton = unsafe {
         WrappedProofSkeletonInstance::from_non_determinism_source::<_, DefaultNonDeterminismSource>(
@@ -512,6 +507,9 @@ pub(crate) fn prepare_unrolled_proof_for_wrapper<
     (skeleton, queries)
 }
 
+// Kept for ad-hoc debugging of the delegated proof shape, even though the main
+// wrapping path currently feeds the unrolled proof variant directly.
+#[allow(dead_code)]
 pub(crate) fn prepare_proof_for_wrapper<
     F: SmallField,
     CS: ConstraintSystem<F>,
@@ -550,6 +548,9 @@ pub(crate) fn prepare_proof_for_wrapper<
 }
 
 #[allow(invalid_value)]
+// Kept for ad-hoc debugging of the inner verifier outside the main proving
+// pipeline, which now relies on explicit top-level verification methods.
+#[allow(dead_code)]
 pub(crate) fn verify_risc_proof<V: LeafInclusionVerifier>(
     proof: &RiscUnrolledProof,
 ) -> (
@@ -562,12 +563,7 @@ pub(crate) fn verify_risc_proof<V: LeafInclusionVerifier>(
     >,
     ProofPublicInputs<NUM_STATE_ELEMENTS>,
 ) {
-    let compiled_circuit: CompiledCircuitArtifact<Mersenne31Field> = serde_json::from_str(
-        include_str!("../inner_verifiers/unified_reduced/imports/circuit_layout.json"),
-    )
-    .unwrap();
-
-    set_iterator_from_unrolled_proof(proof, compiled_circuit);
+    set_iterator_from_unrolled_proof(proof, unified_reduced_compiled_circuit());
 
     let mut proof_state_dst = unsafe {
         MaybeUninit::<
@@ -596,17 +592,29 @@ pub(crate) fn verify_risc_proof<V: LeafInclusionVerifier>(
 
 pub(crate) fn set_iterator_from_unrolled_proof(
     proof: &RiscUnrolledProof,
-    compiled_circuit: CompiledCircuitArtifact<Mersenne31Field>,
+    compiled_circuit: &CompiledCircuitArtifact<Mersenne31Field>,
 ) {
-    let mut oracle_data =
-        risc_verifier::verifier_common::proof_flattener::flatten_full_unrolled_proof(
-            &proof,
-            &compiled_circuit,
-        );
+    let oracle_data = risc_verifier::verifier_common::proof_flattener::flatten_full_unrolled_proof(
+        &proof,
+        compiled_circuit,
+    );
 
     let it = oracle_data.into_iter();
 
     risc_verifier::prover::nd_source_std::set_iterator(it.clone());
+}
+
+// The compiled layout is immutable generated data, so parsing it once per
+// process is enough for every proof we wrap.
+fn unified_reduced_compiled_circuit() -> &'static CompiledCircuitArtifact<Mersenne31Field> {
+    static COMPILED_CIRCUIT: OnceLock<CompiledCircuitArtifact<Mersenne31Field>> = OnceLock::new();
+
+    COMPILED_CIRCUIT.get_or_init(|| {
+        serde_json::from_str(include_str!(
+            "../inner_verifiers/unified_reduced/imports/circuit_layout.json"
+        ))
+        .unwrap()
+    })
 }
 
 pub(crate) fn set_iterator_from_proof(

@@ -254,7 +254,7 @@ fn try_synthesize_compression_with_params(
 
         let mut owned_cs = builder.build(1 << 24);
 
-        let circuit = crate::circuits::CompressionCircuit::new(None, vk.clone(), false);
+        let circuit = crate::circuits::CompressionCircuit::new(None, vk.clone());
         circuit.synthesize_into_cs(&mut owned_cs);
         owned_cs.pad_and_shrink();
     }));

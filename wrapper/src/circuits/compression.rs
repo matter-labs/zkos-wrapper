@@ -116,17 +116,7 @@ impl CompressionCircuit {
     pub fn new(
         risc_wrapper_proof: Option<RiscWrapperProof>,
         risc_wrapper_vk: RiscWrapperVK,
-        verify_inner_proof: bool,
     ) -> Self {
-        if verify_inner_proof {
-            if let Some(proof) = &risc_wrapper_proof {
-                let is_valid = crate::verify_risc_wrapper_proof(proof, &risc_wrapper_vk);
-                assert!(is_valid, "Proof is invalid");
-            } else {
-                panic!("Proof is required for verification");
-            }
-        }
-
         Self {
             witness: risc_wrapper_proof,
             vk: risc_wrapper_vk,

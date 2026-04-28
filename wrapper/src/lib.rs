@@ -7,6 +7,7 @@ pub mod circuits;
 mod inner_verifiers;
 pub mod interface;
 pub mod transcript;
+mod wrapper;
 pub mod wrapper_utils;
 
 #[cfg(feature = "gpu")]
@@ -51,6 +52,7 @@ use std::path::Path;
 use wrapper_utils::verifier_traits::CircuitBlake2sForEverythingVerifier;
 
 use anyhow::Context as _;
+pub use wrapper::{SnarkWrapper, SnarkWrapperConfig};
 
 pub type GL = boojum::field::goldilocks::GoldilocksField;
 pub type GLExt2 = boojum::field::goldilocks::GoldilocksExt2;
@@ -130,8 +132,7 @@ pub fn get_risc_wrapper_setup(
     DenseVariablesCopyHint,
     DenseWitnessCopyHint,
 ) {
-    let verify_inner_proof: bool = false;
-    let circuit = RiscWrapper::new(None, verify_inner_proof, binary_commitment);
+    let circuit = RiscWrapper::new(None, false, binary_commitment);
 
     let geometry = RiscWrapper::geometry();
     let (max_trace_len, num_vars) = circuit.size_hint();
@@ -183,19 +184,13 @@ pub fn prove_risc_wrapper(
     worker: &Worker,
     binary_commitment: BinaryCommitment,
 ) -> RiscWrapperProof {
-    let verify_inner_proof = true;
-    let circuit = RiscWrapper::new(
-        Some(risc_wrapper_witness),
-        verify_inner_proof,
-        binary_commitment,
-    );
+    let circuit = RiscWrapper::new(Some(risc_wrapper_witness), true, binary_commitment);
 
     let geometry = RiscWrapper::geometry();
     let (max_trace_len, num_vars) = circuit.size_hint();
 
-    use boojum::config::DevCSConfig;
     let builder_impl =
-        CsReferenceImplementationBuilder::<GL, GL, DevCSConfig, StCircuitResolver<_, _>>::new(
+        CsReferenceImplementationBuilder::<GL, GL, ProvingCSConfig, StCircuitResolver<_, _>>::new(
             geometry,
             max_trace_len.unwrap(),
         );
@@ -206,8 +201,7 @@ pub fn prove_risc_wrapper(
     circuit.add_tables(&mut cs);
     circuit.synthesize_into_cs(&mut cs);
     cs.pad_and_shrink_using_hint(finalization_hint);
-    let mut cs = cs.into_assembly::<Global>();
-    dbg!(cs.check_if_satisfied(&worker));
+    let cs = cs.into_assembly::<Global>();
 
     let proof_config = RiscWrapper::get_proof_config();
 
@@ -243,8 +237,7 @@ pub fn get_compression_setup(
     DenseVariablesCopyHint,
     DenseWitnessCopyHint,
 ) {
-    let verify_inner_proof: bool = false;
-    let circuit = CompressionCircuit::new(None, risc_wrapper_vk, verify_inner_proof);
+    let circuit = CompressionCircuit::new(None, risc_wrapper_vk);
 
     let geometry = CompressionCircuit::geometry();
     let (max_trace_len, num_vars) = circuit.size_hint();
@@ -294,12 +287,7 @@ pub fn prove_compression(
     witness_hints: &DenseWitnessCopyHint,
     worker: &Worker,
 ) -> CompressionProof {
-    let verify_inner_proof = true;
-    let circuit = CompressionCircuit::new(
-        Some(risc_wrapper_proof),
-        risc_wrapper_vk,
-        verify_inner_proof,
-    );
+    let circuit = CompressionCircuit::new(Some(risc_wrapper_proof), risc_wrapper_vk);
 
     let geometry = CompressionCircuit::geometry();
     let (max_trace_len, num_vars) = circuit.size_hint();
@@ -341,11 +329,10 @@ pub fn verify_compression_proof(proof: &CompressionProof, vk: &CompressionVK) ->
 // Stark -> Snark Wrapper
 pub const L1_VERIFIER_DOMAIN_SIZE_LOG: usize = 24;
 
-pub fn get_snark_wrapper_setup(
+pub fn create_snark_wrapper_setup(
     compression_vk: CompressionVK,
-    crs_mons: &Crs<Bn256, CrsForMonomialForm>,
     worker: &BellmanWorker,
-) -> (SnarkWrapperSetup, SnarkWrapperVK) {
+) -> SnarkWrapperSetup {
     let mut assembly = SetupAssembly::<
         Bn256,
         PlonkCsWidth4WithNextStepAndCustomGatesParams,
@@ -372,7 +359,24 @@ pub fn get_snark_wrapper_setup(
         .create_setup::<SnarkWrapperCircuit>(worker)
         .unwrap();
 
-    let snark_vk = SnarkWrapperVK::from_setup(&snark_setup, &worker, &crs_mons).unwrap();
+    snark_setup
+}
+
+pub fn derive_snark_wrapper_vk(
+    snark_setup: &SnarkWrapperSetup,
+    crs_mons: &Crs<Bn256, CrsForMonomialForm>,
+    worker: &BellmanWorker,
+) -> SnarkWrapperVK {
+    SnarkWrapperVK::from_setup(snark_setup, worker, crs_mons).unwrap()
+}
+
+pub fn get_snark_wrapper_setup(
+    compression_vk: CompressionVK,
+    crs_mons: &Crs<Bn256, CrsForMonomialForm>,
+    worker: &BellmanWorker,
+) -> (SnarkWrapperSetup, SnarkWrapperVK) {
+    let snark_setup = create_snark_wrapper_setup(compression_vk, worker);
+    let snark_vk = derive_snark_wrapper_vk(&snark_setup, crs_mons, worker);
 
     (snark_setup, snark_vk)
 }
@@ -611,7 +615,7 @@ pub fn prove_risc_wrapper_with_snark(
             }
             None => {
                 precompute_store =
-                    gpu::snark::gpu_create_snark_setup_data(&compression_vk, &crs_file);
+                    gpu::snark::gpu_create_snark_setup_data(&compression_vk, &crs_file, None);
                 (&precompute_store.0, &precompute_store.1)
             }
         };
