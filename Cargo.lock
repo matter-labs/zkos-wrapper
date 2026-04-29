@@ -574,7 +574,7 @@ dependencies = [
 [[package]]
 name = "boojum-cuda"
 version = "0.156.0"
-source = "git+https://github.com/matter-labs/zksync-crypto-gpu.git?branch=oh_for_wrapper#62a38f541810a32ab2e65ba8ba20683c7e0eec6b"
+source = "git+https://github.com/matter-labs/zksync-crypto-gpu.git?branch=oh_for_wrapper#845905b2aae49215e3d4ad0b71998b4a6b5abebf"
 dependencies = [
  "boojum",
  "cmake",
@@ -1096,7 +1096,7 @@ dependencies = [
 [[package]]
 name = "era_cudart"
 version = "0.156.0"
-source = "git+https://github.com/matter-labs/zksync-crypto-gpu.git?branch=oh_for_wrapper#62a38f541810a32ab2e65ba8ba20683c7e0eec6b"
+source = "git+https://github.com/matter-labs/zksync-crypto-gpu.git?branch=oh_for_wrapper#845905b2aae49215e3d4ad0b71998b4a6b5abebf"
 dependencies = [
  "bitflags",
  "era_cudart_sys 0.156.0 (git+https://github.com/matter-labs/zksync-crypto-gpu.git?branch=oh_for_wrapper)",
@@ -1115,7 +1115,7 @@ dependencies = [
 [[package]]
 name = "era_cudart_sys"
 version = "0.156.0"
-source = "git+https://github.com/matter-labs/zksync-crypto-gpu.git?branch=oh_for_wrapper#62a38f541810a32ab2e65ba8ba20683c7e0eec6b"
+source = "git+https://github.com/matter-labs/zksync-crypto-gpu.git?branch=oh_for_wrapper#845905b2aae49215e3d4ad0b71998b4a6b5abebf"
 dependencies = [
  "regex-lite",
 ]
@@ -1235,7 +1235,7 @@ dependencies = [
 [[package]]
 name = "fflonk-cuda"
 version = "0.156.0"
-source = "git+https://github.com/matter-labs/zksync-crypto-gpu.git?branch=oh_for_wrapper#62a38f541810a32ab2e65ba8ba20683c7e0eec6b"
+source = "git+https://github.com/matter-labs/zksync-crypto-gpu.git?branch=oh_for_wrapper#845905b2aae49215e3d4ad0b71998b4a6b5abebf"
 dependencies = [
  "bincode",
  "byteorder",
@@ -2376,7 +2376,7 @@ dependencies = [
 [[package]]
 name = "proof-compression"
 version = "0.156.0"
-source = "git+https://github.com/matter-labs/zksync-crypto-gpu.git?branch=oh_for_wrapper#62a38f541810a32ab2e65ba8ba20683c7e0eec6b"
+source = "git+https://github.com/matter-labs/zksync-crypto-gpu.git?branch=oh_for_wrapper#845905b2aae49215e3d4ad0b71998b4a6b5abebf"
 dependencies = [
  "anyhow",
  "bincode",
@@ -2993,7 +2993,7 @@ dependencies = [
 [[package]]
 name = "shivini"
 version = "0.156.0"
-source = "git+https://github.com/matter-labs/zksync-crypto-gpu.git?branch=oh_for_wrapper#62a38f541810a32ab2e65ba8ba20683c7e0eec6b"
+source = "git+https://github.com/matter-labs/zksync-crypto-gpu.git?branch=oh_for_wrapper#845905b2aae49215e3d4ad0b71998b4a6b5abebf"
 dependencies = [
  "bincode",
  "boojum",
@@ -3832,7 +3832,7 @@ dependencies = [
 [[package]]
 name = "zksync-gpu-ffi"
 version = "0.156.0"
-source = "git+https://github.com/matter-labs/zksync-crypto-gpu.git?branch=oh_for_wrapper#62a38f541810a32ab2e65ba8ba20683c7e0eec6b"
+source = "git+https://github.com/matter-labs/zksync-crypto-gpu.git?branch=oh_for_wrapper#845905b2aae49215e3d4ad0b71998b4a6b5abebf"
 dependencies = [
  "cmake",
  "crossbeam",
@@ -3846,7 +3846,7 @@ dependencies = [
 [[package]]
 name = "zksync-gpu-prover"
 version = "0.156.0"
-source = "git+https://github.com/matter-labs/zksync-crypto-gpu.git?branch=oh_for_wrapper#62a38f541810a32ab2e65ba8ba20683c7e0eec6b"
+source = "git+https://github.com/matter-labs/zksync-crypto-gpu.git?branch=oh_for_wrapper#845905b2aae49215e3d4ad0b71998b4a6b5abebf"
 dependencies = [
  "bit-vec",
  "cfg-if",

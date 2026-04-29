@@ -110,7 +110,7 @@ fn try_synthesize_wrapper_with_params(
 }
 
 #[test]
-// #[ignore]
+#[ignore]
 fn find_minimum_cs_parameters_for_wrapper() {
     // Customizable starting values via environment variables.
     // NUM_REPETITIONS: used as the high bound when searching for min num_repetitions,
@@ -263,7 +263,7 @@ fn try_synthesize_compression_with_params(
 }
 
 #[test]
-// #[ignore]
+#[ignore]
 fn find_minimum_cs_parameters_for_compression() {
     let vk: crate::RiscWrapperVK = deserialize_from_file(RISC_WRAPPER_VK_PATH).unwrap();
 

@@ -1,7 +1,7 @@
 use anyhow::Context as _;
 use bellman::rand;
 use proof_compression::{
-    PlonkSnarkWrapper, ProofSystemDefinition, SnarkWrapperProofSystem,
+    PlonkSnarkWrapperLogN, ProofSystemDefinition, SnarkWrapperProofSystem,
     hardcoded_canonical_g2_bases,
     serialization::{GenericWrapper, PlonkSnarkVerifierCircuitDeviceSetupWrapper},
 };
@@ -25,6 +25,7 @@ use crate::{
     SnarkWrapperFunction, SnarkWrapperProof, SnarkWrapperVK,
 };
 
+type PlonkSnarkWrapper = PlonkSnarkWrapperLogN<L1_VERIFIER_DOMAIN_SIZE_LOG>;
 pub(crate) type CompactRawCrs = <PlonkSnarkWrapper as SnarkWrapperProofSystem>::CRS;
 type PlonkDeviceContext = <PlonkSnarkWrapper as SnarkWrapperProofSystem>::Context;
 pub(crate) type PlonkDeviceManager = <PlonkDeviceContext as GenericWrapper>::Inner;
@@ -167,7 +168,7 @@ pub(crate) fn gpu_snark_prove_with_manager(
     // Currently in place to allow a easy revert in case ZK proving causes issues.
     use_zk: bool,
 ) -> anyhow::Result<SnarkWrapperProof> {
-    let finalization_hint: usize = 1 << 24;
+    let finalization_hint: usize = 1 << L1_VERIFIER_DOMAIN_SIZE_LOG;
     let input_proof = compression_proof;
     // Recreate stuff from prove_plonk_snark_wrapper_step
 

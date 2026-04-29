@@ -327,7 +327,11 @@ pub fn verify_compression_proof(proof: &CompressionProof, vk: &CompressionVK) ->
 }
 
 // Stark -> Snark Wrapper
+#[cfg(feature = "security_80")]
 pub const L1_VERIFIER_DOMAIN_SIZE_LOG: usize = 24;
+
+#[cfg(feature = "security_100")]
+pub const L1_VERIFIER_DOMAIN_SIZE_LOG: usize = 25;
 
 pub fn create_snark_wrapper_setup(
     compression_vk: CompressionVK,
