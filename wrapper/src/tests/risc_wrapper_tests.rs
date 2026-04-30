@@ -26,7 +26,7 @@ pub(crate) fn risc_wrapper_full_test() {
     dbg!(binary_commitment);
 
     let program_proof: execution_utils::unrolled::UnrolledProgramProof =
-        deserialize_from_file(RISC_PROOF_PATH).unwrap();
+        deserialize_from_bin_file(RISC_PROOF_PATH).unwrap();
 
     let risc_wrapper_witness =
         RiscWrapperWitness::from_full_proof(program_proof, &binary_commitment);
@@ -83,8 +83,8 @@ pub(crate) fn risc_wrapper_full_test() {
         (risc_wrapper_proof, gpu_vk)
     };
 
-    serialize_to_file(&risc_wrapper_proof, RISC_WRAPPER_PROOF_PATH).unwrap();
-    serialize_to_file(&risc_wrapper_vk, RISC_WRAPPER_VK_PATH).unwrap();
+    serialize_to_bin_file(&risc_wrapper_proof, RISC_WRAPPER_PROOF_PATH).unwrap();
+    serialize_to_bin_file(&risc_wrapper_vk, RISC_WRAPPER_VK_PATH).unwrap();
 }
 
 #[test]
@@ -95,7 +95,7 @@ pub(crate) fn risc_wrapper_setup_test() {
     let (_finalization_hint, _setup_base, _setup, vk, _setup_tree, _vars_hint, _witness_hints) =
         crate::get_risc_wrapper_setup(&worker, binary_commitment);
 
-    serialize_to_file(&vk, RISC_WRAPPER_VK_PATH).unwrap();
+    serialize_to_bin_file(&vk, RISC_WRAPPER_VK_PATH).unwrap();
 }
 
 #[test]
@@ -202,7 +202,7 @@ fn test_verifier_inner_function() {
     let path = "testing_data/unified_proof_for_hashed_fibonacci.json";
     // let path = "testing_data/risc_proof_80sb.json";
     let program_proof: execution_utils::unrolled::UnrolledProgramProof =
-        deserialize_from_file(path).unwrap();
+        crate::deserialize_from_file(path).unwrap();
     let binary_commitment = BinaryCommitment::from_default_binary();
 
     let risc_wrapper_witness =

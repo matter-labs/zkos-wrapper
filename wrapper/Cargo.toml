@@ -23,6 +23,7 @@ setups.workspace = true
 circuit_mersenne_field.workspace = true
 serde_json.workspace = true
 serde.workspace = true
+bincode.workspace = true
 clap.workspace = true
 sha3.workspace = true
 tracing.workspace = true

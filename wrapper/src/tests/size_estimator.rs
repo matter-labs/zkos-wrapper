@@ -265,7 +265,7 @@ fn try_synthesize_compression_with_params(
 #[test]
 #[ignore]
 fn find_minimum_cs_parameters_for_compression() {
-    let vk: crate::RiscWrapperVK = deserialize_from_file(RISC_WRAPPER_VK_PATH).unwrap();
+    let vk: crate::RiscWrapperVK = deserialize_from_bin_file(RISC_WRAPPER_VK_PATH).unwrap();
 
     // Clear/create output directory
     let _ = fs::remove_dir_all(SIZE_ESTIMATOR_OUTPUT_DIR);

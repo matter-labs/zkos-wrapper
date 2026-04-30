@@ -1,4 +1,3 @@
-use boojum::cs;
 use mersenne_field::Mersenne31Quartic;
 
 use super::*;

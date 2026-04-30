@@ -13,8 +13,9 @@ fn trusted_setup_file() -> String {
 
 #[test]
 pub(crate) fn snark_wrapper_full_test() {
-    let compression_proof = deserialize_from_file(COMPRESSION_PROOF_PATH).unwrap();
-    let compression_vk: crate::CompressionVK = deserialize_from_file(COMPRESSION_VK_PATH).unwrap();
+    let compression_proof = deserialize_from_bin_file(COMPRESSION_PROOF_PATH).unwrap();
+    let compression_vk: crate::CompressionVK =
+        deserialize_from_bin_file(COMPRESSION_VK_PATH).unwrap();
 
     #[cfg(not(feature = "gpu"))]
     let (snark_wrapper_vk, snark_wrapper_proof) = {
@@ -43,11 +44,8 @@ pub(crate) fn snark_wrapper_full_test() {
     let (snark_wrapper_vk, snark_wrapper_proof) = {
         let crs_file = trusted_setup_file();
 
-        let (gpu_setup, gpu_vk) = crate::gpu::snark::gpu_create_snark_setup_data(
-            &compression_vk,
-            &crs_file,
-            None,
-        );
+        let (gpu_setup, gpu_vk) =
+            crate::gpu::snark::gpu_create_snark_setup_data(&compression_vk, &crs_file, None);
 
         let snark_wrapper_proof = crate::gpu::snark::gpu_snark_prove(
             &gpu_setup,
@@ -64,13 +62,14 @@ pub(crate) fn snark_wrapper_full_test() {
     let is_valid = crate::verify_snark_wrapper_proof(&snark_wrapper_proof, &snark_wrapper_vk);
     assert!(is_valid);
 
-    serialize_to_file(&snark_wrapper_proof, SNARK_WRAPPER_PROOF_PATH).unwrap();
-    serialize_to_file(&snark_wrapper_vk, SNARK_WRAPPER_VK_PATH).unwrap();
+    serialize_to_bin_file(&snark_wrapper_proof, SNARK_WRAPPER_PROOF_PATH).unwrap();
+    serialize_to_bin_file(&snark_wrapper_vk, SNARK_WRAPPER_VK_PATH).unwrap();
 }
 
 #[test]
 pub(crate) fn snark_wrapper_setup_test() {
-    let compression_vk: crate::CompressionVK = deserialize_from_file(COMPRESSION_VK_PATH).unwrap();
+    let compression_vk: crate::CompressionVK =
+        deserialize_from_bin_file(COMPRESSION_VK_PATH).unwrap();
 
     #[cfg(not(feature = "gpu"))]
     let snark_wrapper_vk = {
@@ -94,5 +93,5 @@ pub(crate) fn snark_wrapper_setup_test() {
         gpu_vk
     };
 
-    serialize_to_file(&snark_wrapper_vk, SNARK_WRAPPER_VK_PATH).unwrap();
+    serialize_to_bin_file(&snark_wrapper_vk, SNARK_WRAPPER_VK_PATH).unwrap();
 }
