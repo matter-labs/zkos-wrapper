@@ -55,12 +55,12 @@ impl<F: SmallField> MersenneQuartic<F> {
         ]
     }
 
-    pub fn into_uint32s(&self) -> [UInt32<F>; 4] {
+    pub fn into_uint32s<CS: ConstraintSystem<F>>(&self, cs: &mut CS) -> [UInt32<F>; 4] {
         [
-            self.x.x.into_uint32(),
-            self.x.y.into_uint32(),
-            self.y.x.into_uint32(),
-            self.y.y.into_uint32(),
+            self.x.x.into_uint32(cs),
+            self.x.y.into_uint32(cs),
+            self.y.x.into_uint32(cs),
+            self.y.y.into_uint32(cs),
         ]
     }
 
@@ -163,7 +163,7 @@ impl<F: SmallField> MersenneQuartic<F> {
     }
 
     #[inline(never)]
-    pub fn mul<CS: ConstraintSystem<F>>(&self, cs: &mut CS, other: &Self) -> Self {
+    pub fn mul_simple<CS: ConstraintSystem<F>>(&self, cs: &mut CS, other: &Self) -> Self {
         // (a + bj)(c + dj) = (ac + kbd) + (ad + bc)j
         let kbd = self.y.mul(cs, &other.y).mul_by_non_residue(cs);
         let bc = self.y.mul(cs, &other.x);
@@ -175,7 +175,7 @@ impl<F: SmallField> MersenneQuartic<F> {
     }
 
     #[inline(never)]
-    pub fn mul_and_add<CS: ConstraintSystem<F>>(
+    pub fn mul_and_add_simple<CS: ConstraintSystem<F>>(
         &self,
         cs: &mut CS,
         other_mul: &Self,
@@ -194,7 +194,7 @@ impl<F: SmallField> MersenneQuartic<F> {
         }
     }
 
-    pub fn mul_optimized<CS: ConstraintSystem<F>>(&self, cs: &mut CS, other: &Self) -> Self {
+    pub fn mul<CS: ConstraintSystem<F>>(&self, cs: &mut CS, other: &Self) -> Self {
         // (a, b, c, d) = (a1, b1, c1, d1)(a2, b2, c2, d2)
         // (a, b) = (a1, b1)(a2, b2) + (c1, d1)(c2, d2)(2, 1)
         // (c, d) = (a1, b1)(c2, d2) + (c1, d1)(a2, b2)
@@ -248,7 +248,7 @@ impl<F: SmallField> MersenneQuartic<F> {
             tmp3,
         );
 
-        let (a, reduce_a) = reduce_mersenne31(cs, tmp4);
+        let (a, reduce_a) = unsafe { reduce_mersenne31(cs, tmp4) };
         range_check_33_bits(cs, reduce_a);
 
         // Computing b
@@ -280,7 +280,7 @@ impl<F: SmallField> MersenneQuartic<F> {
             tmp7,
         );
 
-        let (b, reduce_b) = reduce_mersenne31(cs, tmp8);
+        let (b, reduce_b) = unsafe { reduce_mersenne31(cs, tmp8) };
         range_check_33_bits(cs, reduce_b);
 
         // Computing c
@@ -320,7 +320,7 @@ impl<F: SmallField> MersenneQuartic<F> {
             tmp12,
         );
 
-        let (c, reduce_c) = reduce_mersenne31(cs, tmp13);
+        let (c, reduce_c) = unsafe { reduce_mersenne31(cs, tmp13) };
         range_check_33_bits(cs, reduce_c);
 
         // Computing d
@@ -360,7 +360,7 @@ impl<F: SmallField> MersenneQuartic<F> {
             tmp17,
         );
 
-        let (d, reduce_d) = reduce_mersenne31(cs, tmp18);
+        let (d, reduce_d) = unsafe { reduce_mersenne31(cs, tmp18) };
         range_check_33_bits(cs, reduce_d);
 
         Self {
@@ -369,7 +369,7 @@ impl<F: SmallField> MersenneQuartic<F> {
         }
     }
 
-    pub fn mul_and_add_optimized<CS: ConstraintSystem<F>>(
+    pub fn mul_and_add<CS: ConstraintSystem<F>>(
         &self,
         cs: &mut CS,
         other_mul: &Self,
@@ -437,7 +437,7 @@ impl<F: SmallField> MersenneQuartic<F> {
             tmp4,
         );
 
-        let (a, reduce_a) = reduce_mersenne31(cs, tmp5);
+        let (a, reduce_a) = unsafe { reduce_mersenne31(cs, tmp5) };
         range_check_33_bits(cs, reduce_a);
 
         // Computing b
@@ -477,7 +477,7 @@ impl<F: SmallField> MersenneQuartic<F> {
             tmp8,
         );
 
-        let (b, reduce_b) = reduce_mersenne31(cs, tmp9);
+        let (b, reduce_b) = unsafe { reduce_mersenne31(cs, tmp9) };
         range_check_33_bits(cs, reduce_b);
 
         // Computing c
@@ -525,7 +525,7 @@ impl<F: SmallField> MersenneQuartic<F> {
             tmp13,
         );
 
-        let (c, reduce_c) = reduce_mersenne31(cs, tmp14);
+        let (c, reduce_c) = unsafe { reduce_mersenne31(cs, tmp14) };
         range_check_33_bits(cs, reduce_c);
 
         // Computing d
@@ -565,7 +565,7 @@ impl<F: SmallField> MersenneQuartic<F> {
             tmp17,
         );
 
-        let (d, reduce_d) = reduce_mersenne31(cs, tmp18);
+        let (d, reduce_d) = unsafe { reduce_mersenne31(cs, tmp18) };
         range_check_33_bits(cs, reduce_d);
 
         Self {
@@ -710,35 +710,72 @@ impl<F: SmallField> MersenneQuartic<F> {
 }
 
 fn range_check_33_bits<F: SmallField, CS: ConstraintSystem<F>>(cs: &mut CS, variable: Variable) {
-    use boojum::gadgets::impls::limbs_decompose::decompose_into_limbs;
     use boojum::gadgets::non_native_field::implementations::get_16_bits_range_check_table;
-    use boojum::gadgets::u8::get_8_by_8_range_check_table;
 
     if let Some(table_id) = get_16_bits_range_check_table(&*cs) {
-        let [limb0, limb1, limb2] =
-            decompose_into_limbs::<F, CS, 3>(cs, F::from_u64_unchecked(1u64 << 16), variable);
+        // firstly we need to split the variable into 3 limbs, each limb has 16 bits, and the last limb has 1 bit
+        let limbs = cs.alloc_multiple_variables_without_values::<3>();
+
+        if <CS::Config as CSConfig>::WitnessConfig::EVALUATE_WITNESS {
+            let value_fn = move |inputs: [F; 1]| {
+                let mut current = inputs[0].as_u64_reduced();
+                let limb_size = 1 << 16;
+                let limb1 = current % limb_size;
+                current /= limb_size;
+                let limb2 = current % limb_size;
+                current /= limb_size;
+                [
+                    F::from_u64_with_reduction(limb1),
+                    F::from_u64_with_reduction(limb2),
+                    F::from_u64_with_reduction(current),
+                ]
+            };
+
+            cs.set_values_with_dependencies(
+                &[variable.into()],
+                &Place::from_variables(limbs),
+                value_fn,
+            );
+        }
+
+        if <CS::Config as CSConfig>::SetupConfig::KEEP_SETUP == true {
+            let reduction_constants = [
+                F::ONE,
+                F::from_u64_unchecked(1 << 16),
+                F::from_u64_unchecked(1 << 32),
+                F::ZERO,
+            ];
+            let output_variables = [limbs[0], limbs[1], limbs[2], cs.allocate_constant(F::ZERO)];
+
+            let gate = ReductionGate::<F, 4> {
+                params: ReductionGateParams {
+                    reduction_constants,
+                },
+                terms: output_variables,
+                reduction_result: variable,
+            };
+            gate.add_to_cs(cs);
+        }
 
         let zero = cs.allocate_constant(F::ZERO);
         match cs.get_lookup_params().lookup_width() {
             1 => {
-                cs.enforce_lookup::<1>(table_id, &[limb0]);
-                cs.enforce_lookup::<1>(table_id, &[limb1]);
+                cs.enforce_lookup::<1>(table_id, &[limbs[0]]);
+                cs.enforce_lookup::<1>(table_id, &[limbs[1]]);
             }
             3 => {
-                cs.enforce_lookup::<3>(table_id, &[limb0, zero, zero]);
-                cs.enforce_lookup::<3>(table_id, &[limb1, zero, zero]);
+                cs.enforce_lookup::<3>(table_id, &[limbs[0], zero, zero]);
+                cs.enforce_lookup::<3>(table_id, &[limbs[1], zero, zero]);
             }
             4 => {
-                cs.enforce_lookup::<4>(table_id, &[limb0, zero, zero, zero]);
-                cs.enforce_lookup::<4>(table_id, &[limb1, zero, zero, zero]);
+                cs.enforce_lookup::<4>(table_id, &[limbs[0], zero, zero, zero]);
+                cs.enforce_lookup::<4>(table_id, &[limbs[1], zero, zero, zero]);
             }
             _ => unimplemented!(),
         }
-        let _ = Boolean::from_variable_checked(cs, limb2);
-    } else if let Some(_table_id) = get_8_by_8_range_check_table(&*cs) {
-        let _ = UInt32::from_variable_checked(cs, variable);
+        let _ = Boolean::from_variable_checked(cs, limbs[2]);
     } else {
-        unimplemented!()
+        unimplemented!();
     }
 }
 
@@ -1028,17 +1065,17 @@ mod tests {
         let res_var = rand_vars[0].square(cs);
         assert_eq!(res_witness, res_var.witness_hook(&*cs)().unwrap());
 
-        // mul_optimized
+        // mul_simple
         let mut res_witness = rand_witness[0];
         res_witness.mul_assign(&rand_witness[1]);
-        let res_var = rand_vars[0].mul_optimized(cs, &rand_vars[1]);
+        let res_var = rand_vars[0].mul_simple(cs, &rand_vars[1]);
         assert_eq!(res_witness, res_var.witness_hook(&*cs)().unwrap());
 
-        // mul_and_add_optimized
+        // mul_and_add_simple
         let mut res_witness = rand_witness[0];
         res_witness.mul_assign(&rand_witness[1]);
         res_witness.add_assign(&rand_witness[2]);
-        let res_var = rand_vars[0].mul_and_add_optimized(cs, &rand_vars[1], &rand_vars[2]);
+        let res_var = rand_vars[0].mul_and_add_simple(cs, &rand_vars[1], &rand_vars[2]);
         assert_eq!(res_witness, res_var.witness_hook(&*cs)().unwrap());
 
         // pow_const

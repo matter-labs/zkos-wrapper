@@ -3,7 +3,7 @@ use crate::risc_verifier;
 use crate::transcript::*;
 use crate::wrapper_utils::verifier_traits::CircuitBlake2sForEverythingVerifier;
 use crate::wrapper_utils::verifier_traits::CircuitLeafInclusionVerifier;
-use crate::{deserialize_from_file, serialize_to_file};
+use anyhow::Context as _;
 use boojum::cs::LookupParameters;
 use boojum::cs::gates::FmaGateInBaseFieldWithoutConstant;
 use boojum::cs::gates::NopGate;
@@ -96,3 +96,48 @@ mod path_constants {
 }
 
 use path_constants::*;
+
+pub(crate) fn serialize_to_bin_file<T: serde::ser::Serialize>(
+    content: &T,
+    filename: &str,
+) -> anyhow::Result<()> {
+    let file =
+        std::fs::File::create(filename).with_context(|| format!("Can't create file {filename}"))?;
+    let mut writer = std::io::BufWriter::new(file);
+    bincode::serde::encode_into_std_write(content, &mut writer, bincode::config::standard())
+        .with_context(|| format!("Can't bincode-serialize {filename}"))?;
+    Ok(())
+}
+
+pub(crate) fn deserialize_from_bin_file<T: serde::de::DeserializeOwned>(
+    filename: &str,
+) -> anyhow::Result<T> {
+    let file =
+        std::fs::File::open(filename).with_context(|| format!("Can't open file {filename}"))?;
+    let mut reader = std::io::BufReader::new(file);
+    bincode::serde::decode_from_std_read(&mut reader, bincode::config::standard())
+        .with_context(|| format!("Can't bincode-deserialize the contents of file {filename}"))
+}
+
+/// Test for updating testing_data/risc_proof_{80,100}sb from JSON to bincode in place.
+///
+/// Run via:
+///   RUST_MIN_STACK=16777216 cargo test convert_risc_proof_from_json -- --ignored --nocapture
+///   RUST_MIN_STACK=16777216 cargo test convert_risc_proof_from_json --no-default-features --features security_100 -- --ignored --nocapture
+#[test]
+#[ignore]
+fn convert_risc_proof_from_json() {
+    use execution_utils::unrolled::UnrolledProgramProof;
+
+    let path = RISC_PROOF_PATH;
+    let before = std::fs::metadata(path).unwrap().len();
+    let value: UnrolledProgramProof = {
+        let f = std::fs::File::open(path).unwrap();
+        serde_json::from_reader(std::io::BufReader::new(f)).unwrap()
+    };
+    let tmp = format!("{path}.tmp");
+    serialize_to_bin_file(&value, &tmp).unwrap();
+    std::fs::rename(&tmp, path).unwrap();
+    let after = std::fs::metadata(path).unwrap().len();
+    println!("{path}: {before} -> {after} bytes");
+}

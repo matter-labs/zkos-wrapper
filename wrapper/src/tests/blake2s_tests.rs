@@ -397,7 +397,7 @@ fn test_leaf_inclusion() {
     let cs = &mut owned_cs;
 
     // read proof and set iterator
-    let risc_proof = deserialize_from_file(RISC_PROOF_PATH).unwrap();
+    let risc_proof = deserialize_from_bin_file(RISC_PROOF_PATH).unwrap();
     let shuffle_ram_inits_and_teardowns_len =
         crate::inner_verifiers::unified_reduced::imports::VERIFIER_COMPILED_LAYOUT
             .memory_layout

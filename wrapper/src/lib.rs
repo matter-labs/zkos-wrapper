@@ -189,9 +189,8 @@ pub fn prove_risc_wrapper(
     let geometry = RiscWrapper::geometry();
     let (max_trace_len, num_vars) = circuit.size_hint();
 
-    use boojum::config::DevCSConfig;
     let builder_impl =
-        CsReferenceImplementationBuilder::<GL, GL, DevCSConfig, StCircuitResolver<_, _>>::new(
+        CsReferenceImplementationBuilder::<GL, GL, ProvingCSConfig, StCircuitResolver<_, _>>::new(
             geometry,
             max_trace_len.unwrap(),
         );
@@ -202,15 +201,8 @@ pub fn prove_risc_wrapper(
     circuit.add_tables(&mut cs);
     circuit.synthesize_into_cs(&mut cs);
     cs.pad_and_shrink_using_hint(finalization_hint);
-    let mut cs = cs.into_assembly::<Global>();
-    dbg!(cs.check_if_satisfied(&worker));
-    cs.print_gate_stats();
+    let cs = cs.into_assembly::<Global>();
 
-    dbg!(cs.lookup_multiplicities.len());
-
-    for mul in &cs.lookup_multiplicities {
-        dbg!(mul.len());
-    }
     let proof_config = RiscWrapper::get_proof_config();
 
     cs.prove_from_precomputations::<GLExt2, RiscWrapperTranscript, RiscWrapperTreeHasher, NoPow>(
@@ -266,7 +258,7 @@ pub fn get_compression_setup(
         fri_lde_factor,
         merkle_tree_cap_size,
         ..
-    } = RiscWrapper::get_proof_config();
+    } = CompressionCircuit::get_proof_config();
     let cs = cs.into_assembly::<Global>();
 
     let (setup_base, setup, vk, setup_tree, vars_hint, witness_hints) =
@@ -335,7 +327,11 @@ pub fn verify_compression_proof(proof: &CompressionProof, vk: &CompressionVK) ->
 }
 
 // Stark -> Snark Wrapper
+#[cfg(feature = "security_80")]
 pub const L1_VERIFIER_DOMAIN_SIZE_LOG: usize = 24;
+
+#[cfg(feature = "security_100")]
+pub const L1_VERIFIER_DOMAIN_SIZE_LOG: usize = 25;
 
 pub fn create_snark_wrapper_setup(
     compression_vk: CompressionVK,
