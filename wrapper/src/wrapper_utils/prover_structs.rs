@@ -70,6 +70,12 @@ impl<F: SmallField, const N: usize> CSAllocatable<F> for WrappedMerkleTreeCap<F,
         let cap = witness.cap.map(|row| row.map(|x| UInt32::allocate(cs, x)));
         Self { cap }
     }
+    fn allocate_constant<CS: ConstraintSystem<F>>(cs: &mut CS, witness: Self::Witness) -> Self {
+        let cap = witness
+            .cap
+            .map(|row| row.map(|x| UInt32::allocate_constant(cs, x)));
+        Self { cap }
+    }
 }
 
 pub struct WrappedExternalMemoryArgumentChallenges<F: SmallField> {
@@ -79,14 +85,14 @@ pub struct WrappedExternalMemoryArgumentChallenges<F: SmallField> {
 }
 
 impl<F: SmallField> WrappedExternalMemoryArgumentChallenges<F> {
-    pub(crate) fn to_uint32_vec(&self) -> Vec<UInt32<F>> {
+    pub(crate) fn to_uint32_vec<CS: ConstraintSystem<F>>(&self, cs: &mut CS) -> Vec<UInt32<F>> {
         let mut result = Vec::with_capacity(NUM_MEM_ARGUMENT_LINEARIZATION_CHALLENGES * 4 + 4);
         for i in 0..NUM_MEM_ARGUMENT_LINEARIZATION_CHALLENGES {
             result.extend_from_slice(
-                &self.memory_argument_linearization_challenges[i].into_uint32s(),
+                &self.memory_argument_linearization_challenges[i].into_uint32s(cs),
             );
         }
-        result.extend_from_slice(&self.memory_argument_gamma.into_uint32s());
+        result.extend_from_slice(&self.memory_argument_gamma.into_uint32s(cs));
         result
     }
 
@@ -140,15 +146,15 @@ pub struct WrappedExternalDelegationArgumentChallenges<F: SmallField> {
 }
 
 impl<F: SmallField> WrappedExternalDelegationArgumentChallenges<F> {
-    pub(crate) fn to_uint32_vec(&self) -> Vec<UInt32<F>> {
+    pub(crate) fn to_uint32_vec<CS: ConstraintSystem<F>>(&self, cs: &mut CS) -> Vec<UInt32<F>> {
         let mut result =
             Vec::with_capacity(NUM_DELEGATION_ARGUMENT_LINEARIZATION_CHALLENGES * 4 + 4);
         for i in 0..NUM_DELEGATION_ARGUMENT_LINEARIZATION_CHALLENGES {
             result.extend_from_slice(
-                &self.delegation_argument_linearization_challenges[i].into_uint32s(),
+                &self.delegation_argument_linearization_challenges[i].into_uint32s(cs),
             );
         }
-        result.extend_from_slice(&self.delegation_argument_gamma.into_uint32s());
+        result.extend_from_slice(&self.delegation_argument_gamma.into_uint32s(cs));
         result
     }
 
@@ -206,21 +212,21 @@ pub struct WrappedAuxArgumentsBoundaryValues<F: SmallField> {
 }
 
 impl<F: SmallField> WrappedAuxArgumentsBoundaryValues<F> {
-    pub(crate) fn to_uint32_vec(&self) -> Vec<UInt32<F>> {
+    pub(crate) fn to_uint32_vec<CS: ConstraintSystem<F>>(&self, cs: &mut CS) -> Vec<UInt32<F>> {
         let mut result = Vec::with_capacity(REGISTER_SIZE * 2);
-        result.extend_from_slice(&self.lazy_init_first_row.map(|x| x.into_uint32()));
-        result.extend_from_slice(&self.teardown_value_first_row.map(|x| x.into_uint32()));
-        result.extend_from_slice(&self.teardown_timestamp_first_row.map(|x| x.into_uint32()));
-        result.extend_from_slice(&self.lazy_init_one_before_last_row.map(|x| x.into_uint32()));
+        result.extend_from_slice(&self.lazy_init_first_row.map(|x| x.into_uint32(cs)));
+        result.extend_from_slice(&self.teardown_value_first_row.map(|x| x.into_uint32(cs)));
+        result.extend_from_slice(&self.teardown_timestamp_first_row.map(|x| x.into_uint32(cs)));
+        result.extend_from_slice(&self.lazy_init_one_before_last_row.map(|x| x.into_uint32(cs)));
         result.extend_from_slice(
             &self
                 .teardown_value_one_before_last_row
-                .map(|x| x.into_uint32()),
+                .map(|x| x.into_uint32(cs)),
         );
         result.extend_from_slice(
             &self
                 .teardown_timestamp_one_before_last_row
-                .map(|x| x.into_uint32()),
+                .map(|x| x.into_uint32(cs)),
         );
         result
     }
