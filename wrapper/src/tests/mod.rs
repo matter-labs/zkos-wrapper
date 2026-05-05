@@ -1,3 +1,4 @@
+use crate::inner_verifiers::unified_reduced::NUM_QUERIES;
 use crate::inner_verifiers::unified_reduced::skeleton::*;
 use crate::risc_verifier;
 use crate::transcript::*;
