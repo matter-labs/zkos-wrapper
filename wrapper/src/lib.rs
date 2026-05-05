@@ -3,6 +3,12 @@
 #![allow(unsafe_op_in_unsafe_fn)]
 #![feature(generic_const_exprs)]
 
+#[cfg(all(feature = "security_80", feature = "security_100"))]
+compile_error!("features `security_80` and `security_100` are mutually exclusive in zkos-wrapper");
+
+#[cfg(all(not(feature = "security_80"), not(feature = "security_100")))]
+compile_error!("one of `security_80` or `security_100` must be enabled");
+
 pub mod circuits;
 mod inner_verifiers;
 pub mod interface;
@@ -53,6 +59,22 @@ use wrapper_utils::verifier_traits::CircuitBlake2sForEverythingVerifier;
 
 use anyhow::Context as _;
 pub use wrapper::{SnarkWrapper, SnarkWrapperConfig};
+
+pub(crate) mod active_security {
+    #[cfg(feature = "security_80")]
+    pub(crate) type ActiveSecurity =
+        crate::risc_verifier::verifier_common::security_80::Security80Marker;
+    #[cfg(feature = "security_100")]
+    pub(crate) type ActiveSecurity =
+        crate::risc_verifier::verifier_common::security_100::Security100Marker;
+
+    #[cfg(feature = "security_80")]
+    pub(crate) const ACTIVE_SECURITY_MODEL: crate::risc_verifier::verifier_common::SecurityModel =
+        crate::risc_verifier::verifier_common::SecurityModel::Security80;
+    #[cfg(feature = "security_100")]
+    pub(crate) const ACTIVE_SECURITY_MODEL: crate::risc_verifier::verifier_common::SecurityModel =
+        crate::risc_verifier::verifier_common::SecurityModel::Security100;
+}
 
 pub type GL = boojum::field::goldilocks::GoldilocksField;
 pub type GLExt2 = boojum::field::goldilocks::GoldilocksExt2;

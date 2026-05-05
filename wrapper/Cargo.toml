@@ -42,6 +42,6 @@ tempfile = "3"
 
 [features]
 gpu = ["shivini", "proof-compression", "zksync-gpu-prover"]
-security_80 = ["unified_reduced_machine_verifier/security_80", "blake_verifier/security_80", "execution_utils/verifier_80"]
-security_100 = ["unified_reduced_machine_verifier/security_100", "blake_verifier/security_100", "execution_utils/verifier_100"]
+security_80 = ["unified_reduced_machine_verifier/security_80", "blake_verifier/security_80"]
+security_100 = ["unified_reduced_machine_verifier/security_100", "blake_verifier/security_100"]
 default = ["security_80"]
