@@ -17,8 +17,6 @@ jobs:
       - name: Setup
         run: |
           rustup set profile minimal
-      - name: Configure git
-        run: git config --global url."https://x-access-token:${{ secrets.RELEASE_TOKEN }}@github.com/".insteadOf "ssh://git@github.com/"
       - name: Compile
         run: cargo build --verbose
       - name: tests
@@ -36,8 +34,6 @@ jobs:
       - name: Setup
         run: |
           rustup set profile minimal
-      - name: Configure git
-        run: git config --global url."https://x-access-token:${{ secrets.RELEASE_TOKEN }}@github.com/".insteadOf "ssh://git@github.com/"
       - name: Compile
         working-directory: ./circuit_mersenne_field
         run: cargo build --verbose
@@ -56,8 +52,6 @@ jobs:
       - name: Setup
         run: |
           rustup set profile default
-      - name: Configure git
-        run: git config --global url."https://x-access-token:${{ secrets.RELEASE_TOKEN }}@github.com/".insteadOf "ssh://git@github.com/"
       - name: Regenerate wrapper
         run: cargo run --bin wrapper_generator --release
       - name: Check if anything has changed
