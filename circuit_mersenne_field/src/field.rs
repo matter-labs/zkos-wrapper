@@ -54,7 +54,8 @@ impl<F: SmallField> MersenneField<F> {
         Num::from_variable(self.variable)
     }
 
-    pub fn into_uint32(&self) -> UInt32<F> {
+    pub fn into_uint32<CS: ConstraintSystem<F>>(&self, cs: &mut CS) -> UInt32<F> {
+        self.enforce_reduced(cs);
         unsafe { UInt32::from_variable_unchecked(self.variable) }
     }
 
@@ -73,7 +74,7 @@ impl<F: SmallField> MersenneField<F> {
         range_check_31_bits(cs, variable);
 
         if reduced {
-            result.enforce_reduced(cs);
+            result.enforce_reduced_marked(cs);
         }
 
         result
@@ -153,7 +154,12 @@ impl<F: SmallField> MersenneField<F> {
         result
     }
 
-    pub fn enforce_reduced<CS: ConstraintSystem<F>>(&mut self, cs: &mut CS) {
+    pub fn enforce_reduced_marked<CS: ConstraintSystem<F>>(&mut self, cs: &mut CS) {
+        self.enforce_reduced(cs);
+        self.reduced = true;
+    }
+
+    pub fn enforce_reduced<CS: ConstraintSystem<F>>(&self, cs: &mut CS) {
         // The value is already checked to be in range [0, 2^31 - 1]
         // so we should only check that value != 2^31 - 1
         // We can just use this gate:
@@ -198,8 +204,6 @@ impl<F: SmallField> MersenneField<F> {
         } else {
             unimplemented!()
         }
-
-        self.reduced = true;
     }
 
     pub fn add<CS: ConstraintSystem<F>>(&self, cs: &mut CS, other: &Self) -> Self {
@@ -354,8 +358,7 @@ impl<F: SmallField> MersenneField<F> {
             unimplemented!()
         }
 
-        let zero = Self::zero(cs);
-        zero.sub(cs, self)
+        result
     }
 
     pub fn sub<CS: ConstraintSystem<F>>(&self, cs: &mut CS, other: &Self) -> Self {
@@ -1271,13 +1274,13 @@ impl<F: SmallField> MersenneField<F> {
     }
 
     pub fn is_zero<CS: ConstraintSystem<F>>(&mut self, cs: &mut CS) -> Boolean<F> {
-        self.enforce_reduced(cs);
+        self.enforce_reduced_marked(cs);
         self.into_num().is_zero(cs)
     }
 
     pub fn equals<CS: ConstraintSystem<F>>(&mut self, cs: &mut CS, other: &mut Self) -> Boolean<F> {
-        self.enforce_reduced(cs);
-        other.enforce_reduced(cs);
+        self.enforce_reduced_marked(cs);
+        other.enforce_reduced_marked(cs);
         Num::equals(cs, &self.into_num(), &other.into_num())
     }
 
@@ -1309,8 +1312,6 @@ impl<F: SmallField> MersenneField<F> {
 }
 
 fn range_check_32_bits<F: SmallField, CS: ConstraintSystem<F>>(cs: &mut CS, variable: Variable) {
-    use boojum::gadgets::u8::get_8_by_8_range_check_table;
-
     if let Some(table_id) = get_16_bits_range_check_table(&*cs) {
         let limbs = split_variable_into_two_16_bits_limbs(cs, variable);
 
@@ -1330,10 +1331,8 @@ fn range_check_32_bits<F: SmallField, CS: ConstraintSystem<F>>(cs: &mut CS, vari
             }
             _ => unimplemented!(),
         }
-    } else if let Some(_table_id) = get_8_by_8_range_check_table(&*cs) {
-        let _ = UInt32::from_variable_checked(cs, variable);
     } else {
-        unimplemented!()
+        let _ = UInt32::from_variable_checked(cs, variable);
     }
 }
 
@@ -1446,8 +1445,10 @@ pub fn get_15_bits_range_check_table<F: SmallField, CS: ConstraintSystem<F>>(
 
 /// Returns a and reduce_a such that unreduced_a = a + reduce_a * modulus
 /// a is constrainted to be in [0, 2^31 - 1]
-/// reduce_a has no additional constraints
-pub fn reduce_mersenne31<F: SmallField, CS: ConstraintSystem<F>>(
+///
+/// # Safety
+/// reduce_a has no additional constraints, so the caller should range check it separately
+pub unsafe fn reduce_mersenne31<F: SmallField, CS: ConstraintSystem<F>>(
     cs: &mut CS,
     unreduced_a: Variable,
 ) -> (MersenneField<F>, Variable) {
@@ -1482,7 +1483,6 @@ pub fn reduce_mersenne31<F: SmallField, CS: ConstraintSystem<F>>(
         gate.add_to_cs(cs);
     } else if cs.gate_is_allowed::<FmaGateInBaseFieldWithoutConstant<F>>() {
         if <CS::Config as CSConfig>::SetupConfig::KEEP_SETUP == true {
-            // (1) self * other_mul + modulus^2 = tmp
             let params = FmaGateInBaseWithoutConstantParams {
                 coeff_for_quadtaric_part: F::ONE,
                 linear_term_coeff: *F::from_u64_unchecked(M31_MODULUS).negate(),
@@ -1705,7 +1705,7 @@ mod tests {
 
         // enforce reduced
         for var in rand_vars.iter_mut() {
-            var.enforce_reduced(cs);
+            var.enforce_reduced_marked(cs);
         }
 
         // add

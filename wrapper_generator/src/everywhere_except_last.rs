@@ -258,7 +258,7 @@ pub(crate) fn guess_transform_squaring_of_linear_combination(
 
     // so we can generate a temporary term for linear combination, before multiplication
     let mut substream = quote! {
-        let mut t = Mersenne31Quartic::ZERO;
+        let mut t = MersenneQuartic::zero(cs);
     };
     for (coeff, place) in lc.into_iter() {
         let read_a_expr = read_value_expr(place, idents, false);
@@ -267,7 +267,7 @@ pub(crate) fn guess_transform_squaring_of_linear_combination(
             {
                 let mut a = #read_a_expr;
                 let coeff = MersenneField::allocate_constant(cs, Mersenne31Field(#coeff));
-                let t = a.mul_by_base_and_add(cs, &coeff, &t);
+                t = a.mul_by_base_and_add(cs, &coeff, &t);
             }
         };
         substream.extend(t);
@@ -288,7 +288,7 @@ pub(crate) fn guess_transform_squaring_of_linear_combination(
         let mut #individual_term_ident = {
             #substream
 
-            t.square();
+            t = t.square();
 
             t
         };

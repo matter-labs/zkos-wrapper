@@ -251,7 +251,7 @@ pub fn get_compression_setup(
         fri_lde_factor,
         merkle_tree_cap_size,
         ..
-    } = RiscWrapper::get_proof_config();
+    } = CompressionCircuit::get_proof_config();
     let cs = cs.into_assembly::<Global>();
 
     let (setup_base, setup, vk, setup_tree, vars_hint, witness_hints) =

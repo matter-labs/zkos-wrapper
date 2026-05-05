@@ -247,21 +247,21 @@ impl<F: SmallField> WrappedProofSkeletonInstance<F> {
         Self::allocate(cs, witness)
     }
 
-    pub(crate) fn transcript_elements_before_stage2(&self) -> Vec<UInt32<F>> {
+    pub(crate) fn transcript_elements_before_stage2<CS: ConstraintSystem<F>>(&self, cs: &mut CS) -> Vec<UInt32<F>> {
         let mut result = vec![];
 
         result.push(self.circuit_sequence_idx.clone());
         result.push(self.delegation_type.clone());
-        result.extend_from_slice(&self.public_inputs.map(|x| x.into_uint32()));
+        result.extend_from_slice(&self.public_inputs.map(|x| x.into_uint32(cs)));
         for cap in &self.setup_caps {
             result.extend_from_slice(&cap.to_slice());
         }
-        result.extend_from_slice(&self.memory_argument_challenges.to_uint32_vec());
+        result.extend_from_slice(&self.memory_argument_challenges.to_uint32_vec(cs));
         for challenge in &self.delegation_argument_challenges {
-            result.extend_from_slice(&challenge.to_uint32_vec());
+            result.extend_from_slice(&challenge.to_uint32_vec(cs));
         }
         for boundary_values in &self.aux_boundary_values {
-            result.extend_from_slice(&boundary_values.to_uint32_vec());
+            result.extend_from_slice(&boundary_values.to_uint32_vec(cs));
         }
         for cap in &self.witness_caps {
             result.extend_from_slice(&cap.to_slice());
@@ -273,14 +273,14 @@ impl<F: SmallField> WrappedProofSkeletonInstance<F> {
         result
     }
 
-    pub fn transcript_elements_stage2_to_stage3(&self) -> Vec<UInt32<F>> {
+    pub fn transcript_elements_stage2_to_stage3<CS: ConstraintSystem<F>>(&self, cs: &mut CS) -> Vec<UInt32<F>> {
         let mut result = vec![];
         for cap in &self.stage_2_caps {
             result.extend_from_slice(&cap.to_slice());
         }
-        result.extend_from_slice(&self.memory_grand_product_accumulator.into_uint32s());
+        result.extend_from_slice(&self.memory_grand_product_accumulator.into_uint32s(cs));
         for acc in &self.delegation_argument_accumulator {
-            result.extend_from_slice(&acc.into_uint32s());
+            result.extend_from_slice(&acc.into_uint32s(cs));
         }
 
         result
@@ -296,14 +296,14 @@ impl<F: SmallField> WrappedProofSkeletonInstance<F> {
         result
     }
 
-    pub fn transcript_elements_evaluations_at_z(&self) -> Vec<UInt32<F>> {
+    pub fn transcript_elements_evaluations_at_z<CS: ConstraintSystem<F>>(&self, cs: &mut CS) -> Vec<UInt32<F>> {
         let mut result = vec![];
 
         for opening in &self.openings_at_z {
-            result.extend_from_slice(&opening.into_uint32s());
+            result.extend_from_slice(&opening.into_uint32s(cs));
         }
         for opening in &self.openings_at_z_omega {
-            result.extend_from_slice(&opening.into_uint32s());
+            result.extend_from_slice(&opening.into_uint32s(cs));
         }
 
         result
@@ -323,23 +323,23 @@ impl<F: SmallField> WrappedProofSkeletonInstance<F> {
             })
     }
 
-    pub fn transcript_elements_last_fri_step_leaf_values(&self) -> Vec<UInt32<F>> {
+    pub fn transcript_elements_last_fri_step_leaf_values<CS: ConstraintSystem<F>>(&self, cs: &mut CS) -> Vec<UInt32<F>> {
         let mut result = vec![];
 
         for coset in &self.fri_final_step_leafs {
             for leaf in coset {
-                result.extend_from_slice(&leaf.into_uint32s());
+                result.extend_from_slice(&leaf.into_uint32s(cs));
             }
         }
 
         result
     }
 
-    pub fn transcript_elements_monomial_coefficients(&self) -> Vec<UInt32<F>> {
+    pub fn transcript_elements_monomial_coefficients<CS: ConstraintSystem<F>>(&self, cs: &mut CS) -> Vec<UInt32<F>> {
         let mut result = vec![];
 
         for coeff in &self.monomial_coeffs {
-            result.extend_from_slice(&coeff.into_uint32s());
+            result.extend_from_slice(&coeff.into_uint32s(cs));
         }
 
         result
@@ -501,6 +501,21 @@ impl<F: SmallField> WrappedQueryValuesInstance<F> {
         // for all except FRI the following is valid
         let tree_index = UInt32::allocate_checked(cs, source.query_index & TREE_INDEX_MASK);
         let coset_index = UInt32::allocate_checked(cs, source.query_index >> TRACE_LEN_LOG2);
+
+        let chunks = [
+            (tree_index.get_variable(), F::ONE),
+            (
+                coset_index.get_variable(),
+                F::from_u64(1 << TRACE_LEN_LOG2).unwrap(),
+            ),
+        ];
+        use boojum::gadgets::impls::lc::linear_combination_collapse;
+        linear_combination_collapse(
+            cs,
+            &mut chunks.into_iter(),
+            Some(query.query_index.get_variable()),
+        );
+
         let coset_index = coset_index
             .into_num()
             .spread_into_bits::<CS, FRI_FACTOR_LOG2>(cs);

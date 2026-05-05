@@ -24,20 +24,20 @@ bellman = { package = "zksync_bellman", version = "=0.32.5" }
 rescue_poseidon = "=0.32.5"
 snark_wrapper = "=0.32.5"
 
-final_risc_verifier = { git = "https://github.com/matter-labs/zksync-airbender.git", package = "final_reduced_risc_v_machine_verifier", features = [
+final_risc_verifier = { git = "ssh://git@github.com/matter-labs/zksync-airbender-private.git", package = "final_reduced_risc_v_machine_verifier", features = [
     "proof_utils",
-], tag = "v0.5.2" }
-reduced_risc_verifier = { git = "https://github.com/matter-labs/zksync-airbender.git", package = "reduced_risc_v_log_23_machine_verifier", features = [
+], tag = "v0.5.2_rc1" }
+reduced_risc_verifier = { git = "ssh://git@github.com/matter-labs/zksync-airbender-private.git", package = "reduced_risc_v_log_23_machine_verifier", features = [
     "proof_utils",
-], tag = "v0.5.2" }
-blake_verifier = { git = "https://github.com/matter-labs/zksync-airbender.git", package = "blake2_with_compression_verifier", features = [
+], tag = "v0.5.2_rc1" }
+blake_verifier = { git = "ssh://git@github.com/matter-labs/zksync-airbender-private.git", package = "blake2_with_compression_verifier", features = [
     "proof_utils",
-], tag = "v0.5.2" }
-execution_utils = { git = "https://github.com/matter-labs/zksync-airbender.git", package = "execution_utils", tag = "v0.5.2" }
-setups = { git = "https://github.com/matter-labs/zksync-airbender.git", package = "setups", tag = "v0.5.2" }
-mersenne_field = { git = "https://github.com/matter-labs/zksync-airbender.git", package = "field", tag = "v0.5.2" }
-zkos_verifier_generator = { git = "https://github.com/matter-labs/zksync-airbender.git", package = "verifier_generator", tag = "v0.5.2" }
-prover = { git = "https://github.com/matter-labs/zksync-airbender.git", package = "prover", tag = "v0.5.2" }
+], tag = "v0.5.2_rc1" }
+execution_utils = { git = "ssh://git@github.com/matter-labs/zksync-airbender-private.git", package = "execution_utils", tag = "v0.5.2_rc1" }
+setups = { git = "ssh://git@github.com/matter-labs/zksync-airbender-private.git", package = "setups", tag = "v0.5.2_rc1" }
+mersenne_field = { git = "ssh://git@github.com/matter-labs/zksync-airbender-private.git", package = "field", tag = "v0.5.2_rc1" }
+zkos_verifier_generator = { git = "ssh://git@github.com/matter-labs/zksync-airbender-private.git", package = "verifier_generator", tag = "v0.5.2_rc1" }
+prover = { git = "ssh://git@github.com/matter-labs/zksync-airbender-private.git", package = "prover", tag = "v0.5.2_rc1" }
 
 serde_json = { version = "1.0" }
 serde = { version = "1", default-features = false, features = [
