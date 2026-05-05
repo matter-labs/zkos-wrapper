@@ -251,8 +251,10 @@ impl<F: SmallField> WrappedProofSkeletonInstance<F> {
         cs: &mut CS,
     ) -> Self {
         let witness = unsafe {
-            let mut skeleton = MaybeUninit::<ProofSkeletonInstance>::uninit();
-            ProofSkeletonInstance::fill::<I>(skeleton.as_mut_ptr());
+            let mut skeleton = MaybeUninit::<AirbenderProofSkeletonInstance>::uninit();
+            <AirbenderProofSkeletonInstance as ProofSkeletonInstanceExt<ActiveSecurity>>::fill::<I>(
+                skeleton.as_mut_ptr(),
+            );
             skeleton.assume_init()
         };
 
@@ -566,13 +568,6 @@ impl<
     }
 }
 
-const NUM_QUERIES: usize = LEAF_SIZE_SETUP
-    + LEAF_SIZE_WITNESS_TREE
-    + LEAF_SIZE_MEMORY_TREE
-    + LEAF_SIZE_STAGE_2
-    + LEAF_SIZE_QUOTIENT
-    + TOTAL_FRI_LEAFS_SIZES;
-
 impl<F: SmallField> WrappedQueryValuesInstance<F> {
     pub unsafe fn from_non_determinism_source<
         CS: ConstraintSystem<F>,
@@ -583,7 +578,7 @@ impl<F: SmallField> WrappedQueryValuesInstance<F> {
         proof_skeleton: &WrappedProofSkeletonInstance<F>,
         hasher: &mut V,
     ) -> Self {
-        let mut source = MaybeUninit::<QueryValuesInstance>::uninit();
+        let mut source = MaybeUninit::<AirbenderQueryValuesInstance>::uninit();
         let dst = source.as_mut_ptr().cast::<u32>();
         let modulus = Mersenne31Field::CHARACTERISTICS as u32;
         // query index
@@ -596,11 +591,13 @@ impl<F: SmallField> WrappedQueryValuesInstance<F> {
         );
         unsafe { dst.write(query_index) };
 
-        // BASE_CIRCUIT_QUERY_VALUES_OFFSETS must be in scope from the including file
+        let query_value_offsets = <AirbenderQueryValuesInstance as QueryValuesInstanceExt<
+            ActiveSecurity,
+        >>::BASE_CIRCUIT_QUERY_VALUES_OFFSETS;
         let mut i = 0;
         // leaf values are field elements
-        while i < NUM_QUERIES {
-            dst.add(BASE_CIRCUIT_QUERY_VALUES_OFFSETS[i])
+        while i < NUM_QUERY_VALUES {
+            dst.add(query_value_offsets[i])
                 .write(I::read_reduced_field_element(modulus));
             i += 1;
         }

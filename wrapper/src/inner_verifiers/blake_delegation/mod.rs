@@ -18,8 +18,11 @@ use blake_verifier::field::*;
 use blake_verifier::prover::cs::definitions::*;
 use blake_verifier::skeleton::{ProofSkeleton, QueryValues};
 use blake_verifier::verifier_common::non_determinism_source::NonDeterminismSource;
-use risc_verifier::verifier_common::{SizedProofPowChallenges, transcript_challenge_array_size};
+use blake_verifier::verifier_common::{
+    SizedProofPowChallenges, SizedProofSecurityConfig, transcript_challenge_array_size,
+};
 
+use crate::active_security::ActiveSecurity;
 use crate::wrapper_utils::prover_structs::*;
 
 pub(crate) mod imports;
@@ -33,6 +36,26 @@ use crate::risc_verifier;
 use crate::set_iterator_from_proof;
 use risc_verifier::prover::nd_source_std::ThreadLocalBasedSource;
 use risc_verifier::prover::prover_stages::Proof as RiscProof;
+
+// Airbender now exposes verifier geometry through a security marker. The wrapper
+// still compiles one security model at a time, so the shared verifier code can
+// keep using concrete constants selected by the active Cargo feature.
+type AirbenderProofSkeletonInstance = ProofSkeletonInstance<ActiveSecurity>;
+type AirbenderQueryValuesInstance = QueryValuesInstance<ActiveSecurity>;
+type ActiveGeometry = Geometry<ActiveSecurity>;
+
+const SECURITY_CONFIG: SizedProofSecurityConfig<NUM_FRI_STEPS> = ActiveGeometry::SECURITY_CONFIG;
+pub(crate) const NUM_QUERIES: usize = ActiveGeometry::NUM_QUERIES;
+const NUM_QUERY_VALUES: usize = ActiveGeometry::NUM_QUERY_VALUES;
+const NUM_REQUIRED_WORDS_FOR_QUERY_INDEXES: usize =
+    ActiveGeometry::NUM_REQUIRED_WORDS_FOR_QUERY_INDEXES;
+const LAST_FRI_STEP_EXPOSE_LEAFS: bool = ActiveGeometry::LAST_FRI_STEP_EXPOSE_LEAFS;
+const LAST_FRI_STEP_LEAFS_TOTAL_SIZE_PER_COSET: usize =
+    ActiveGeometry::LAST_FRI_STEP_LEAFS_TOTAL_SIZE_PER_COSET;
+const NUM_FRI_STEPS_WITH_ORACLES: usize = ActiveGeometry::NUM_FRI_STEPS_WITH_ORACLES;
+const TOTAL_FRI_ORACLES_PATHS_LENGTH: usize = ActiveGeometry::TOTAL_FRI_ORACLES_PATHS_LENGTH;
+const TOTAL_FRI_LEAFS_SIZES: usize = ActiveGeometry::TOTAL_FRI_LEAFS_SIZES;
+
 pub fn prepare_blake_proof_for_wrapper<
     F: SmallField,
     CS: ConstraintSystem<F>,
@@ -125,7 +148,7 @@ pub(crate) fn verify_blake_proof<V: LeafInclusionVerifier>(
         unsafe { MaybeUninit::<ProofPublicInputs<NUM_STATE_ELEMENTS>>::uninit().assume_init() };
 
     unsafe {
-        blake_verifier::verify_with_configuration::<ThreadLocalBasedSource, V>(
+        blake_verifier::verify_with_configuration::<ActiveSecurity, ThreadLocalBasedSource, V>(
             &mut proof_state_dst,
             &mut proof_input_dst,
         );

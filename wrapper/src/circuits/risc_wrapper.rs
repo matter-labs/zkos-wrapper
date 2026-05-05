@@ -55,7 +55,7 @@ use boojum::gadgets::tables::create_range_check_16_bits_table;
 use risc_verifier::prover::prover_stages::Proof as RiscProof;
 use risc_verifier::prover::prover_stages::unrolled_prover::UnrolledModeProof as RiscUnrolledProof;
 
-use execution_utils::unrolled::UnrolledProgramProof;
+use execution_utils::{RecursionArtifact, RecursionLayer, unrolled::UnrolledProgramProof};
 
 const NUM_RISC_WRAPPER_PUBLIC_INPUTS: usize = 4;
 
@@ -85,9 +85,18 @@ impl BinaryCommitment {
     pub fn from_default_binary() -> Self {
         // We expect to verify an unified_reduced_machine
 
+        let security_model = crate::active_security::ACTIVE_SECURITY_MODEL;
         Self::from_binary(
-            execution_utils::verifier_binaries::RECURSION_UNIFIED_BIN,
-            execution_utils::verifier_binaries::RECURSION_UNIFIED_TXT,
+            execution_utils::verifier_binaries::recursion_artifact(
+                security_model,
+                RecursionLayer::Unified,
+                RecursionArtifact::Bin,
+            ),
+            execution_utils::verifier_binaries::recursion_artifact(
+                security_model,
+                RecursionLayer::Unified,
+                RecursionArtifact::Txt,
+            ),
         )
     }
 
@@ -581,10 +590,11 @@ pub(crate) fn verify_risc_proof<V: LeafInclusionVerifier>(
         unsafe { MaybeUninit::<ProofPublicInputs<NUM_STATE_ELEMENTS>>::uninit().assume_init() };
 
     unsafe {
-        risc_verifier::verify_with_configuration::<DefaultNonDeterminismSource, V>(
-            &mut proof_state_dst,
-            &mut proof_input_dst,
-        );
+        risc_verifier::verify_with_configuration::<
+            crate::active_security::ActiveSecurity,
+            DefaultNonDeterminismSource,
+            V,
+        >(&mut proof_state_dst, &mut proof_input_dst);
     }
 
     (proof_state_dst, proof_input_dst)
@@ -921,7 +931,7 @@ pub(crate) fn check_proof_state<F: SmallField, CS: ConstraintSystem<F>>(
     ) = draw_from_transcript_seed_with_state_permutation(
         cs,
         memory_seed,
-        risc_verifier::verifier_common::MEMORY_DELEGATION_POW_BITS as u32,
+        crate::active_security::ACTIVE_SECURITY_MODEL.memory_delegation_pow_bits() as u32,
         pow_challenge,
     );
 

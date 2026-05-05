@@ -1,4 +1,6 @@
 use super::*;
-use blake_verifier::concrete::skeleton_instance::BASE_CIRCUIT_QUERY_VALUES_OFFSETS;
+use blake_verifier::concrete::skeleton_instance::{
+    ProofSkeletonInstanceExt, QueryValuesInstanceExt,
+};
 
 include!("../shared/skeleton_impl.rs");
