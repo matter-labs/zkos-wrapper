@@ -898,7 +898,7 @@ pub(crate) fn transform_delegation_ram_memory_accumulators(
                             let mut #individual_term_ident = #accumulator_expr;
                             #individual_term_ident = #individual_term_ident.mul(cs, &denom);
                             let mut t = previous;
-                            t.mul(cs, &numerator);
+                            t = t.mul(cs, &numerator);
                             #individual_term_ident = #individual_term_ident.sub(cs, &t);
 
                             #individual_term_ident

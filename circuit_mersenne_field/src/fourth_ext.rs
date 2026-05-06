@@ -53,12 +53,12 @@ impl<F: SmallField> MersenneQuartic<F> {
         ]
     }
 
-    pub fn into_uint32s(&self) -> [UInt32<F>; 4] {
+    pub fn into_uint32s<CS: ConstraintSystem<F>>(&self, cs: &mut CS) -> [UInt32<F>; 4] {
         [
-            self.x.x.into_uint32(),
-            self.x.y.into_uint32(),
-            self.y.x.into_uint32(),
-            self.y.y.into_uint32(),
+            self.x.x.into_uint32(cs),
+            self.x.y.into_uint32(cs),
+            self.y.x.into_uint32(cs),
+            self.y.y.into_uint32(cs),
         ]
     }
 
@@ -235,7 +235,7 @@ impl<F: SmallField> MersenneQuartic<F> {
             tmp3,
         );
 
-        let (a, reduce_a) = reduce_mersenne31(cs, tmp4);
+        let (a, reduce_a) = unsafe { reduce_mersenne31(cs, tmp4) };
         range_check_33_bits(cs, reduce_a);
 
         // Computing b
@@ -267,7 +267,7 @@ impl<F: SmallField> MersenneQuartic<F> {
             tmp7,
         );
 
-        let (b, reduce_b) = reduce_mersenne31(cs, tmp8);
+        let (b, reduce_b) = unsafe { reduce_mersenne31(cs, tmp8) };
         range_check_33_bits(cs, reduce_b);
 
         // Computing c
@@ -307,7 +307,7 @@ impl<F: SmallField> MersenneQuartic<F> {
             tmp12,
         );
 
-        let (c, reduce_c) = reduce_mersenne31(cs, tmp13);
+        let (c, reduce_c) = unsafe { reduce_mersenne31(cs, tmp13) };
         range_check_33_bits(cs, reduce_c);
 
         // Computing d
@@ -347,7 +347,7 @@ impl<F: SmallField> MersenneQuartic<F> {
             tmp17,
         );
 
-        let (d, reduce_d) = reduce_mersenne31(cs, tmp18);
+        let (d, reduce_d) = unsafe { reduce_mersenne31(cs, tmp18) };
         range_check_33_bits(cs, reduce_d);
 
         Self {
@@ -424,7 +424,7 @@ impl<F: SmallField> MersenneQuartic<F> {
             tmp4,
         );
 
-        let (a, reduce_a) = reduce_mersenne31(cs, tmp5);
+        let (a, reduce_a) = unsafe { reduce_mersenne31(cs, tmp5) };
         range_check_33_bits(cs, reduce_a);
 
         // Computing b
@@ -464,7 +464,7 @@ impl<F: SmallField> MersenneQuartic<F> {
             tmp8,
         );
 
-        let (b, reduce_b) = reduce_mersenne31(cs, tmp9);
+        let (b, reduce_b) = unsafe { reduce_mersenne31(cs, tmp9) };
         range_check_33_bits(cs, reduce_b);
 
         // Computing c
@@ -512,7 +512,7 @@ impl<F: SmallField> MersenneQuartic<F> {
             tmp13,
         );
 
-        let (c, reduce_c) = reduce_mersenne31(cs, tmp14);
+        let (c, reduce_c) = unsafe { reduce_mersenne31(cs, tmp14) };
         range_check_33_bits(cs, reduce_c);
 
         // Computing d
@@ -552,7 +552,7 @@ impl<F: SmallField> MersenneQuartic<F> {
             tmp17,
         );
 
-        let (d, reduce_d) = reduce_mersenne31(cs, tmp18);
+        let (d, reduce_d) = unsafe { reduce_mersenne31(cs, tmp18) };
         range_check_33_bits(cs, reduce_d);
 
         Self {
@@ -699,7 +699,7 @@ impl<F: SmallField> MersenneQuartic<F> {
 fn range_check_33_bits<F: SmallField, CS: ConstraintSystem<F>>(cs: &mut CS, variable: Variable) {
     use boojum::gadgets::impls::limbs_decompose::decompose_into_limbs;
     use boojum::gadgets::non_native_field::implementations::get_16_bits_range_check_table;
-    use boojum::gadgets::u8::get_8_by_8_range_check_table;
+    use boojum::gadgets::u8::range_check_u8_pair;
 
     if let Some(table_id) = get_16_bits_range_check_table(&*cs) {
         let [limb0, limb1, limb2] =
@@ -722,10 +722,13 @@ fn range_check_33_bits<F: SmallField, CS: ConstraintSystem<F>>(cs: &mut CS, vari
             _ => unimplemented!(),
         }
         let _ = Boolean::from_variable_checked(cs, limb2);
-    } else if let Some(_table_id) = get_8_by_8_range_check_table(&*cs) {
-        let _ = UInt32::from_variable_checked(cs, variable);
     } else {
-        unimplemented!()
+        let limbs =
+            decompose_into_limbs::<F, CS, 5>(cs, F::from_u64_unchecked(1u64 << 8), variable);
+
+        range_check_u8_pair(cs, &[limbs[0], limbs[1]]);
+        range_check_u8_pair(cs, &[limbs[2], limbs[3]]);
+        let _ = Boolean::from_variable_checked(cs, limbs[4]);
     }
 }
 
