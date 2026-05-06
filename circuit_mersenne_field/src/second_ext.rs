@@ -48,8 +48,8 @@ impl<F: SmallField> MersenneComplex<F> {
         [self.x.into_num(), self.y.into_num()]
     }
 
-    pub fn into_uint32s(&self) -> [UInt32<F>; 2] {
-        [self.x.into_uint32(), self.y.into_uint32()]
+    pub fn into_uint32s<CS: ConstraintSystem<F>>(&self, cs: &mut CS) -> [UInt32<F>; 2] {
+        [self.x.into_uint32(cs), self.y.into_uint32(cs)]
     }
 
     /// The coordinate values should be in range [0, 2^31 - 2]

@@ -560,6 +560,24 @@ pub(crate) fn check_proof_state<F: SmallField, CS: ConstraintSystem<F>>(
             }
         }
 
+        let expected_setup_caps =
+            <[WrappedMerkleTreeCap<F, TREE_CAP_SIZE>; NUM_COSETS]>::allocate_constant(
+                cs,
+                setups::all_parameters::ALL_DELEGATION_CIRCUITS_PARAMS[0].2,
+            );
+
+        for (cap, expected_cap) in blake_state
+            .setup_caps
+            .iter()
+            .zip(expected_setup_caps.iter())
+        {
+            for (chunk, expected_chunk) in cap.cap.iter().zip(expected_cap.cap.iter()) {
+                for (l, r) in chunk.iter().zip(expected_chunk.iter()) {
+                    Num::enforce_equal(cs, &l.into_num(), &r.into_num());
+                }
+            }
+        }
+
         memory_grand_product_accumulator =
             memory_grand_product_accumulator.mul(cs, &blake_state.memory_grand_product_accumulator);
         delegation_set_accumulator =
@@ -670,10 +688,11 @@ pub fn produce_register_contribution_into_memory_accumulator_raw<
     // all registers are write 0 at timestamp 0
     for (reg_idx, value_and_timestamp) in register_final_data.chunks(3).enumerate() {
         let [value_low, value_high] = split_uint32_into_pair_mersenne(cs, &value_and_timestamp[0]);
+        // Timestamps were previously committed to transcript, so we need to ensure that values are reduced
         let timestamp_low =
-            MersenneField::from_variable_checked(cs, value_and_timestamp[1].get_variable(), false);
+            MersenneField::from_variable_checked(cs, value_and_timestamp[1].get_variable(), true);
         let timestamp_high =
-            MersenneField::from_variable_checked(cs, value_and_timestamp[2].get_variable(), false);
+            MersenneField::from_variable_checked(cs, value_and_timestamp[2].get_variable(), true);
 
         let mut contribution = MersenneQuartic::one(cs); // is_register == 1, without challenge
         let mut t =
