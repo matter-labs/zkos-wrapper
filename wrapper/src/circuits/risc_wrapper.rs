@@ -76,45 +76,115 @@ pub struct RiscWrapperWitness {
 #[derive(Clone, Copy, Debug)]
 pub struct BinaryCommitment {
     pub end_params: [u32; 8],
-    // We propagate aux_params to subsequent layers
-    // instead of comparing it against the constant at this stage
-    // pub aux_params: [u32; 8],
+    pub aux_params: [u32; 8],
 }
 
 impl BinaryCommitment {
-    pub fn from_default_binary() -> Self {
-        // We expect to verify an unified_reduced_machine
+    /// Build from all three layer binaries explicitly:
+    /// 1. the base program (e.g. zksync_os app),
+    /// 2. the unrolled-recursion verifier,
+    /// 3. the unified-recursion verifier.
+    ///
+    /// `aux_params` is the Blake2s chain hash computed over the layer
+    /// `end_params` (matches `UnrolledProgramProof::recursion_chain_hash`).
+    pub fn from_binaries(
+        base_bin: &[u8],
+        base_text: &[u8],
+        unrolled_bin: &[u8],
+        unrolled_text: &[u8],
+        unified_bin: &[u8],
+        unified_text: &[u8],
+    ) -> Self {
+        use execution_utils::unified_circuit::compute_unified_setup_for_machine_configuration;
+        use execution_utils::unrolled::{
+            UnrolledProgramSetup, compute_setup_for_machine_configuration,
+        };
+        use risc_verifier::prover::riscv_transpiler::cycle::{
+            IMStandardIsaConfigWithUnsignedMulDiv, IWithoutByteAccessIsaConfigWithDelegation,
+        };
 
-        let security_model = crate::active_security::ACTIVE_SECURITY_MODEL;
-        Self::from_binary(
-            execution_utils::verifier_binaries::recursion_artifact(
-                security_model,
-                RecursionLayer::Unified,
-                RecursionArtifact::Bin,
-            ),
-            execution_utils::verifier_binaries::recursion_artifact(
-                security_model,
-                RecursionLayer::Unified,
-                RecursionArtifact::Txt,
-            ),
-        )
+        fn padded(bytes: &[u8]) -> Vec<u8> {
+            let mut v = bytes.to_vec();
+            setups::pad_bytecode_bytes_for_proving(&mut v);
+            v
+        }
+
+        let padded_base_bin = padded(base_bin);
+        let padded_base_text = padded(base_text);
+        let padded_unrolled_bin = padded(unrolled_bin);
+        let padded_unrolled_text = padded(unrolled_text);
+        let padded_unified_bin = padded(unified_bin);
+        let padded_unified_text = padded(unified_text);
+
+        let base_setup = compute_setup_for_machine_configuration::<
+            IMStandardIsaConfigWithUnsignedMulDiv,
+        >(&padded_base_bin, &padded_base_text);
+        let unrolled_setup = compute_setup_for_machine_configuration::<
+            IWithoutByteAccessIsaConfigWithDelegation,
+        >(&padded_unrolled_bin, &padded_unrolled_text);
+        let unified_setup = compute_unified_setup_for_machine_configuration::<
+            IWithoutByteAccessIsaConfigWithDelegation,
+        >(&padded_unified_bin, &padded_unified_text);
+
+        let (h1, p1) = UnrolledProgramSetup::begin_recursion_chain(&base_setup.end_params);
+        let (h2, p2) =
+            UnrolledProgramSetup::continue_recursion_chain(&unrolled_setup.end_params, &h1, &p1);
+        let (aux_params, _) =
+            UnrolledProgramSetup::continue_recursion_chain(&unified_setup.end_params, &h2, &p2);
+
+        Self {
+            end_params: unified_setup.end_params,
+            aux_params,
+        }
     }
 
-    pub fn from_binary(binary: &[u8], text: &[u8]) -> Self {
+    /// Build from the base program only; pulls the unrolled / unified
+    /// verifier binaries from `execution_utils::verifier_binaries`.
+    pub fn from_base_binary(base_bin: &[u8], base_text: &[u8]) -> Self {
+        let security = crate::active_security::ACTIVE_SECURITY_MODEL;
+        let load = |layer, artifact| {
+            execution_utils::verifier_binaries::recursion_artifact(security, layer, artifact)
+        };
+        Self::from_binaries(
+            base_bin,
+            base_text,
+            load(RecursionLayer::Unrolled, RecursionArtifact::Bin),
+            load(RecursionLayer::Unrolled, RecursionArtifact::Txt),
+            load(RecursionLayer::Unified, RecursionArtifact::Bin),
+            load(RecursionLayer::Unified, RecursionArtifact::Txt),
+        )
+    }
+}
+
+impl Default for BinaryCommitment {
+    /// `end_params` from the default unified-recursion verifier binary, with a
+    /// zero `aux_params`. Use when `check_aux_params` is disabled — the base
+    /// program bin/text is then unnecessary (`aux_params` is never consumed).
+    fn default() -> Self {
         use execution_utils::unified_circuit::compute_unified_setup_for_machine_configuration;
         use risc_verifier::prover::riscv_transpiler::cycle::IWithoutByteAccessIsaConfigWithDelegation;
 
-        let mut padded_binary = binary.to_vec();
-        setups::pad_bytecode_bytes_for_proving(&mut padded_binary);
-        let mut padded_text = text.to_vec();
-        setups::pad_bytecode_bytes_for_proving(&mut padded_text);
+        let security = crate::active_security::ACTIVE_SECURITY_MODEL;
+        let load = |artifact| {
+            execution_utils::verifier_binaries::recursion_artifact(
+                security,
+                RecursionLayer::Unified,
+                artifact,
+            )
+        };
 
-        let setup = compute_unified_setup_for_machine_configuration::<
+        let mut unified_bin = load(RecursionArtifact::Bin).to_vec();
+        setups::pad_bytecode_bytes_for_proving(&mut unified_bin);
+        let mut unified_text = load(RecursionArtifact::Txt).to_vec();
+        setups::pad_bytecode_bytes_for_proving(&mut unified_text);
+
+        let unified_setup = compute_unified_setup_for_machine_configuration::<
             IWithoutByteAccessIsaConfigWithDelegation,
-        >(&padded_binary, &padded_text);
+        >(&unified_bin, &unified_text);
 
         Self {
-            end_params: setup.end_params,
+            end_params: unified_setup.end_params,
+            aux_params: [0u32; 8],
         }
     }
 }
@@ -122,7 +192,8 @@ impl BinaryCommitment {
 impl RiscWrapperWitness {
     pub fn from_full_proof(
         full_proof: UnrolledProgramProof,
-        _binary_commitment: &BinaryCommitment,
+        binary_commitment: &BinaryCommitment,
+        check_aux_params: bool,
     ) -> Self {
         let UnrolledProgramProof {
             final_pc,
@@ -131,23 +202,29 @@ impl RiscWrapperWitness {
             inits_and_teardowns_proofs,
             delegation_proofs,
             register_final_values,
-            recursion_chain_preimage: _,
-            recursion_chain_hash: _,
+            recursion_chain_preimage,
+            recursion_chain_hash,
             pow_challenge,
         } = full_proof;
 
-        // TODO: check final_pc, recursion_chain_preimage, recursion_chain_hash
+        dbg!(binary_commitment);
+        dbg!(register_final_values);
 
-        // assert!(recursion_chain_preimage.is_some());
-        // let mut result_hasher = Blake2sBufferingTranscript::new();
-        // result_hasher.absorb(&recursion_chain_preimage.unwrap());
+        // TODO: check final_pc
+        use risc_verifier::prover::transcript::Blake2sBufferingTranscript;
 
-        // assert!(recursion_chain_hash.is_some());
-        // assert_eq!(
-        //     recursion_chain_hash.unwrap(),
-        //     result_hasher.finalize_reset().0
-        // );
-        // assert_eq!(recursion_chain_hash.unwrap(), binary_commitment.aux_params);
+        assert!(recursion_chain_preimage.is_some());
+        let mut result_hasher = Blake2sBufferingTranscript::new();
+        result_hasher.absorb(&recursion_chain_preimage.unwrap());
+
+        assert!(recursion_chain_hash.is_some());
+        assert_eq!(
+            recursion_chain_hash.unwrap(),
+            result_hasher.finalize_reset().0
+        );
+        if check_aux_params {
+            assert_eq!(recursion_chain_hash.unwrap(), binary_commitment.aux_params);
+        }
 
         let (final_timestamp_low, final_timestamp_high) =
             risc_verifier::prover::cs::definitions::split_timestamp(final_timestamp);
@@ -208,6 +285,7 @@ impl RiscWrapperWitness {
 pub struct RiscWrapperCircuit<F: SmallField, V: CircuitLeafInclusionVerifier<F>> {
     pub witness: Option<RiscWrapperWitness>,
     pub binary_commitment: BinaryCommitment,
+    pub check_aux_params: bool,
     _phantom: std::marker::PhantomData<(F, V)>,
 }
 
@@ -321,6 +399,7 @@ impl<F: SmallField, V: CircuitLeafInclusionVerifier<F>> RiscWrapperCircuit<F, V>
         witness: Option<RiscWrapperWitness>,
         verify_inner_proof: bool,
         binary_commitment: BinaryCommitment,
+        check_aux_params: bool,
     ) -> Self {
         if verify_inner_proof {
             if let Some(witness) = &witness {
@@ -338,6 +417,7 @@ impl<F: SmallField, V: CircuitLeafInclusionVerifier<F>> RiscWrapperCircuit<F, V>
         Self {
             witness,
             binary_commitment,
+            check_aux_params,
             _phantom: std::marker::PhantomData,
         }
     }
@@ -480,7 +560,12 @@ impl<F: SmallField, V: CircuitLeafInclusionVerifier<F>> RiscWrapperCircuit<F, V>
             &self.binary_commitment,
         );
 
-        prepare_and_allocate_public_inputs(cs, final_registers_state);
+        prepare_and_allocate_public_inputs(
+            cs,
+            final_registers_state,
+            self.check_aux_params,
+            &self.binary_commitment,
+        );
     }
 }
 
@@ -997,6 +1082,8 @@ pub(crate) fn check_proof_state<F: SmallField, CS: ConstraintSystem<F>>(
 fn prepare_and_allocate_public_inputs<F: SmallField, CS: ConstraintSystem<F>>(
     cs: &mut CS,
     final_registers_state: [UInt32<F>; NUM_REGISTERS * 3],
+    check_aux_params: bool,
+    binary_commitment: &BinaryCommitment,
 ) {
     // We hash needed data for the L1 verifier
     // registers 10-17 - those are the output of the base program
@@ -1010,10 +1097,26 @@ fn prepare_and_allocate_public_inputs<F: SmallField, CS: ConstraintSystem<F>>(
         .collect();
 
     use boojum::gadgets::keccak256;
+    // Always run keccak so we don't need to configure gates based on check_aux_params flag
     let input_keccak_hash = keccak256::keccak256(cs, &flattened_public_input);
+
+    let public_input_source: Vec<_> = if check_aux_params {
+        // Pack registers 10..18 directly (no keccak)
+        // In the end 28 of 32 bytes are consumed
+        // This is intentional, we assume these registers to contain a keccak hash
+        final_registers_state
+            .chunks(3)
+            .skip(10)
+            .take(8)
+            .flat_map(|chunk| chunk[0].decompose_into_bytes(cs))
+            .collect()
+    } else {
+        input_keccak_hash.to_vec()
+    };
+
     let take_by = F::CAPACITY_BITS / 8;
 
-    for chunk in input_keccak_hash
+    for chunk in public_input_source
         .chunks_exact(take_by)
         .take(NUM_RISC_WRAPPER_PUBLIC_INPUTS)
     {
@@ -1026,6 +1129,16 @@ fn prepare_and_allocate_public_inputs<F: SmallField, CS: ConstraintSystem<F>>(
         use boojum::cs::gates::PublicInputGate;
         let gate = PublicInputGate::new(as_num.get_variable());
         gate.add_to_cs(cs);
+    }
+
+    if check_aux_params {
+        // Constrain registers 18..26 (8 values) to equal the aux_params constant
+        // baked into the binary commitment. Mirrors the end_params check above.
+        for i in 0..8 {
+            let expected = UInt32::allocate_constant(cs, binary_commitment.aux_params[i]);
+            let actual = final_registers_state[(18 + i) * 3];
+            Num::enforce_equal(cs, &expected.into_num(), &actual.into_num());
+        }
     }
 }
 

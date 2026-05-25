@@ -98,9 +98,16 @@ fn try_synthesize_wrapper_with_params(
 
         let mut owned_cs = builder.build(1 << 27);
 
-        let binary_commitment = BinaryCommitment::from_default_binary();
+        use std::io::Read;
+        let mut binary = vec![];
+        let mut file = std::fs::File::open(crate::tests::RISC_PROGRAM_BIN_PATH).unwrap();
+        file.read_to_end(&mut binary).unwrap();
+        let mut text = vec![];
+        let mut file = std::fs::File::open(crate::tests::RISC_PROGRAM_TEXT_PATH).unwrap();
+        file.read_to_end(&mut text).unwrap();
+        let binary_commitment = BinaryCommitment::from_base_binary(&binary, &text);
         use crate::RiscWrapper;
-        let circuit = RiscWrapper::new(None, false, binary_commitment);
+        let circuit = RiscWrapper::new(None, false, binary_commitment, false);
         circuit.add_tables(&mut owned_cs);
         circuit.synthesize_into_cs(&mut owned_cs);
         owned_cs.pad_and_shrink();

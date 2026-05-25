@@ -30,11 +30,11 @@ enum Commands {
         #[arg(long)]
         proof: PathBuf,
 
-        /// Path to the RISC-V .bin file (omit to use default recursion verifier)
+        /// Path to the base program .bin file (required with --check-aux-params)
         #[arg(long, requires = "text")]
         bin: Option<PathBuf>,
 
-        /// Path to the RISC-V .text file (omit to use default recursion verifier)
+        /// Path to the base program .text file (required with --check-aux-params)
         #[arg(long, requires = "bin")]
         text: Option<PathBuf>,
 
@@ -53,6 +53,12 @@ enum Commands {
         /// Save intermediate proofs (risc wrapper, compression) alongside final SNARK
         #[arg(long)]
         save_intermediates: bool,
+
+        /// Pack registers 10..18 directly as public inputs and constrain
+        /// registers 18..26 to `BinaryCommitment::aux_params` (instead of
+        /// hashing registers 10..26 into the public input).
+        #[arg(long)]
+        check_aux_params: bool,
     },
 
     /// Phase 1: Wrap FRI proof into a boojum STARK proof
@@ -61,17 +67,23 @@ enum Commands {
         #[arg(long)]
         proof: PathBuf,
 
-        /// Path to the RISC-V .bin file (omit to use default recursion verifier)
+        /// Path to the base program .bin file (required with --check-aux-params)
         #[arg(long, requires = "text")]
         bin: Option<PathBuf>,
 
-        /// Path to the RISC-V .text file (omit to use default recursion verifier)
+        /// Path to the base program .text file (required with --check-aux-params)
         #[arg(long, requires = "bin")]
         text: Option<PathBuf>,
 
         /// Output directory
         #[arg(short, long)]
         output_dir: PathBuf,
+
+        /// Pack registers 10..18 directly as public inputs and constrain
+        /// registers 18..26 to `BinaryCommitment::aux_params` (instead of
+        /// hashing registers 10..26 into the public input).
+        #[arg(long)]
+        check_aux_params: bool,
     },
 
     /// Phase 2: Compress a STARK wrapper proof (Poseidon2-based re-hashing)
@@ -84,17 +96,21 @@ enum Commands {
         #[arg(long)]
         risc_wrapper_vk: Option<PathBuf>,
 
-        /// Path to the RISC-V .bin file (omit to use default recursion verifier)
+        /// Path to the base program .bin file (required with --check-aux-params)
         #[arg(long, requires = "text")]
         bin: Option<PathBuf>,
 
-        /// Path to the RISC-V .text file (omit to use default recursion verifier)
+        /// Path to the base program .text file (required with --check-aux-params)
         #[arg(long, requires = "bin")]
         text: Option<PathBuf>,
 
         /// Output directory
         #[arg(short, long)]
         output_dir: PathBuf,
+
+        /// Must match the value used to produce the phase-1 proof / VK chain.
+        #[arg(long)]
+        check_aux_params: bool,
     },
 
     /// Phase 3: Wrap compressed STARK proof into a BN256 SNARK
@@ -107,11 +123,11 @@ enum Commands {
         #[arg(long)]
         compression_vk: Option<PathBuf>,
 
-        /// Path to the RISC-V .bin file (omit to use default recursion verifier)
+        /// Path to the base program .bin file (required with --check-aux-params)
         #[arg(long, requires = "text")]
         bin: Option<PathBuf>,
 
-        /// Path to the RISC-V .text file (omit to use default recursion verifier)
+        /// Path to the base program .text file (required with --check-aux-params)
         #[arg(long, requires = "bin")]
         text: Option<PathBuf>,
 
@@ -126,6 +142,10 @@ enum Commands {
         /// Enable zero-knowledge padding in SNARK proving
         #[arg(long)]
         use_zk: bool,
+
+        /// Must match the value used to produce the phase-1 proof / VK chain.
+        #[arg(long)]
+        check_aux_params: bool,
     },
 
     /// Generate verification keys without a proof (for deployment preparation)
@@ -134,17 +154,37 @@ enum Commands {
         #[arg(short, long)]
         output_dir: PathBuf,
 
-        /// Path to RISC-V .bin file (omit to use default recursion verifier)
+        /// Path to the base program .bin file (required with --check-aux-params)
         #[arg(long, requires = "text")]
         bin: Option<PathBuf>,
 
-        /// Path to RISC-V .text file (omit to use default recursion verifier)
+        /// Path to the base program .text file (required with --check-aux-params)
         #[arg(long, requires = "bin")]
         text: Option<PathBuf>,
 
         /// Path to trusted setup (CRS) file. If omitted, uses fake crs_42.
         #[arg(long)]
         trusted_setup: Option<PathBuf>,
+
+        /// Pack registers 10..18 directly as public inputs and constrain
+        /// registers 18..26 to `BinaryCommitment::aux_params`.
+        #[arg(long)]
+        check_aux_params: bool,
+    },
+
+    /// Compute the 3-layer recursion-chain hash (aux_params) for a base program
+    ComputeAuxParams {
+        /// Path to the base program .bin file
+        #[arg(long, requires = "text")]
+        bin: PathBuf,
+
+        /// Path to the base program .text file
+        #[arg(long, requires = "bin")]
+        text: PathBuf,
+
+        /// Optional path to write aux_params as a JSON [u32; 8] array
+        #[arg(long)]
+        output: Option<PathBuf>,
     },
 
     /// Compute the Keccak256 hash of a SNARK verification key
@@ -215,6 +255,7 @@ fn main() -> anyhow::Result<()> {
             trusted_setup,
             use_zk,
             save_intermediates,
+            check_aux_params,
         } => interface::cmd_prove_all(
             proof,
             bin,
@@ -223,6 +264,7 @@ fn main() -> anyhow::Result<()> {
             trusted_setup,
             use_zk,
             save_intermediates,
+            check_aux_params,
             cli.threads,
         ),
 
@@ -231,7 +273,15 @@ fn main() -> anyhow::Result<()> {
             bin,
             text,
             output_dir,
-        } => interface::cmd_prove_risc_wrapper(proof, bin, text, output_dir, cli.threads),
+            check_aux_params,
+        } => interface::cmd_prove_risc_wrapper(
+            proof,
+            bin,
+            text,
+            output_dir,
+            check_aux_params,
+            cli.threads,
+        ),
 
         Commands::ProveCompression {
             risc_wrapper_proof,
@@ -239,12 +289,14 @@ fn main() -> anyhow::Result<()> {
             bin,
             text,
             output_dir,
+            check_aux_params,
         } => interface::cmd_prove_compression(
             risc_wrapper_proof,
             risc_wrapper_vk,
             bin,
             text,
             output_dir,
+            check_aux_params,
             cli.threads,
         ),
 
@@ -256,6 +308,7 @@ fn main() -> anyhow::Result<()> {
             output_dir,
             trusted_setup,
             use_zk,
+            check_aux_params,
         } => interface::cmd_prove_snark(
             compression_proof,
             compression_vk,
@@ -264,6 +317,7 @@ fn main() -> anyhow::Result<()> {
             output_dir,
             trusted_setup,
             use_zk,
+            check_aux_params,
             cli.threads,
         ),
 
@@ -272,7 +326,19 @@ fn main() -> anyhow::Result<()> {
             bin,
             text,
             trusted_setup,
-        } => interface::cmd_generate_vk(output_dir, bin, text, trusted_setup, cli.threads),
+            check_aux_params,
+        } => interface::cmd_generate_vk(
+            output_dir,
+            bin,
+            text,
+            trusted_setup,
+            check_aux_params,
+            cli.threads,
+        ),
+
+        Commands::ComputeAuxParams { bin, text, output } => {
+            interface::cmd_compute_aux_params(bin, text, output)
+        }
 
         Commands::VkHash { vk } => interface::cmd_vk_hash(vk),
 

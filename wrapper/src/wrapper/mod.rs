@@ -34,6 +34,10 @@ pub struct SnarkWrapperConfig {
     pub text: Option<PathBuf>,
     pub trusted_setup: Option<PathBuf>,
     pub threads: Option<usize>,
+    /// When enabled, the RISC wrapper circuit packs registers 10..18 directly as
+    /// public inputs (no keccak) and constrains registers 18..26 to equal
+    /// `BinaryCommitment::aux_params` instead of folding them into the digest.
+    pub check_aux_params: bool,
     /// Trusted phase-1 VK to be reused instead of deriving it from the binary.
     pub risc_wrapper_vk: Option<RiscWrapperVK>,
     /// Trusted phase-2 VK to be reused instead of deriving it from the phase-1 VK.
@@ -81,16 +85,24 @@ impl SnarkWrapper {
         program_proof: UnrolledProgramProof,
     ) -> anyhow::Result<RiscWrapperProof> {
         let binary_commitment = self.binary_commitment()?;
+        let check_aux_params = self.config.check_aux_params;
         let start = Instant::now();
-        let witness = RiscWrapperWitness::from_full_proof(program_proof, &binary_commitment);
+        let witness = RiscWrapperWitness::from_full_proof(
+            program_proof,
+            &binary_commitment,
+            check_aux_params,
+        );
         tracing::info!(
             "Phase 1 witness generation took {:.3}s",
             start.elapsed().as_secs_f64()
         );
 
-        let proof = self
-            .backend
-            .prove_risc_wrapper(witness, binary_commitment, &self.worker)?;
+        let proof = self.backend.prove_risc_wrapper(
+            witness,
+            binary_commitment,
+            check_aux_params,
+            &self.worker,
+        )?;
         let start = Instant::now();
         if !self
             .verify_risc_wrapper(&proof)
@@ -131,9 +143,10 @@ impl SnarkWrapper {
         }
 
         let binary_commitment = self.binary_commitment()?;
+        let check_aux_params = self.config.check_aux_params;
 
         self.backend
-            .risc_wrapper_vk(binary_commitment, &self.worker)
+            .risc_wrapper_vk(binary_commitment, check_aux_params, &self.worker)
     }
 
     /// Proves phase 2 and verifies the generated compression proof before returning it.
@@ -271,7 +284,11 @@ impl SnarkWrapper {
         }
 
         let start = Instant::now();
-        let binary_commitment = load_binary_commitment(&self.config.bin, &self.config.text)?;
+        let binary_commitment = load_binary_commitment(
+            &self.config.bin,
+            &self.config.text,
+            self.config.check_aux_params,
+        )?;
         tracing::info!(
             "Binary commitment loading took {:.3}s",
             start.elapsed().as_secs_f64()
@@ -313,7 +330,14 @@ fn validate_trusted_setup_file(trusted_setup: &Option<PathBuf>) -> anyhow::Resul
 fn load_binary_commitment(
     bin: &Option<PathBuf>,
     text: &Option<PathBuf>,
+    check_aux_params: bool,
 ) -> anyhow::Result<BinaryCommitment> {
+    if !check_aux_params {
+        // `aux_params` is never consumed in this mode; `end_params` comes solely
+        // from the fixed unified verifier binary, so the base program is not needed.
+        return Ok(BinaryCommitment::default());
+    }
+
     match (bin, text) {
         (Some(bin_path), Some(text_path)) => {
             let binary = std::fs::read(bin_path).with_context(|| {
@@ -329,9 +353,13 @@ fn load_binary_commitment(
                 )
             })?;
 
-            Ok(BinaryCommitment::from_binary(&binary, &text_data))
+            Ok(BinaryCommitment::from_base_binary(&binary, &text_data))
         }
-        (None, None) => Ok(BinaryCommitment::from_default_binary()),
+        (None, None) => {
+            anyhow::bail!(
+                "--bin and --text are required when --check-aux-params is set (path to the base program)"
+            )
+        }
         _ => anyhow::bail!("Both --bin and --text must be provided together"),
     }
 }

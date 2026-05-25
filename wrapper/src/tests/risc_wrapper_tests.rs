@@ -7,7 +7,7 @@ pub(crate) fn risc_wrapper_full_test() {
     use std::io::Read;
     let worker = boojum::worker::Worker::new_with_num_threads(32);
 
-    let binary_commitment = if cfg!(feature = "security_80") {
+    let binary_commitment = {
         let mut binary = vec![];
         let mut file = std::fs::File::open(RISC_PROGRAM_BIN_PATH).unwrap();
         file.read_to_end(&mut binary).unwrap();
@@ -16,12 +16,7 @@ pub(crate) fn risc_wrapper_full_test() {
         let mut file = std::fs::File::open(RISC_PROGRAM_TEXT_PATH).unwrap();
         file.read_to_end(&mut text).unwrap();
 
-        // We use a prove of hashed fibonacci for testing
-        BinaryCommitment::from_binary(&binary, &text)
-    } else if cfg!(feature = "security_100") {
-        BinaryCommitment::from_default_binary()
-    } else {
-        panic!("Please specify a security level feature");
+        BinaryCommitment::from_base_binary(&binary, &text)
     };
     dbg!(binary_commitment);
 
@@ -29,7 +24,7 @@ pub(crate) fn risc_wrapper_full_test() {
         deserialize_from_bin_file(RISC_PROOF_PATH).unwrap();
 
     let risc_wrapper_witness =
-        RiscWrapperWitness::from_full_proof(program_proof, &binary_commitment);
+        RiscWrapperWitness::from_full_proof(program_proof, &binary_commitment, false);
 
     #[cfg(not(feature = "gpu"))]
     let (risc_wrapper_proof, risc_wrapper_vk) = {
@@ -41,7 +36,7 @@ pub(crate) fn risc_wrapper_full_test() {
             setup_tree,
             vars_hint,
             witness_hints,
-        ) = crate::get_risc_wrapper_setup(&worker, binary_commitment.clone());
+        ) = crate::get_risc_wrapper_setup(&worker, binary_commitment.clone(), false);
 
         let risc_wrapper_proof = crate::prove_risc_wrapper(
             risc_wrapper_witness,
@@ -54,6 +49,7 @@ pub(crate) fn risc_wrapper_full_test() {
             &witness_hints,
             &worker,
             binary_commitment.clone(),
+            false,
         );
 
         let is_valid = crate::verify_risc_wrapper_proof(&risc_wrapper_proof, &risc_wrapper_vk);
@@ -66,7 +62,11 @@ pub(crate) fn risc_wrapper_full_test() {
     let (risc_wrapper_proof, risc_wrapper_vk) = {
         let _prover_context = shivini::ProverContext::create().unwrap();
         let (gpu_setup, gpu_vk, finalization_hint) =
-            crate::gpu::risc_wrapper::get_risc_wrapper_setup(&worker, binary_commitment.clone());
+            crate::gpu::risc_wrapper::get_risc_wrapper_setup(
+                &worker,
+                binary_commitment.clone(),
+                false,
+            );
 
         let risc_wrapper_proof = crate::gpu::risc_wrapper::prove_risc_wrapper(
             risc_wrapper_witness,
@@ -75,6 +75,7 @@ pub(crate) fn risc_wrapper_full_test() {
             &gpu_vk,
             &worker,
             binary_commitment.clone(),
+            false,
         );
 
         let is_valid = crate::verify_risc_wrapper_proof(&risc_wrapper_proof, &gpu_vk);
@@ -89,11 +90,20 @@ pub(crate) fn risc_wrapper_full_test() {
 
 #[test]
 pub(crate) fn risc_wrapper_setup_test() {
+    use std::io::Read;
     let worker = boojum::worker::Worker::new();
-    let binary_commitment = BinaryCommitment::from_default_binary();
+
+    let mut binary = vec![];
+    let mut file = std::fs::File::open(RISC_PROGRAM_BIN_PATH).unwrap();
+    file.read_to_end(&mut binary).unwrap();
+    let mut text = vec![];
+    let mut file = std::fs::File::open(RISC_PROGRAM_TEXT_PATH).unwrap();
+    file.read_to_end(&mut text).unwrap();
+
+    let binary_commitment = BinaryCommitment::from_base_binary(&binary, &text);
 
     let (_finalization_hint, _setup_base, _setup, vk, _setup_tree, _vars_hint, _witness_hints) =
-        crate::get_risc_wrapper_setup(&worker, binary_commitment);
+        crate::get_risc_wrapper_setup(&worker, binary_commitment, false);
 
     serialize_to_bin_file(&vk, RISC_WRAPPER_VK_PATH).unwrap();
 }
@@ -203,14 +213,22 @@ fn test_verifier_inner_function() {
     // let path = "testing_data/risc_proof_80sb.json";
     let program_proof: execution_utils::unrolled::UnrolledProgramProof =
         crate::deserialize_from_file(path).unwrap();
-    let binary_commitment = BinaryCommitment::from_default_binary();
+
+    use std::io::Read;
+    let mut binary = vec![];
+    let mut file = std::fs::File::open(RISC_PROGRAM_BIN_PATH).unwrap();
+    file.read_to_end(&mut binary).unwrap();
+    let mut text = vec![];
+    let mut file = std::fs::File::open(RISC_PROGRAM_TEXT_PATH).unwrap();
+    file.read_to_end(&mut text).unwrap();
+    let binary_commitment = BinaryCommitment::from_base_binary(&binary, &text);
 
     let risc_wrapper_witness =
-        RiscWrapperWitness::from_full_proof(program_proof, &binary_commitment);
+        RiscWrapperWitness::from_full_proof(program_proof, &binary_commitment, false);
 
     use crate::RiscWrapper;
 
-    let circuit = RiscWrapper::new(Some(risc_wrapper_witness), true, binary_commitment);
+    let circuit = RiscWrapper::new(Some(risc_wrapper_witness), true, binary_commitment, false);
 
     circuit.synthesize_into_cs(cs);
 
