@@ -7,6 +7,7 @@ use shivini::cs::GpuSetup;
 use shivini::{ProverContext, ProverContextConfig};
 
 use crate::circuits::{BinaryCommitment, RiscWrapperWitness};
+use crate::gpu::context::apply_env_overrides;
 use crate::{
     BoojumWorker, CompressionProof, CompressionTreeHasher, CompressionVK, RiscWrapperProof,
     RiscWrapperTreeHasher, RiscWrapperVK, SnarkWrapperProof, SnarkWrapperVK,
@@ -334,8 +335,9 @@ impl BackendState {
             // Both STARK phases use shivini's process-global context. Use the
             // smallest domain required by phase 2 so one context can serve phase
             // 1 and phase 2 for a single FRI -> SNARK pipeline iteration.
-            let config =
-                ProverContextConfig::default().with_smallest_supported_domain_size(1 << 15);
+            let config = apply_env_overrides(
+                ProverContextConfig::default().with_smallest_supported_domain_size(1 << 15),
+            );
             self.stark_context = Some(
                 ProverContext::create_with_config(config)
                     .context("while attempting to initialize the STARK GPU prover context")?,
