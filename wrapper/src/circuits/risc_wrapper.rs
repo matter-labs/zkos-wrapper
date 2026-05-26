@@ -207,22 +207,20 @@ impl RiscWrapperWitness {
             pow_challenge,
         } = full_proof;
 
-        dbg!(binary_commitment);
-        dbg!(register_final_values);
-
         // TODO: check final_pc
-        use risc_verifier::prover::transcript::Blake2sBufferingTranscript;
 
-        assert!(recursion_chain_preimage.is_some());
-        let mut result_hasher = Blake2sBufferingTranscript::new();
-        result_hasher.absorb(&recursion_chain_preimage.unwrap());
-
-        assert!(recursion_chain_hash.is_some());
-        assert_eq!(
-            recursion_chain_hash.unwrap(),
-            result_hasher.finalize_reset().0
-        );
         if check_aux_params {
+            use risc_verifier::prover::transcript::Blake2sBufferingTranscript;
+
+            assert!(recursion_chain_preimage.is_some());
+            let mut result_hasher = Blake2sBufferingTranscript::new();
+            result_hasher.absorb(&recursion_chain_preimage.unwrap());
+
+            assert!(recursion_chain_hash.is_some());
+            assert_eq!(
+                recursion_chain_hash.unwrap(),
+                result_hasher.finalize_reset().0
+            );
             assert_eq!(recursion_chain_hash.unwrap(), binary_commitment.aux_params);
         }
 

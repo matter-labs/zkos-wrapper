@@ -2,22 +2,40 @@ use crate::circuits::{BinaryCommitment, RiscWrapperWitness};
 
 use super::*;
 
+fn binary_commitment_for_testing() -> BinaryCommitment {
+    use std::io::Read;
+
+    let mut binary = vec![];
+    let mut file = std::fs::File::open(RISC_PROGRAM_BIN_PATH).unwrap();
+    file.read_to_end(&mut binary).unwrap();
+
+    let mut text = vec![];
+    let mut file = std::fs::File::open(RISC_PROGRAM_TEXT_PATH).unwrap();
+    file.read_to_end(&mut text).unwrap();
+
+    let mut padded_binary = binary.to_vec();
+    setups::pad_bytecode_bytes_for_proving(&mut padded_binary);
+    let mut padded_text = text.to_vec();
+    setups::pad_bytecode_bytes_for_proving(&mut padded_text);
+
+    use execution_utils::unified_circuit::compute_unified_setup_for_machine_configuration;
+    use risc_verifier::prover::riscv_transpiler::cycle::IWithoutByteAccessIsaConfigWithDelegation;
+
+    let setup = compute_unified_setup_for_machine_configuration::<
+        IWithoutByteAccessIsaConfigWithDelegation,
+    >(&padded_binary, &padded_text);
+
+    BinaryCommitment {
+        end_params: setup.end_params,
+        aux_params: [0; 8],
+    }
+}
+
 #[test]
 pub(crate) fn risc_wrapper_full_test() {
-    use std::io::Read;
     let worker = boojum::worker::Worker::new_with_num_threads(32);
 
-    let binary_commitment = {
-        let mut binary = vec![];
-        let mut file = std::fs::File::open(RISC_PROGRAM_BIN_PATH).unwrap();
-        file.read_to_end(&mut binary).unwrap();
-
-        let mut text = vec![];
-        let mut file = std::fs::File::open(RISC_PROGRAM_TEXT_PATH).unwrap();
-        file.read_to_end(&mut text).unwrap();
-
-        BinaryCommitment::from_base_binary(&binary, &text)
-    };
+    let binary_commitment = binary_commitment_for_testing();
     dbg!(binary_commitment);
 
     let program_proof: execution_utils::unrolled::UnrolledProgramProof =
@@ -93,14 +111,7 @@ pub(crate) fn risc_wrapper_setup_test() {
     use std::io::Read;
     let worker = boojum::worker::Worker::new();
 
-    let mut binary = vec![];
-    let mut file = std::fs::File::open(RISC_PROGRAM_BIN_PATH).unwrap();
-    file.read_to_end(&mut binary).unwrap();
-    let mut text = vec![];
-    let mut file = std::fs::File::open(RISC_PROGRAM_TEXT_PATH).unwrap();
-    file.read_to_end(&mut text).unwrap();
-
-    let binary_commitment = BinaryCommitment::from_base_binary(&binary, &text);
+    let binary_commitment = binary_commitment_for_testing();
 
     let (_finalization_hint, _setup_base, _setup, vk, _setup_tree, _vars_hint, _witness_hints) =
         crate::get_risc_wrapper_setup(&worker, binary_commitment, false);
@@ -214,14 +225,7 @@ fn test_verifier_inner_function() {
     let program_proof: execution_utils::unrolled::UnrolledProgramProof =
         crate::deserialize_from_file(path).unwrap();
 
-    use std::io::Read;
-    let mut binary = vec![];
-    let mut file = std::fs::File::open(RISC_PROGRAM_BIN_PATH).unwrap();
-    file.read_to_end(&mut binary).unwrap();
-    let mut text = vec![];
-    let mut file = std::fs::File::open(RISC_PROGRAM_TEXT_PATH).unwrap();
-    file.read_to_end(&mut text).unwrap();
-    let binary_commitment = BinaryCommitment::from_base_binary(&binary, &text);
+    let binary_commitment = binary_commitment_for_testing();
 
     let risc_wrapper_witness =
         RiscWrapperWitness::from_full_proof(program_proof, &binary_commitment, false);
