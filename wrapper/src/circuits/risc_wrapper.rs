@@ -56,6 +56,18 @@ use execution_utils::{ProgramProof, RecursionStrategy, generate_constants_for_bi
 
 const NUM_RISC_WRAPPER_PUBLIC_INPUTS: usize = 4;
 
+#[cfg(feature = "wrap_with_reduced_log_23")]
+fn expected_reduced_log_23_blake_delegation_type() -> u32 {
+    let parameters = execution_utils::RECURSION_LAYER_CIRCUITS_VERIFICATION_PARAMETERS;
+    assert_eq!(
+        parameters.len(),
+        1,
+        "Expected exactly one reduced-log delegation circuit parameter set",
+    );
+
+    parameters[0].0
+}
+
 pub struct RiscWrapperWitness {
     pub final_registers_state: [u32; NUM_REGISTERS * 3],
     pub proof: RiscProof,
@@ -125,16 +137,39 @@ impl RiscWrapperWitness {
 
         let base_proof = base_layer_proofs.into_iter().next().unwrap();
 
-        let mut dp_iter = delegation_proofs.iter();
-
         #[cfg(feature = "wrap_with_reduced_log_23")]
         let blake_proof = {
-            let blake_proofs = dp_iter.next().unwrap();
-            assert!(blake_proofs.1.len() == 1, "Expected only one blake proof");
-            blake_proofs.1.into_iter().next().unwrap().clone()
+            let expected_delegation_type = expected_reduced_log_23_blake_delegation_type();
+            let blake_proofs = delegation_proofs
+                .get(&expected_delegation_type)
+                .unwrap_or_else(|| {
+                    panic!(
+                        "Missing reduced-log Blake delegation proof for type {}",
+                        expected_delegation_type
+                    )
+                });
+
+            assert_eq!(
+                blake_proofs.len(),
+                1,
+                "Expected exactly one reduced-log Blake delegation proof for type {}",
+                expected_delegation_type,
+            );
+            assert_eq!(
+                delegation_proofs.len(),
+                1,
+                "Unexpected reduced-log delegation proof layout: expected only type {}",
+                expected_delegation_type,
+            );
+
+            blake_proofs[0].clone()
         };
 
-        assert!(dp_iter.next().is_none(), "Too many delegation proofs");
+        #[cfg(feature = "wrap_final_machine")]
+        assert!(
+            delegation_proofs.is_empty(),
+            "Unexpected delegation proofs in final-machine mode"
+        );
 
         Self {
             final_registers_state: final_registers_state.try_into().unwrap(),
@@ -550,6 +585,40 @@ pub(crate) fn check_proof_state<F: SmallField, CS: ConstraintSystem<F>>(
     // Now delegation circuit
 
     if let Some(blake_state) = blake_state {
+        #[cfg(feature = "wrap_with_reduced_log_23")]
+        {
+            let expected_delegation_type = expected_reduced_log_23_blake_delegation_type();
+            let expected_delegation_type = UInt32::allocate_constant(cs, expected_delegation_type);
+            Num::enforce_equal(
+                cs,
+                &blake_state.delegation_type.into_num(),
+                &expected_delegation_type.into_num(),
+            );
+            Num::enforce_equal(cs, &blake_state.circuit_sequence.into_num(), &zero);
+
+            let expected_setup_caps =
+                <[WrappedMerkleTreeCap<F, TREE_CAP_SIZE>; NUM_COSETS]>::allocate_constant(
+                    cs,
+                    setups::all_parameters::ALL_DELEGATION_CIRCUITS_PARAMS[0].2,
+                );
+
+            for (actual_cap, expected_cap) in blake_state
+                .setup_caps
+                .iter()
+                .zip(expected_setup_caps.iter())
+            {
+                for (actual_chunk, expected_chunk) in
+                    actual_cap.cap.iter().zip(expected_cap.cap.iter())
+                {
+                    for (actual_word, expected_word) in
+                        actual_chunk.iter().zip(expected_chunk.iter())
+                    {
+                        Num::enforce_equal(cs, &actual_word.into_num(), &expected_word.into_num());
+                    }
+                }
+            }
+        }
+
         let mut buffer = [UInt32::zero(cs); BLAKE2S_BLOCK_SIZE_U32_WORDS];
         buffer[0] = blake_state.delegation_type;
         transcript.absorb(cs, &buffer);
@@ -670,10 +739,11 @@ pub fn produce_register_contribution_into_memory_accumulator_raw<
     // all registers are write 0 at timestamp 0
     for (reg_idx, value_and_timestamp) in register_final_data.chunks(3).enumerate() {
         let [value_low, value_high] = split_uint32_into_pair_mersenne(cs, &value_and_timestamp[0]);
+        // Timestamps were previously committed to transcript, so we need to ensure that values are reduced.
         let timestamp_low =
-            MersenneField::from_variable_checked(cs, value_and_timestamp[1].get_variable(), false);
+            MersenneField::from_variable_checked(cs, value_and_timestamp[1].get_variable(), true);
         let timestamp_high =
-            MersenneField::from_variable_checked(cs, value_and_timestamp[2].get_variable(), false);
+            MersenneField::from_variable_checked(cs, value_and_timestamp[2].get_variable(), true);
 
         let mut contribution = MersenneQuartic::one(cs); // is_register == 1, without challenge
         let mut t =

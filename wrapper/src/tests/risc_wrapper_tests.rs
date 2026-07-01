@@ -1,6 +1,33 @@
 use crate::circuits::{BinaryCommitment, RiscWrapperWitness};
+#[cfg(feature = "wrap_with_reduced_log_23")]
+use blake_verifier::verifier_common::ProofOutput as BlakeProofOutput;
+#[cfg(feature = "wrap_with_reduced_log_23")]
+use boojum::gadgets::traits::allocatable::CSAllocatable;
+#[cfg(feature = "wrap_with_reduced_log_23")]
+use risc_verifier::field::{Field, Mersenne31Quartic};
+#[cfg(feature = "wrap_with_reduced_log_23")]
+use risc_verifier::prover::definitions::{
+    ExternalChallenges, produce_register_contribution_into_memory_accumulator_raw,
+};
+#[cfg(feature = "wrap_with_reduced_log_23")]
+use risc_verifier::prover::risc_v_simulator::cycle::state::NUM_REGISTERS;
+#[cfg(feature = "wrap_with_reduced_log_23")]
+use risc_verifier::prover::transcript::Blake2sBufferingTranscript;
+#[cfg(feature = "wrap_with_reduced_log_23")]
+use std::panic::{AssertUnwindSafe, catch_unwind};
 
 use super::*;
+
+#[cfg(feature = "wrap_with_reduced_log_23")]
+type BaseProofOutputWitness =
+    ProofOutput<TREE_CAP_SIZE, NUM_COSETS, NUM_DELEGATION_CHALLENGES, NUM_AUX_BOUNDARY_VALUES>;
+#[cfg(feature = "wrap_with_reduced_log_23")]
+type BlakeProofOutputWitness = BlakeProofOutput<
+    { blake_verifier::concrete::size_constants::TREE_CAP_SIZE },
+    { blake_verifier::concrete::size_constants::NUM_COSETS },
+    { blake_verifier::concrete::size_constants::NUM_DELEGATION_CHALLENGES },
+    { blake_verifier::concrete::size_constants::NUM_AUX_BOUNDARY_VALUES },
+>;
 
 #[test]
 pub(crate) fn risc_wrapper_full_test() {
@@ -52,6 +79,287 @@ pub(crate) fn risc_wrapper_setup_test() {
         crate::get_risc_wrapper_setup(&worker, binary_commitment);
 
     serialize_to_file(&vk, RISC_WRAPPER_VK_PATH);
+}
+
+#[cfg(feature = "wrap_with_reduced_log_23")]
+fn expected_reduced_log_23_blake_delegation_parameters() -> (
+    u32,
+    &'static [risc_verifier::prover::definitions::MerkleTreeCap<TREE_CAP_SIZE>; NUM_COSETS],
+) {
+    let parameters = execution_utils::RECURSION_LAYER_CIRCUITS_VERIFICATION_PARAMETERS;
+    assert_eq!(
+        parameters.len(),
+        1,
+        "Expected exactly one reduced-log delegation circuit parameter set",
+    );
+
+    parameters[0]
+}
+
+#[cfg(feature = "wrap_with_reduced_log_23")]
+fn load_wrapper_constraint_fixture() -> (
+    BinaryCommitment,
+    [u32; NUM_REGISTERS * 3],
+    BaseProofOutputWitness,
+    ProofPublicInputs<NUM_STATE_ELEMENTS>,
+    BlakeProofOutputWitness,
+) {
+    let program_proof: execution_utils::ProgramProof = deserialize_from_file(RISC_PROOF_PATH);
+    let binary_commitment = BinaryCommitment::from_default_binary();
+    let witness = RiscWrapperWitness::from_full_proof(program_proof, &binary_commitment);
+    let final_registers_state = witness.final_registers_state;
+    let (proof_state, proof_input) =
+        crate::verify_risc_proof::<Blake2sForEverythingVerifier>(&witness.proof);
+    let (blake_state, _) = crate::blake2_inner_verifier::verify_blake_proof::<
+        Blake2sForEverythingVerifier,
+    >(&witness.blake_proof);
+
+    (
+        binary_commitment,
+        final_registers_state,
+        proof_state,
+        proof_input,
+        blake_state,
+    )
+}
+
+#[cfg(feature = "wrap_with_reduced_log_23")]
+fn wrapper_constraints_are_satisfied(
+    binary_commitment: BinaryCommitment,
+    final_registers_state_witness: [u32; NUM_REGISTERS * 3],
+    proof_state_witness: BaseProofOutputWitness,
+    public_input_witness: ProofPublicInputs<NUM_STATE_ELEMENTS>,
+    blake_state_witness: BlakeProofOutputWitness,
+) -> bool {
+    use boojum::config::DevCSConfig;
+    use boojum::cs::cs_builder::new_builder;
+    use boojum::cs::cs_builder_reference::CsReferenceImplementationBuilder;
+    use boojum::cs::gates::{PublicInputGate, ZeroCheckGate};
+    use boojum::cs::traits::circuit::CircuitBuilder;
+    use boojum::dag::CircuitResolverOpts;
+    use boojum::gadgets::num::Num;
+
+    catch_unwind(AssertUnwindSafe(|| {
+        let worker = boojum::worker::Worker::new_with_num_threads(4);
+        let circuit = crate::RiscWrapper::new(None, false, binary_commitment);
+        let (max_trace_len, num_vars) = circuit.size_hint();
+        let builder_impl = CsReferenceImplementationBuilder::<F, F, DevCSConfig>::new(
+            crate::RiscWrapper::geometry(),
+            max_trace_len.unwrap(),
+        );
+        let builder = new_builder::<_, F>(builder_impl);
+        let builder = crate::RiscWrapper::configure_builder(builder);
+        let mut owned_cs = builder.build(CircuitResolverOpts::new(num_vars.unwrap()));
+        circuit.add_tables(&mut owned_cs);
+
+        let cs = &mut owned_cs;
+        let final_registers_state =
+            <[UInt32<F>; NUM_REGISTERS * 3]>::allocate(cs, final_registers_state_witness);
+        let proof_state = crate::wrapper_utils::prover_structs::WrappedProofOutput::<
+            F,
+            TREE_CAP_SIZE,
+            NUM_COSETS,
+            NUM_DELEGATION_CHALLENGES,
+            NUM_AUX_BOUNDARY_VALUES,
+        >::allocate(cs, proof_state_witness);
+        let public_input = crate::wrapper_utils::prover_structs::WrappedProofPublicInputs::<
+            F,
+            NUM_STATE_ELEMENTS,
+        >::allocate(cs, public_input_witness);
+        let blake_state = Some(
+            crate::blake2_inner_verifier::WrappedBlakeProofOutput::<F>::allocate(
+                cs,
+                blake_state_witness,
+            ),
+        );
+
+        crate::check_proof_state(
+            cs,
+            final_registers_state,
+            &proof_state,
+            &public_input,
+            &blake_state,
+            &binary_commitment,
+        );
+
+        let zero = Num::zero(cs);
+        let _ = ZeroCheckGate::check_if_zero(cs, zero.get_variable());
+        PublicInputGate::new(zero.get_variable()).add_to_cs(cs);
+
+        let _ = cs;
+        owned_cs.pad_and_shrink();
+        let mut owned_cs = owned_cs.into_assembly::<Global>();
+        owned_cs.check_if_satisfied(&worker)
+    }))
+    .unwrap_or(false)
+}
+
+#[cfg(feature = "wrap_with_reduced_log_23")]
+fn retarget_blake_delegation_type_while_preserving_old_wrapper_relations(
+    final_registers_state: [u32; NUM_REGISTERS * 3],
+    proof_state: &mut BaseProofOutputWitness,
+    blake_state: &mut BlakeProofOutputWitness,
+) {
+    let (expected_delegation_type, _) = expected_reduced_log_23_blake_delegation_parameters();
+    blake_state.delegation_type = expected_delegation_type + 1;
+
+    let mut transcript = Blake2sBufferingTranscript::new();
+    transcript.absorb(&final_registers_state);
+    transcript.absorb(proof_state.setup_caps_flattened());
+    transcript.absorb(proof_state.memory_caps_flattened());
+
+    let mut delegation_header = [0u32; risc_verifier::blake2s_u32::BLAKE2S_BLOCK_SIZE_U32_WORDS];
+    delegation_header[0] = blake_state.delegation_type;
+    transcript.absorb(&delegation_header);
+    transcript.absorb(blake_state.memory_caps_flattened());
+
+    let memory_seed = transcript.finalize_reset();
+    let expected_challenges =
+        ExternalChallenges::draw_from_transcript_seed(memory_seed, NUM_DELEGATION_CHALLENGES > 0);
+
+    proof_state.memory_challenges = expected_challenges.memory_argument;
+    blake_state.memory_challenges = expected_challenges.memory_argument;
+    if let Some(expected_delegation_challenge) = expected_challenges.delegation_argument {
+        for challenge in proof_state.delegation_challenges.iter_mut() {
+            *challenge = expected_delegation_challenge;
+        }
+        for challenge in blake_state.delegation_challenges.iter_mut() {
+            *challenge = expected_delegation_challenge;
+        }
+    }
+
+    let register_final_data = core::array::from_fn(|idx| {
+        let offset = idx * 3;
+        (
+            final_registers_state[offset],
+            (
+                final_registers_state[offset + 1],
+                final_registers_state[offset + 2],
+            ),
+        )
+    });
+    let register_contribution = produce_register_contribution_into_memory_accumulator_raw(
+        &register_final_data,
+        proof_state
+            .memory_challenges
+            .memory_argument_linearization_challenges,
+        proof_state.memory_challenges.memory_argument_gamma,
+    );
+
+    proof_state.memory_grand_product_accumulator = register_contribution.inverse().unwrap();
+    blake_state.memory_grand_product_accumulator = Mersenne31Quartic::ONE;
+    proof_state.delegation_argument_accumulator =
+        [Mersenne31Quartic::ZERO; NUM_DELEGATION_CHALLENGES];
+    blake_state.delegation_argument_accumulator =
+        [Mersenne31Quartic::ZERO; NUM_DELEGATION_CHALLENGES];
+}
+
+#[cfg(feature = "wrap_with_reduced_log_23")]
+#[test]
+fn witness_construction_rejects_non_canonical_delegation_layout() {
+    let program_proof: execution_utils::ProgramProof = deserialize_from_file(RISC_PROOF_PATH);
+    let binary_commitment = BinaryCommitment::from_default_binary();
+    let (expected_delegation_type, _) = expected_reduced_log_23_blake_delegation_parameters();
+    let canonical_proofs = program_proof
+        .delegation_proofs
+        .get(&expected_delegation_type)
+        .unwrap()
+        .clone();
+    let wrong_delegation_type = expected_delegation_type + 1;
+
+    let mut wrong_key_proof = program_proof.clone();
+    wrong_key_proof.delegation_proofs.clear();
+    wrong_key_proof
+        .delegation_proofs
+        .insert(wrong_delegation_type, canonical_proofs.clone());
+    assert!(
+        catch_unwind(AssertUnwindSafe(|| {
+            RiscWrapperWitness::from_full_proof(wrong_key_proof, &binary_commitment);
+        }))
+        .is_err()
+    );
+
+    let mut extra_entry_proof = program_proof.clone();
+    extra_entry_proof
+        .delegation_proofs
+        .insert(wrong_delegation_type, canonical_proofs.clone());
+    assert!(
+        catch_unwind(AssertUnwindSafe(|| {
+            RiscWrapperWitness::from_full_proof(extra_entry_proof, &binary_commitment);
+        }))
+        .is_err()
+    );
+
+    let mut duplicate_proof_entry = program_proof;
+    duplicate_proof_entry
+        .delegation_proofs
+        .get_mut(&expected_delegation_type)
+        .unwrap()
+        .push(canonical_proofs[0].clone());
+    assert!(
+        catch_unwind(AssertUnwindSafe(|| {
+            RiscWrapperWitness::from_full_proof(duplicate_proof_entry, &binary_commitment);
+        }))
+        .is_err()
+    );
+}
+
+#[cfg(feature = "wrap_with_reduced_log_23")]
+#[test]
+fn delegated_blake_proof_identity_is_bound_to_expected_recursion_parameters() {
+    std::thread::Builder::new()
+        .name("delegated-blake-identity".to_owned())
+        .stack_size(64 * 1024 * 1024)
+        .spawn(|| {
+            let (binary_commitment, final_registers_state, proof_state, proof_input, blake_state) =
+                load_wrapper_constraint_fixture();
+
+            assert!(wrapper_constraints_are_satisfied(
+                binary_commitment,
+                final_registers_state,
+                proof_state,
+                proof_input,
+                blake_state,
+            ));
+
+            let mut mutated_blake_state = blake_state;
+            mutated_blake_state.setup_caps[0].cap[0][0] ^= 1;
+            assert!(!wrapper_constraints_are_satisfied(
+                binary_commitment,
+                final_registers_state,
+                proof_state,
+                proof_input,
+                mutated_blake_state,
+            ));
+
+            let mut mutated_blake_state = blake_state;
+            mutated_blake_state.circuit_sequence = 1;
+            assert!(!wrapper_constraints_are_satisfied(
+                binary_commitment,
+                final_registers_state,
+                proof_state,
+                proof_input,
+                mutated_blake_state,
+            ));
+
+            let mut mutated_proof_state = proof_state;
+            let mut mutated_blake_state = blake_state;
+            retarget_blake_delegation_type_while_preserving_old_wrapper_relations(
+                final_registers_state,
+                &mut mutated_proof_state,
+                &mut mutated_blake_state,
+            );
+            assert!(!wrapper_constraints_are_satisfied(
+                binary_commitment,
+                final_registers_state,
+                mutated_proof_state,
+                proof_input,
+                mutated_blake_state,
+            ));
+        })
+        .unwrap()
+        .join()
+        .unwrap();
 }
 
 #[test]
