@@ -42,7 +42,7 @@ pub(crate) fn risc_wrapper_full_test() {
         deserialize_from_bin_file(RISC_PROOF_PATH).unwrap();
 
     let risc_wrapper_witness =
-        RiscWrapperWitness::from_full_proof(program_proof, &binary_commitment, false);
+        RiscWrapperWitness::from_full_proof(program_proof, &binary_commitment, false).unwrap();
 
     #[cfg(not(feature = "gpu"))]
     let (risc_wrapper_proof, risc_wrapper_vk) = {
@@ -228,7 +228,7 @@ fn test_verifier_inner_function() {
     let binary_commitment = binary_commitment_for_testing();
 
     let risc_wrapper_witness =
-        RiscWrapperWitness::from_full_proof(program_proof, &binary_commitment, false);
+        RiscWrapperWitness::from_full_proof(program_proof, &binary_commitment, false).unwrap();
 
     use crate::RiscWrapper;
 

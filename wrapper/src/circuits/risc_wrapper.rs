@@ -194,7 +194,7 @@ impl RiscWrapperWitness {
         full_proof: UnrolledProgramProof,
         binary_commitment: &BinaryCommitment,
         check_aux_params: bool,
-    ) -> Self {
+    ) -> anyhow::Result<Self> {
         let UnrolledProgramProof {
             final_pc,
             final_timestamp,
@@ -212,16 +212,27 @@ impl RiscWrapperWitness {
         if check_aux_params {
             use risc_verifier::prover::transcript::Blake2sBufferingTranscript;
 
-            assert!(recursion_chain_preimage.is_some());
+            let recursion_chain_preimage = recursion_chain_preimage.ok_or_else(|| {
+                anyhow::anyhow!(
+                    "proof is missing recursion_chain_preimage, required with --check-aux-params"
+                )
+            })?;
             let mut result_hasher = Blake2sBufferingTranscript::new();
-            result_hasher.absorb(&recursion_chain_preimage.unwrap());
+            result_hasher.absorb(&recursion_chain_preimage);
 
-            assert!(recursion_chain_hash.is_some());
-            assert_eq!(
-                recursion_chain_hash.unwrap(),
-                result_hasher.finalize_reset().0
+            let recursion_chain_hash = recursion_chain_hash.ok_or_else(|| {
+                anyhow::anyhow!(
+                    "proof is missing recursion_chain_hash, required with --check-aux-params"
+                )
+            })?;
+            anyhow::ensure!(
+                recursion_chain_hash == result_hasher.finalize_reset().0,
+                "recursion_chain_hash does not match the hash of recursion_chain_preimage"
             );
-            assert_eq!(recursion_chain_hash.unwrap(), binary_commitment.aux_params);
+            anyhow::ensure!(
+                recursion_chain_hash == binary_commitment.aux_params,
+                "recursion_chain_hash does not match the binary commitment's aux_params"
+            );
         }
 
         let (final_timestamp_low, final_timestamp_high) =
@@ -269,14 +280,14 @@ impl RiscWrapperWitness {
         };
         assert!(dp_iter.next().is_none(), "Too many delegation proofs");
 
-        Self {
+        Ok(Self {
             final_pc,
             final_timestamp: [final_timestamp_low, final_timestamp_high],
             final_registers_state: final_registers_state.try_into().unwrap(),
             unified_proofs,
             blake_proof,
             pow_challenge,
-        }
+        })
     }
 }
 

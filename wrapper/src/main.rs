@@ -96,12 +96,14 @@ enum Commands {
         #[arg(long)]
         risc_wrapper_vk: Option<PathBuf>,
 
-        /// Path to the base program .bin file (required with --check-aux-params)
-        #[arg(long, requires = "text", required_if_eq("check_aux_params", "true"))]
+        /// Path to the base program .bin file (needed with --check-aux-params
+        /// unless a saved --risc-wrapper-vk is supplied)
+        #[arg(long, requires = "text")]
         bin: Option<PathBuf>,
 
-        /// Path to the base program .text file (required with --check-aux-params)
-        #[arg(long, requires = "bin", required_if_eq("check_aux_params", "true"))]
+        /// Path to the base program .text file (needed with --check-aux-params
+        /// unless a saved --risc-wrapper-vk is supplied)
+        #[arg(long, requires = "bin")]
         text: Option<PathBuf>,
 
         /// Output directory
@@ -123,12 +125,14 @@ enum Commands {
         #[arg(long)]
         compression_vk: Option<PathBuf>,
 
-        /// Path to the base program .bin file (required with --check-aux-params)
-        #[arg(long, requires = "text", required_if_eq("check_aux_params", "true"))]
+        /// Path to the base program .bin file (needed with --check-aux-params
+        /// unless a saved --compression-vk is supplied)
+        #[arg(long, requires = "text")]
         bin: Option<PathBuf>,
 
-        /// Path to the base program .text file (required with --check-aux-params)
-        #[arg(long, requires = "bin", required_if_eq("check_aux_params", "true"))]
+        /// Path to the base program .text file (needed with --check-aux-params
+        /// unless a saved --compression-vk is supplied)
+        #[arg(long, requires = "bin")]
         text: Option<PathBuf>,
 
         /// Output directory

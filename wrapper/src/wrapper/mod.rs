@@ -91,7 +91,7 @@ impl SnarkWrapper {
             program_proof,
             &binary_commitment,
             check_aux_params,
-        );
+        )?;
         tracing::info!(
             "Phase 1 witness generation took {:.3}s",
             start.elapsed().as_secs_f64()
