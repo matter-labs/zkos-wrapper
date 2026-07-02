@@ -1095,17 +1095,23 @@ fn prepare_and_allocate_public_inputs<F: SmallField, CS: ConstraintSystem<F>>(
         .collect();
 
     use boojum::gadgets::keccak256;
-    // Always run keccak so we don't need to configure gates based on check_aux_params flag
+    // Computed unconditionally: the hashed path below consumes it. In the
+    // `check_aux_params` branch the result is discarded, but keccak is still run so
+    // the keccak gates/tables stay present in both modes, keeping the circuit
+    // skeleton uniform. Skipping it in check mode is a possible future optimization
+    // (it would change the check-mode VK).
     let input_keccak_hash = keccak256::keccak256(cs, &flattened_public_input);
 
     let public_input_source: Vec<_> = if check_aux_params {
-        // Pack registers 10..18 directly (no keccak)
-        // In the end 28 of 32 bytes are consumed
-        // This is intentional, we assume these registers to contain a keccak hash
+        // Pack registers 10..=16 (7 registers = 28 bytes) directly as the public
+        // input, bypassing keccak. The loop below consumes exactly
+        // NUM_RISC_WRAPPER_PUBLIC_INPUTS * take_by = 4 * 7 = 28 bytes, matching the
+        // 28-byte truncation the hashed path applies to the 32-byte keccak digest.
+        // We assume the base program has placed a keccak hash in these registers.
         final_registers_state
             .chunks(3)
             .skip(10)
-            .take(8)
+            .take(7)
             .flat_map(|chunk| chunk[0].decompose_into_bytes(cs))
             .collect()
     } else {

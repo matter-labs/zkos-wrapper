@@ -31,11 +31,11 @@ enum Commands {
         proof: PathBuf,
 
         /// Path to the base program .bin file (required with --check-aux-params)
-        #[arg(long, requires = "text")]
+        #[arg(long, requires = "text", required_if_eq("check_aux_params", "true"))]
         bin: Option<PathBuf>,
 
         /// Path to the base program .text file (required with --check-aux-params)
-        #[arg(long, requires = "bin")]
+        #[arg(long, requires = "bin", required_if_eq("check_aux_params", "true"))]
         text: Option<PathBuf>,
 
         /// Output directory for proof and VK files
@@ -68,11 +68,11 @@ enum Commands {
         proof: PathBuf,
 
         /// Path to the base program .bin file (required with --check-aux-params)
-        #[arg(long, requires = "text")]
+        #[arg(long, requires = "text", required_if_eq("check_aux_params", "true"))]
         bin: Option<PathBuf>,
 
         /// Path to the base program .text file (required with --check-aux-params)
-        #[arg(long, requires = "bin")]
+        #[arg(long, requires = "bin", required_if_eq("check_aux_params", "true"))]
         text: Option<PathBuf>,
 
         /// Output directory
@@ -97,11 +97,11 @@ enum Commands {
         risc_wrapper_vk: Option<PathBuf>,
 
         /// Path to the base program .bin file (required with --check-aux-params)
-        #[arg(long, requires = "text")]
+        #[arg(long, requires = "text", required_if_eq("check_aux_params", "true"))]
         bin: Option<PathBuf>,
 
         /// Path to the base program .text file (required with --check-aux-params)
-        #[arg(long, requires = "bin")]
+        #[arg(long, requires = "bin", required_if_eq("check_aux_params", "true"))]
         text: Option<PathBuf>,
 
         /// Output directory
@@ -124,11 +124,11 @@ enum Commands {
         compression_vk: Option<PathBuf>,
 
         /// Path to the base program .bin file (required with --check-aux-params)
-        #[arg(long, requires = "text")]
+        #[arg(long, requires = "text", required_if_eq("check_aux_params", "true"))]
         bin: Option<PathBuf>,
 
         /// Path to the base program .text file (required with --check-aux-params)
-        #[arg(long, requires = "bin")]
+        #[arg(long, requires = "bin", required_if_eq("check_aux_params", "true"))]
         text: Option<PathBuf>,
 
         /// Output directory
@@ -155,11 +155,11 @@ enum Commands {
         output_dir: PathBuf,
 
         /// Path to the base program .bin file (required with --check-aux-params)
-        #[arg(long, requires = "text")]
+        #[arg(long, requires = "text", required_if_eq("check_aux_params", "true"))]
         bin: Option<PathBuf>,
 
         /// Path to the base program .text file (required with --check-aux-params)
-        #[arg(long, requires = "bin")]
+        #[arg(long, requires = "bin", required_if_eq("check_aux_params", "true"))]
         text: Option<PathBuf>,
 
         /// Path to trusted setup (CRS) file. If omitted, uses fake crs_42.
