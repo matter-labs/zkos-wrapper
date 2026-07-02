@@ -142,3 +142,29 @@ fn convert_risc_proof_from_json() {
     let after = std::fs::metadata(path).unwrap().len();
     println!("{path}: {before} -> {after} bytes");
 }
+
+/// Manual fixture-prep utility, not a real test (makes no assertions).
+/// Strips the recursion_chain fields from the checked-in RISC_PROOF_PATH fixture
+/// and rewrites it in place. Ignored by default because it mutates tracked test
+/// data; run explicitly with `cargo test small_test -- --ignored` when you need
+/// to regenerate the fixture.
+#[test]
+#[ignore = "mutates the checked-in RISC_PROOF_PATH fixture; run manually with --ignored"]
+fn small_test() {
+    use execution_utils::unrolled::UnrolledProgramProof;
+
+    let path = RISC_PROOF_PATH;
+    let mut value: UnrolledProgramProof = deserialize_from_bin_file(path).unwrap();
+    // value.recursion_chain_preimage = Some([0; 16]);
+
+    // use risc_verifier::prover::transcript::Blake2sBufferingTranscript;
+    // let mut result_hasher = Blake2sBufferingTranscript::new();
+    // result_hasher.absorb(&value.recursion_chain_preimage.unwrap());
+
+    // value.recursion_chain_hash = Some(result_hasher.finalize_reset().0);
+
+    value.recursion_chain_preimage = None;
+    value.recursion_chain_hash = None;
+
+    serialize_to_bin_file(&value, &path).unwrap();
+}
