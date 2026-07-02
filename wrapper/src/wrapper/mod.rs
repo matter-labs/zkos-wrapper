@@ -333,6 +333,13 @@ fn load_binary_commitment(
     check_aux_params: bool,
 ) -> anyhow::Result<BinaryCommitment> {
     if !check_aux_params {
+        if bin.is_some() || text.is_some() {
+            tracing::warn!(
+                "--bin/--text are ignored without --check-aux-params: end_params always comes \
+                 from the fixed unified verifier binary, so the resulting VK does not depend on \
+                 them. Pass --check-aux-params to bind the base program via aux_params."
+            );
+        }
         // `aux_params` is never consumed in this mode; `end_params` comes solely
         // from the fixed unified verifier binary, so the base program is not needed.
         return Ok(BinaryCommitment::default());
