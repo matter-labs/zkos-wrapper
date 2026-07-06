@@ -22,6 +22,10 @@ jobs:
       - name: tests
         # We need to increase the stack size for the tests (due to quotient computation)
         run:  RUST_MIN_STACK=67108864 cargo test all_layers_full_test --release -- --nocapture
+      - name: check_aux_params tests
+        # Exercises the --check-aux-params off-circuit validation (both the
+        # matching and mismatched cases), which the full test above does not cover.
+        run:  RUST_MIN_STACK=67108864 cargo test check_aux_params_off_circuit_validation --release -- --nocapture
 
   mersenne_tests:
     name: mersenne_tests
