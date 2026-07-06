@@ -202,37 +202,38 @@ impl RiscWrapperWitness {
             inits_and_teardowns_proofs,
             delegation_proofs,
             register_final_values,
-            recursion_chain_preimage,
-            recursion_chain_hash,
+            recursion_chain_preimage: _,
+            recursion_chain_hash: _,
             pow_challenge,
         } = full_proof;
 
         // TODO: check final_pc
 
         if check_aux_params {
-            use risc_verifier::prover::transcript::Blake2sBufferingTranscript;
-
-            let recursion_chain_preimage = recursion_chain_preimage.ok_or_else(|| {
-                anyhow::anyhow!(
-                    "proof is missing recursion_chain_preimage, required with --check-aux-params"
-                )
-            })?;
-            let mut result_hasher = Blake2sBufferingTranscript::new();
-            result_hasher.absorb(&recursion_chain_preimage);
-
-            let recursion_chain_hash = recursion_chain_hash.ok_or_else(|| {
-                anyhow::anyhow!(
-                    "proof is missing recursion_chain_hash, required with --check-aux-params"
-                )
-            })?;
-            anyhow::ensure!(
-                recursion_chain_hash == result_hasher.finalize_reset().0,
-                "recursion_chain_hash does not match the hash of recursion_chain_preimage"
-            );
-            anyhow::ensure!(
-                recursion_chain_hash == binary_commitment.aux_params,
-                "recursion_chain_hash does not match the binary commitment's aux_params"
-            );
+            // Off-circuit mirror of the in-circuit aux_params constraint (see
+            // `prepare_and_allocate_public_inputs`, which enforces registers
+            // 18..=25 == aux_params). Checking it here rejects a mismatched binary
+            // commitment up front with a clear error instead of producing an
+            // unsatisfiable circuit at proving time.
+            //
+            // The program exposes the binary chain commitment in its final registers
+            // 18..=25. Note this is NOT the proof's `recursion_chain_hash`: that field
+            // is the prover's internal recursion-layer chain, which sits one fold short
+            // of `aux_params` whenever the top unified-recursion layer converges in a
+            // single iteration, so comparing against it would spuriously reject valid
+            // proofs.
+            for i in 0..8 {
+                let actual = register_final_values[18 + i].value;
+                let expected = binary_commitment.aux_params[i];
+                anyhow::ensure!(
+                    actual == expected,
+                    "register {} (0x{:08x}) does not match binary commitment aux_params[{}] (0x{:08x})",
+                    18 + i,
+                    actual,
+                    i,
+                    expected,
+                );
+            }
         }
 
         let (final_timestamp_low, final_timestamp_high) =
