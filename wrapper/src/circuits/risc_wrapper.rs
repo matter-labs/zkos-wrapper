@@ -85,8 +85,11 @@ impl BinaryCommitment {
     /// 2. the unrolled-recursion verifier,
     /// 3. the unified-recursion verifier.
     ///
-    /// `aux_params` is the Blake2s chain hash computed over the layer
-    /// `end_params` (matches `UnrolledProgramProof::recursion_chain_hash`).
+    /// `aux_params` is the Blake2s recursion-chain hash folded over the layer
+    /// `end_params` in order (base -> unrolled -> unified). This is the binary
+    /// chain commitment the base program exposes in its final registers 18..=25;
+    /// it is NOT the proof's `recursion_chain_hash`, which is the prover's
+    /// internal recursion-layer chain and sits one fold short of `aux_params`.
     pub fn from_binaries(
         base_bin: &[u8],
         base_text: &[u8],

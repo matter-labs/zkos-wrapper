@@ -16,7 +16,9 @@ use super::*;
 fn binary_commitment_for_testing() -> BinaryCommitment {
     #[cfg(feature = "security_100")]
     {
-        BinaryCommitment::default()
+        // Explicit `return` (not a tail expression) so the function still compiles
+        // if both security features are somehow enabled together.
+        return BinaryCommitment::default();
     }
     #[cfg(feature = "security_80")]
     {

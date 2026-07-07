@@ -34,8 +34,8 @@ pub struct SnarkWrapperConfig {
     pub text: Option<PathBuf>,
     pub trusted_setup: Option<PathBuf>,
     pub threads: Option<usize>,
-    /// When enabled, the RISC wrapper circuit packs registers 10..18 directly as
-    /// public inputs (no keccak) and constrains registers 18..26 to equal
+    /// When enabled, the RISC wrapper circuit packs registers 10..=16 directly as
+    /// public inputs (no keccak) and constrains registers 18..=25 to equal
     /// `BinaryCommitment::aux_params` instead of folding them into the digest.
     pub check_aux_params: bool,
     /// Trusted phase-1 VK to be reused instead of deriving it from the binary.

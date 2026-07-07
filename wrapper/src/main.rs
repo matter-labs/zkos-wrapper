@@ -54,9 +54,9 @@ enum Commands {
         #[arg(long)]
         save_intermediates: bool,
 
-        /// Pack registers 10..18 directly as public inputs and constrain
-        /// registers 18..26 to `BinaryCommitment::aux_params` (instead of
-        /// hashing registers 10..26 into the public input).
+        /// Pack registers 10..=16 directly as public inputs and constrain
+        /// registers 18..=25 to `BinaryCommitment::aux_params` (instead of
+        /// hashing registers 10..=25 into the public input).
         #[arg(long)]
         check_aux_params: bool,
     },
@@ -79,9 +79,9 @@ enum Commands {
         #[arg(short, long)]
         output_dir: PathBuf,
 
-        /// Pack registers 10..18 directly as public inputs and constrain
-        /// registers 18..26 to `BinaryCommitment::aux_params` (instead of
-        /// hashing registers 10..26 into the public input).
+        /// Pack registers 10..=16 directly as public inputs and constrain
+        /// registers 18..=25 to `BinaryCommitment::aux_params` (instead of
+        /// hashing registers 10..=25 into the public input).
         #[arg(long)]
         check_aux_params: bool,
     },
@@ -170,8 +170,8 @@ enum Commands {
         #[arg(long)]
         trusted_setup: Option<PathBuf>,
 
-        /// Pack registers 10..18 directly as public inputs and constrain
-        /// registers 18..26 to `BinaryCommitment::aux_params`.
+        /// Pack registers 10..=16 directly as public inputs and constrain
+        /// registers 18..=25 to `BinaryCommitment::aux_params`.
         #[arg(long)]
         check_aux_params: bool,
     },
