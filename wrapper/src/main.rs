@@ -176,7 +176,7 @@ enum Commands {
         check_aux_params: bool,
     },
 
-    /// Compute the 3-layer recursion-chain hash (aux_params) for a base program
+    /// Compute the recursion-chain hash (aux_params, folded base -> unrolled) for a base program
     ComputeAuxParams {
         /// Path to the base program .bin file
         #[arg(long, requires = "text")]

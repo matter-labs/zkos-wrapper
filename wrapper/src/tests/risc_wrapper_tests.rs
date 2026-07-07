@@ -185,9 +185,9 @@ fn check_aux_params_off_circuit_validation() {
 }
 
 /// `BinaryCommitment::from_base_binary` is the core of the `compute-aux-params`
-/// subcommand: it derives `end_params` and the folded 3-layer recursion-chain
-/// `aux_params` from the base program. Smoke-test that it runs and produces a
-/// non-trivial commitment.
+/// subcommand: it derives `end_params` (unified layer) and the folded
+/// recursion-chain `aux_params` (base -> unrolled) from the base program.
+/// Smoke-test that it runs and produces a non-trivial commitment.
 ///
 /// `#[ignore]`d because it computes three full recursion-layer setups (~minutes);
 /// run explicitly with `cargo test from_base_binary_computes_aux_params -- --ignored`.
