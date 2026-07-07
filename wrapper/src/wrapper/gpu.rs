@@ -70,12 +70,13 @@ impl BackendState {
         &mut self,
         witness: RiscWrapperWitness,
         binary_commitment: BinaryCommitment,
+        check_aux_params: bool,
         worker: &BoojumWorker,
     ) -> anyhow::Result<RiscWrapperProof> {
         let start = Instant::now();
         self.ensure_stark_context()
             .context("while attempting to prepare the STARK GPU context")?;
-        let cache = self.ensure_risc_wrapper_setup(binary_commitment, worker)?;
+        let cache = self.ensure_risc_wrapper_setup(binary_commitment, check_aux_params, worker)?;
         tracing::info!(
             "Phase 1 GPU setup ready in {:.3}s",
             start.elapsed().as_secs_f64()
@@ -89,6 +90,7 @@ impl BackendState {
             &cache.vk,
             worker,
             binary_commitment,
+            check_aux_params,
         );
         tracing::info!(
             "Phase 1 GPU proving took {:.3}s",
@@ -101,10 +103,11 @@ impl BackendState {
     pub(crate) fn risc_wrapper_vk(
         &mut self,
         binary_commitment: BinaryCommitment,
+        check_aux_params: bool,
         worker: &BoojumWorker,
     ) -> anyhow::Result<&RiscWrapperVK> {
         let start = Instant::now();
-        let cache = self.ensure_risc_wrapper_setup(binary_commitment, worker)?;
+        let cache = self.ensure_risc_wrapper_setup(binary_commitment, check_aux_params, worker)?;
         tracing::info!(
             "Phase 1 GPU setup ready in {:.3}s",
             start.elapsed().as_secs_f64()
@@ -222,13 +225,18 @@ impl BackendState {
     fn ensure_risc_wrapper_setup(
         &mut self,
         binary_commitment: BinaryCommitment,
+        check_aux_params: bool,
         worker: &BoojumWorker,
     ) -> anyhow::Result<&RiscWrapperSetupCache> {
         if self.risc_wrapper.is_none() {
             self.ensure_stark_context()
                 .context("while attempting to initialize the phase 1 GPU prover context")?;
             let (gpu_setup, vk, finalization_hint) =
-                crate::gpu::risc_wrapper::get_risc_wrapper_setup(worker, binary_commitment);
+                crate::gpu::risc_wrapper::get_risc_wrapper_setup(
+                    worker,
+                    binary_commitment,
+                    check_aux_params,
+                );
 
             self.risc_wrapper = Some(RiscWrapperSetupCache {
                 finalization_hint,

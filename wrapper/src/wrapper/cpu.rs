@@ -74,10 +74,11 @@ impl BackendState {
         &mut self,
         witness: RiscWrapperWitness,
         binary_commitment: BinaryCommitment,
+        check_aux_params: bool,
         worker: &BoojumWorker,
     ) -> anyhow::Result<RiscWrapperProof> {
         let start = Instant::now();
-        let cache = self.ensure_risc_wrapper_setup(binary_commitment, worker)?;
+        let cache = self.ensure_risc_wrapper_setup(binary_commitment, check_aux_params, worker)?;
         tracing::info!(
             "Phase 1 setup ready in {:.3}s",
             start.elapsed().as_secs_f64()
@@ -95,6 +96,7 @@ impl BackendState {
             &cache.witness_hints,
             worker,
             binary_commitment,
+            check_aux_params,
         );
         tracing::info!("Phase 1 proving took {:.3}s", start.elapsed().as_secs_f64());
 
@@ -104,10 +106,11 @@ impl BackendState {
     pub(crate) fn risc_wrapper_vk(
         &mut self,
         binary_commitment: BinaryCommitment,
+        check_aux_params: bool,
         worker: &BoojumWorker,
     ) -> anyhow::Result<&RiscWrapperVK> {
         let start = Instant::now();
-        let cache = self.ensure_risc_wrapper_setup(binary_commitment, worker)?;
+        let cache = self.ensure_risc_wrapper_setup(binary_commitment, check_aux_params, worker)?;
         tracing::info!(
             "Phase 1 setup ready in {:.3}s",
             start.elapsed().as_secs_f64()
@@ -210,11 +213,12 @@ impl BackendState {
     fn ensure_risc_wrapper_setup(
         &mut self,
         binary_commitment: BinaryCommitment,
+        check_aux_params: bool,
         worker: &BoojumWorker,
     ) -> anyhow::Result<&RiscWrapperSetupCache> {
         if self.risc_wrapper.is_none() {
             let (finalization_hint, setup_base, setup, vk, setup_tree, vars_hint, witness_hints) =
-                crate::get_risc_wrapper_setup(worker, binary_commitment);
+                crate::get_risc_wrapper_setup(worker, binary_commitment, check_aux_params);
 
             self.risc_wrapper = Some(RiscWrapperSetupCache {
                 finalization_hint,

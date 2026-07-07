@@ -49,6 +49,7 @@ pub fn cmd_prove_all(
     trusted_setup: Option<PathBuf>,
     use_zk: bool,
     save_intermediates: bool,
+    check_aux_params: bool,
     threads: Option<usize>,
 ) -> anyhow::Result<()> {
     ensure_output_dir(&output_dir)?;
@@ -59,6 +60,7 @@ pub fn cmd_prove_all(
         text,
         trusted_setup,
         threads,
+        check_aux_params,
         risc_wrapper_vk: None,
         compression_vk: None,
         snark_vk: None,
@@ -115,6 +117,7 @@ pub fn cmd_prove_risc_wrapper(
     bin: Option<PathBuf>,
     text: Option<PathBuf>,
     output_dir: PathBuf,
+    check_aux_params: bool,
     threads: Option<usize>,
 ) -> anyhow::Result<()> {
     ensure_output_dir(&output_dir)?;
@@ -124,6 +127,7 @@ pub fn cmd_prove_risc_wrapper(
         text,
         trusted_setup: None,
         threads,
+        check_aux_params,
         risc_wrapper_vk: None,
         compression_vk: None,
         snark_vk: None,
@@ -149,6 +153,7 @@ pub fn cmd_prove_compression(
     bin: Option<PathBuf>,
     text: Option<PathBuf>,
     output_dir: PathBuf,
+    check_aux_params: bool,
     threads: Option<usize>,
 ) -> anyhow::Result<()> {
     ensure_output_dir(&output_dir)?;
@@ -162,6 +167,7 @@ pub fn cmd_prove_compression(
         text,
         trusted_setup: None,
         threads,
+        check_aux_params,
         risc_wrapper_vk,
         compression_vk: None,
         snark_vk: None,
@@ -189,6 +195,7 @@ pub fn cmd_prove_snark(
     output_dir: PathBuf,
     trusted_setup: Option<PathBuf>,
     use_zk: bool,
+    check_aux_params: bool,
     threads: Option<usize>,
 ) -> anyhow::Result<()> {
     ensure_output_dir(&output_dir)?;
@@ -202,6 +209,7 @@ pub fn cmd_prove_snark(
         text,
         trusted_setup,
         threads,
+        check_aux_params,
         risc_wrapper_vk: None,
         compression_vk,
         snark_vk: None,
@@ -226,6 +234,7 @@ pub fn cmd_generate_vk(
     bin: Option<PathBuf>,
     text: Option<PathBuf>,
     trusted_setup: Option<PathBuf>,
+    check_aux_params: bool,
     threads: Option<usize>,
 ) -> anyhow::Result<()> {
     ensure_output_dir(&output_dir)?;
@@ -234,6 +243,7 @@ pub fn cmd_generate_vk(
         text,
         trusted_setup,
         threads,
+        check_aux_params,
         risc_wrapper_vk: None,
         compression_vk: None,
         snark_vk: None,
@@ -259,6 +269,27 @@ pub fn cmd_generate_vk(
 
     let vk_hash = calculate_verification_key_hash(wrapper.snark_vk()?.clone());
     tracing::info!("SNARK VK hash: {vk_hash:?}");
+
+    Ok(())
+}
+
+pub fn cmd_compute_aux_params(
+    bin: PathBuf,
+    text: PathBuf,
+    output: Option<PathBuf>,
+) -> anyhow::Result<()> {
+    let binary = std::fs::read(&bin)
+        .with_context(|| format!("while reading the binary at {}", bin.display()))?;
+    let text_data = std::fs::read(&text)
+        .with_context(|| format!("while reading the text section at {}", text.display()))?;
+
+    let commitment = crate::circuits::BinaryCommitment::from_base_binary(&binary, &text_data);
+    tracing::info!("aux_params: {:?}", commitment.aux_params);
+
+    if let Some(out) = output {
+        serialize_to_file(&commitment.aux_params, &out.to_string_lossy())?;
+        tracing::info!("Wrote aux_params to {}", out.display());
+    }
 
     Ok(())
 }
