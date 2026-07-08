@@ -144,8 +144,8 @@ pub(crate) fn risc_wrapper_setup_test() {
 /// whose `aux_params` equals the proof's final registers 18..=25 is accepted,
 /// and any mismatch is rejected up front with a clear error. This mirrors the
 /// in-circuit aux constraint and guards against comparing against the wrong
-/// value (e.g. the proof's `recursion_chain_hash`, which is one recursion fold
-/// short of `aux_params`).
+/// value (e.g. the proof's `recursion_chain_hash`, a prover-internal field whose
+/// value depends on the unified-recursion iteration count).
 #[test]
 fn check_aux_params_off_circuit_validation() {
     let program_proof: execution_utils::unrolled::UnrolledProgramProof =
@@ -184,16 +184,18 @@ fn check_aux_params_off_circuit_validation() {
     );
 }
 
-/// `BinaryCommitment::from_base_binary` is the core of the `compute-aux-params`
-/// subcommand: it derives `end_params` (unified layer) and the folded
-/// recursion-chain `aux_params` (base -> unrolled) from the base program.
-/// Smoke-test that it runs and produces a non-trivial commitment.
+/// Regression guard for the recursion-chain fold depth. `from_base_binary` (the
+/// core of the `compute-aux-params` subcommand) must fold `base -> unrolled`
+/// only: that is the binary chain commitment the top verifier exposes in the
+/// proof's final registers 18..=25. The original `base -> unrolled -> unified`
+/// fold produced a value one fold too far and would not match here.
 ///
-/// `#[ignore]`d because it computes three full recursion-layer setups (~minutes);
-/// run explicitly with `cargo test from_base_binary_computes_aux_params -- --ignored`.
+/// `security_80` only: `risc_proof_80sb` is a proof over the `risc_app` base
+/// program, so `from_base_binary(risc_app)` is the matching commitment. Under
+/// `security_100` the fixture proof has a different base program.
+#[cfg(feature = "security_80")]
 #[test]
-#[ignore]
-fn from_base_binary_computes_aux_params() {
+fn from_base_binary_aux_params_matches_proof_registers() {
     use std::io::Read;
 
     let mut binary = vec![];
@@ -209,13 +211,17 @@ fn from_base_binary_computes_aux_params() {
 
     let commitment = BinaryCommitment::from_base_binary(&binary, &text);
 
-    assert_ne!(
-        commitment.end_params, [0u32; 8],
-        "end_params must be populated"
-    );
-    assert_ne!(
-        commitment.aux_params, [0u32; 8],
-        "aux_params (recursion-chain hash) must be populated"
+    let program_proof: execution_utils::unrolled::UnrolledProgramProof =
+        deserialize_from_bin_file(RISC_PROOF_PATH).unwrap();
+    let mut registers = [0u32; 8];
+    for i in 0..8 {
+        registers[i] = program_proof.register_final_values[18 + i].value;
+    }
+
+    assert_eq!(
+        commitment.aux_params, registers,
+        "from_base_binary aux_params (base -> unrolled) must equal the proof's \
+         final registers 18..=25; a base -> unrolled -> unified fold would not match"
     );
 }
 

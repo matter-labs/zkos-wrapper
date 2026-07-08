@@ -225,11 +225,10 @@ impl RiscWrapperWitness {
             // unsatisfiable circuit at proving time.
             //
             // The program exposes the binary chain commitment in its final registers
-            // 18..=25. Note this is NOT the proof's `recursion_chain_hash`: that field
-            // is the prover's internal recursion-layer chain, which sits one fold short
-            // of `aux_params` whenever the top unified-recursion layer converges in a
-            // single iteration, so comparing against it would spuriously reject valid
-            // proofs.
+            // 18..=25, which is the source of truth here. Note this is NOT the proof's
+            // `recursion_chain_hash`: that field is the prover's internal
+            // recursion-layer chain, whose value depends on how many unified-recursion
+            // iterations ran, so comparing against it would reject valid proofs.
             for i in 0..8 {
                 let actual = register_final_values[18 + i].value;
                 let expected = binary_commitment.aux_params[i];
