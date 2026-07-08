@@ -28,7 +28,7 @@ jobs:
         # the in-circuit constraints (prepare_and_allocate_public_inputs with
         # check_aux_params = true, plus the direct PI packing), and the recursion
         # -chain fold depth (from_base_binary aux_params == proof registers 18..=25).
-        run:  RUST_MIN_STACK=67108864 cargo test --release -- --nocapture check_aux_params_off_circuit_validation test_verifier_inner_function_check_aux_params from_base_binary_aux_params_matches_proof_registers
+        run:  RUST_MIN_STACK=67108864 cargo test --release -- --nocapture check_aux_params_off_circuit_validation test_verifier_inner_function_check_aux_params from_base_binary_aux_params_fold_depth
 
   mersenne_tests:
     name: mersenne_tests

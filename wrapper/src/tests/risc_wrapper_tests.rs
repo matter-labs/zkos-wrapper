@@ -186,17 +186,29 @@ fn check_aux_params_off_circuit_validation() {
 
 /// Regression guard for the recursion-chain fold depth. `from_base_binary` (the
 /// core of the `compute-aux-params` subcommand) must fold `base -> unrolled`
-/// only: that is the binary chain commitment the top verifier exposes in the
-/// proof's final registers 18..=25. The original `base -> unrolled -> unified`
-/// fold produced a value one fold too far and would not match here.
+/// only; the original `base -> unrolled -> unified` fold produced a value one
+/// fold too far, which failed the register-18..=25 `check_aux_params` check for
+/// real proofs.
 ///
-/// `security_80` only: `risc_proof_80sb` is a proof over the `risc_app` base
-/// program, so `from_base_binary(risc_app)` is the matching commitment. Under
-/// `security_100` the fixture proof has a different base program.
+/// The in-repo `security_80` proof fixture is a plain hashed-fibonacci proof
+/// whose registers 18..=25 are zero, so it can't serve as the ground-truth
+/// commitment. Instead we pin the `base -> unrolled` fold that `from_base_binary`
+/// produces for `risc_app`: a regression to a `base -> unrolled -> unified` fold
+/// (or any other fold depth) changes this value and fails the test.
+///
+/// `security_80` only (pins the security_80 verifier binaries). Regenerate with
+/// `compute-aux-params --bin risc_app.bin --text risc_app.text` if `risc_app` or
+/// the pinned `zksync-airbender` rev changes.
 #[cfg(feature = "security_80")]
 #[test]
-fn from_base_binary_aux_params_matches_proof_registers() {
+fn from_base_binary_aux_params_fold_depth() {
     use std::io::Read;
+
+    // base -> unrolled fold of risc_app under security_80 + zksync-airbender 73d69b5.
+    const EXPECTED_BASE_UNROLLED_AUX_PARAMS: [u32; 8] = [
+        0x4e07ca19, 0xbd2b216e, 0x3a21ee6b, 0xcd1a9743, 0xfda4a5fa, 0x180cc8a3, 0xa1af386f,
+        0xb7337d18,
+    ];
 
     let mut binary = vec![];
     std::fs::File::open(RISC_PROGRAM_BIN_PATH)
@@ -211,17 +223,10 @@ fn from_base_binary_aux_params_matches_proof_registers() {
 
     let commitment = BinaryCommitment::from_base_binary(&binary, &text);
 
-    let program_proof: execution_utils::unrolled::UnrolledProgramProof =
-        deserialize_from_bin_file(RISC_PROOF_PATH).unwrap();
-    let mut registers = [0u32; 8];
-    for i in 0..8 {
-        registers[i] = program_proof.register_final_values[18 + i].value;
-    }
-
     assert_eq!(
-        commitment.aux_params, registers,
-        "from_base_binary aux_params (base -> unrolled) must equal the proof's \
-         final registers 18..=25; a base -> unrolled -> unified fold would not match"
+        commitment.aux_params, EXPECTED_BASE_UNROLLED_AUX_PARAMS,
+        "from_base_binary aux_params must be the base -> unrolled fold; a change \
+         here means the recursion-chain fold depth regressed"
     );
 }
 
