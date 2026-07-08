@@ -86,10 +86,10 @@ impl BinaryCommitment {
     /// 3. the unified-recursion verifier.
     ///
     /// `aux_params` is the Blake2s recursion-chain hash folded over the layer
-    /// `end_params` in order (base -> unrolled -> unified). This is the binary
-    /// chain commitment the base program exposes in its final registers 18..=25;
-    /// it is NOT the proof's `recursion_chain_hash`, which is the prover's
-    /// internal recursion-layer chain and sits one fold short of `aux_params`.
+    /// `end_params` in order (base -> unrolled). The top unified verifier does
+    /// not fold its own `end_params` into the chain it exposes, so `aux_params`
+    /// stops at the unrolled layer. This is the binary chain commitment the top
+    /// verifier exposes in its final registers 18..=25.
     pub fn from_binaries(
         base_bin: &[u8],
         base_text: &[u8],
@@ -129,11 +129,16 @@ impl BinaryCommitment {
             IWithoutByteAccessIsaConfigWithDelegation,
         >(&padded_unified_bin, &padded_unified_text);
 
+        // The top unified-recursion verifier exposes, in its final registers
+        // 18..=25, the chain hash of the layers it has verified BENEATH it
+        // (base -> unrolled). It does NOT fold its own `end_params` into that
+        // chain (nothing above it does that fold). So `aux_params` stops at
+        // base -> unrolled; folding the unified layer here (base -> unrolled ->
+        // unified) produced a hash one fold too far, which fails the
+        // register-18..=25 check for real proofs.
         let (h1, p1) = UnrolledProgramSetup::begin_recursion_chain(&base_setup.end_params);
-        let (h2, p2) =
-            UnrolledProgramSetup::continue_recursion_chain(&unrolled_setup.end_params, &h1, &p1);
         let (aux_params, _) =
-            UnrolledProgramSetup::continue_recursion_chain(&unified_setup.end_params, &h2, &p2);
+            UnrolledProgramSetup::continue_recursion_chain(&unrolled_setup.end_params, &h1, &p1);
 
         Self {
             end_params: unified_setup.end_params,
@@ -220,11 +225,10 @@ impl RiscWrapperWitness {
             // unsatisfiable circuit at proving time.
             //
             // The program exposes the binary chain commitment in its final registers
-            // 18..=25. Note this is NOT the proof's `recursion_chain_hash`: that field
-            // is the prover's internal recursion-layer chain, which sits one fold short
-            // of `aux_params` whenever the top unified-recursion layer converges in a
-            // single iteration, so comparing against it would spuriously reject valid
-            // proofs.
+            // 18..=25, which is the source of truth here. Note this is NOT the proof's
+            // `recursion_chain_hash`: that field is the prover's internal
+            // recursion-layer chain, whose value depends on how many unified-recursion
+            // iterations ran, so comparing against it would reject valid proofs.
             for i in 0..8 {
                 let actual = register_final_values[18 + i].value;
                 let expected = binary_commitment.aux_params[i];

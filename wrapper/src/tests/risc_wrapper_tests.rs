@@ -144,8 +144,8 @@ pub(crate) fn risc_wrapper_setup_test() {
 /// whose `aux_params` equals the proof's final registers 18..=25 is accepted,
 /// and any mismatch is rejected up front with a clear error. This mirrors the
 /// in-circuit aux constraint and guards against comparing against the wrong
-/// value (e.g. the proof's `recursion_chain_hash`, which is one recursion fold
-/// short of `aux_params`).
+/// value (e.g. the proof's `recursion_chain_hash`, a prover-internal field whose
+/// value depends on the unified-recursion iteration count).
 #[test]
 fn check_aux_params_off_circuit_validation() {
     let program_proof: execution_utils::unrolled::UnrolledProgramProof =
@@ -184,17 +184,31 @@ fn check_aux_params_off_circuit_validation() {
     );
 }
 
-/// `BinaryCommitment::from_base_binary` is the core of the `compute-aux-params`
-/// subcommand: it derives `end_params` and the folded 3-layer recursion-chain
-/// `aux_params` from the base program. Smoke-test that it runs and produces a
-/// non-trivial commitment.
+/// Regression guard for the recursion-chain fold depth. `from_base_binary` (the
+/// core of the `compute-aux-params` subcommand) must fold `base -> unrolled`
+/// only; the original `base -> unrolled -> unified` fold produced a value one
+/// fold too far, which failed the register-18..=25 `check_aux_params` check for
+/// real proofs.
 ///
-/// `#[ignore]`d because it computes three full recursion-layer setups (~minutes);
-/// run explicitly with `cargo test from_base_binary_computes_aux_params -- --ignored`.
+/// The in-repo `security_80` proof fixture is a plain hashed-fibonacci proof
+/// whose registers 18..=25 are zero, so it can't serve as the ground-truth
+/// commitment. Instead we pin the `base -> unrolled` fold that `from_base_binary`
+/// produces for `risc_app`: a regression to a `base -> unrolled -> unified` fold
+/// (or any other fold depth) changes this value and fails the test.
+///
+/// `security_80` only (pins the security_80 verifier binaries). Regenerate with
+/// `compute-aux-params --bin risc_app.bin --text risc_app.text` if `risc_app` or
+/// the pinned `zksync-airbender` rev changes.
+#[cfg(feature = "security_80")]
 #[test]
-#[ignore]
-fn from_base_binary_computes_aux_params() {
+fn from_base_binary_aux_params_fold_depth() {
     use std::io::Read;
+
+    // base -> unrolled fold of risc_app under security_80 + zksync-airbender 73d69b5.
+    const EXPECTED_BASE_UNROLLED_AUX_PARAMS: [u32; 8] = [
+        0x4e07ca19, 0xbd2b216e, 0x3a21ee6b, 0xcd1a9743, 0xfda4a5fa, 0x180cc8a3, 0xa1af386f,
+        0xb7337d18,
+    ];
 
     let mut binary = vec![];
     std::fs::File::open(RISC_PROGRAM_BIN_PATH)
@@ -209,13 +223,10 @@ fn from_base_binary_computes_aux_params() {
 
     let commitment = BinaryCommitment::from_base_binary(&binary, &text);
 
-    assert_ne!(
-        commitment.end_params, [0u32; 8],
-        "end_params must be populated"
-    );
-    assert_ne!(
-        commitment.aux_params, [0u32; 8],
-        "aux_params (recursion-chain hash) must be populated"
+    assert_eq!(
+        commitment.aux_params, EXPECTED_BASE_UNROLLED_AUX_PARAMS,
+        "from_base_binary aux_params must be the base -> unrolled fold; a change \
+         here means the recursion-chain fold depth regressed"
     );
 }
 
