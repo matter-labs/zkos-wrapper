@@ -58,7 +58,7 @@ use std::path::Path;
 use wrapper_utils::verifier_traits::CircuitBlake2sForEverythingVerifier;
 
 use anyhow::Context as _;
-pub use wrapper::{SnarkWrapper, SnarkWrapperConfig};
+pub use wrapper::{SnarkWrapper, SnarkWrapperConfig, SnarkWrapperHostCache};
 
 pub(crate) mod active_security {
     #[cfg(feature = "security_80")]

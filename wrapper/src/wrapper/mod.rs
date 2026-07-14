@@ -58,6 +58,26 @@ pub struct SnarkWrapper {
     backend: backend::BackendState,
 }
 
+/// Host-resident setup caches extracted from a finished [`SnarkWrapper`] session.
+///
+/// Deriving the setup chain from scratch costs minutes (three circuit syntheses, the
+/// trusted-setup file load and the phase-3 setup generation), but everything the chain
+/// caches lives in host memory: the phase-1/2 setups are heap/pinned-host vectors (on
+/// GPU builds shivini's `GpuSetup` is host-side data uploaded per proof), and the
+/// phase-3 CRS and setup are pinned host buffers streamed to the device during proving.
+/// The only device-resident members of the backend — the STARK prover context and the
+/// phase-3 device manager — live strictly inside the proving calls.
+///
+/// This type carries those host caches between wrapper sessions: callers that must
+/// leave the GPU completely free between jobs (provers time-sharing one device) can
+/// drop the `SnarkWrapper` after each job and rebuild it from the cache in negligible
+/// time via [`SnarkWrapper::new_with_host_cache`]. The cache is only valid for the
+/// same configuration (binary, trusted setup) it was built with; reusing it across
+/// configs would hand out setups for the wrong circuit chain.
+pub struct SnarkWrapperHostCache {
+    backend: backend::BackendState,
+}
+
 impl SnarkWrapper {
     pub fn new(config: SnarkWrapperConfig) -> anyhow::Result<Self> {
         if config.bin.is_some() != config.text.is_some() {
@@ -73,6 +93,30 @@ impl SnarkWrapper {
             worker,
             backend: backend::BackendState::new(),
         })
+    }
+
+    /// Build a wrapper that adopts the setup caches of a previous session.
+    ///
+    /// See [`SnarkWrapperHostCache`]; the cache must come from a wrapper with the same
+    /// configuration.
+    pub fn new_with_host_cache(
+        config: SnarkWrapperConfig,
+        cache: SnarkWrapperHostCache,
+    ) -> anyhow::Result<Self> {
+        let mut wrapper = Self::new(config)?;
+        wrapper.backend = cache.backend;
+        Ok(wrapper)
+    }
+
+    /// Consume the wrapper, keeping only its host-resident setup caches.
+    ///
+    /// Any device-resident state (the STARK prover context on GPU builds) is released
+    /// here, so holding the returned cache keeps no GPU memory allocated.
+    pub fn into_host_cache(mut self) -> SnarkWrapperHostCache {
+        self.backend.release_device_state();
+        SnarkWrapperHostCache {
+            backend: self.backend,
+        }
     }
 
     /// Proves phase 1 and verifies the generated RISC wrapper proof before returning it.
