@@ -58,23 +58,15 @@ pub struct SnarkWrapper {
     backend: backend::BackendState,
 }
 
-/// Host-resident setup caches extracted from a finished [`SnarkWrapper`] session.
+/// Host-resident setup caches (and their configuration) extracted from a
+/// [`SnarkWrapper`] session.
 ///
-/// Deriving the setup chain from scratch costs minutes (three circuit syntheses, the
-/// trusted-setup file load and the phase-3 setup generation), but everything the chain
-/// caches lives in host memory: the phase-1/2 setups are heap/pinned-host vectors (on
-/// GPU builds shivini's `GpuSetup` is host-side data uploaded per proof), and the
-/// phase-3 CRS and setup are pinned host buffers streamed to the device during proving.
-/// The only device-resident members of the backend — the STARK prover context and the
-/// phase-3 device manager — live strictly inside the proving calls.
-///
-/// This type carries those host caches between wrapper sessions: callers that must
-/// leave the GPU completely free between jobs (provers time-sharing one device) can
-/// drop the `SnarkWrapper` after each job and rebuild it from the cache in negligible
-/// time via [`SnarkWrapper::new_with_host_cache`]. The cache is only valid for the
-/// same configuration (binary, trusted setup) it was built with; reusing it across
-/// configs would hand out setups for the wrong circuit chain.
+/// Deriving the setup chain from scratch costs minutes, while rebuilding a wrapper from
+/// this cache via [`SnarkWrapper::from_host_cache`] is near-instant. The cache holds no
+/// device memory, so callers that must leave the GPU completely free between jobs can
+/// drop the `SnarkWrapper` after each job and keep only the cache.
 pub struct SnarkWrapperHostCache {
+    config: SnarkWrapperConfig,
     backend: backend::BackendState,
 }
 
@@ -95,15 +87,10 @@ impl SnarkWrapper {
         })
     }
 
-    /// Build a wrapper that adopts the setup caches of a previous session.
-    ///
-    /// See [`SnarkWrapperHostCache`]; the cache must come from a wrapper with the same
-    /// configuration.
-    pub fn new_with_host_cache(
-        config: SnarkWrapperConfig,
-        cache: SnarkWrapperHostCache,
-    ) -> anyhow::Result<Self> {
-        let mut wrapper = Self::new(config)?;
+    /// Build a wrapper that adopts the setup caches (and configuration) of a previous
+    /// session. See [`SnarkWrapperHostCache`].
+    pub fn from_host_cache(cache: SnarkWrapperHostCache) -> anyhow::Result<Self> {
+        let mut wrapper = Self::new(cache.config)?;
         wrapper.backend = cache.backend;
         Ok(wrapper)
     }
@@ -115,6 +102,7 @@ impl SnarkWrapper {
     pub fn into_host_cache(mut self) -> SnarkWrapperHostCache {
         self.backend.release_device_state();
         SnarkWrapperHostCache {
+            config: self.config,
             backend: self.backend,
         }
     }
