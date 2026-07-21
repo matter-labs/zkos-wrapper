@@ -2,12 +2,28 @@ use crate::circuits::{BinaryCommitment, RiscWrapperWitness};
 
 use super::*;
 
-#[test]
-pub(crate) fn risc_wrapper_full_test() {
-    use std::io::Read;
-    let worker = boojum::worker::Worker::new_with_num_threads(32);
+/// Commitment matching the checked-in `RISC_PROOF_PATH` fixture for the active
+/// security level, mirroring the (non-check) production path so the derived VK
+/// stays consistent with the checked-in fixtures.
+///
+/// - `security_80`: `risc_proof_80sb` is a proof over the `risc_app` program, so
+///   the `end_params` are derived from the checked-in program bin/text.
+/// - `security_100`: `risc_proof_100sb` is a proof over the default
+///   unified-recursion verifier binary, matching `BinaryCommitment::default()`.
+///
+/// `aux_params` is left zeroed; these callers exercise the `check_aux_params =
+/// false` path where it is never consumed.
+fn binary_commitment_for_testing() -> BinaryCommitment {
+    #[cfg(feature = "security_100")]
+    {
+        // Explicit `return` (not a tail expression) so the function still compiles
+        // if both security features are somehow enabled together.
+        return BinaryCommitment::default();
+    }
+    #[cfg(feature = "security_80")]
+    {
+        use std::io::Read;
 
-    let binary_commitment = if cfg!(feature = "security_80") {
         let mut binary = vec![];
         let mut file = std::fs::File::open(RISC_PROGRAM_BIN_PATH).unwrap();
         file.read_to_end(&mut binary).unwrap();
@@ -16,20 +32,37 @@ pub(crate) fn risc_wrapper_full_test() {
         let mut file = std::fs::File::open(RISC_PROGRAM_TEXT_PATH).unwrap();
         file.read_to_end(&mut text).unwrap();
 
-        // We use a prove of hashed fibonacci for testing
-        BinaryCommitment::from_binary(&binary, &text)
-    } else if cfg!(feature = "security_100") {
-        BinaryCommitment::from_default_binary()
-    } else {
-        panic!("Please specify a security level feature");
-    };
+        let mut padded_binary = binary.to_vec();
+        setups::pad_bytecode_bytes_for_proving(&mut padded_binary);
+        let mut padded_text = text.to_vec();
+        setups::pad_bytecode_bytes_for_proving(&mut padded_text);
+
+        use execution_utils::unified_circuit::compute_unified_setup_for_machine_configuration;
+        use risc_verifier::prover::riscv_transpiler::cycle::IWithoutByteAccessIsaConfigWithDelegation;
+
+        let setup = compute_unified_setup_for_machine_configuration::<
+            IWithoutByteAccessIsaConfigWithDelegation,
+        >(&padded_binary, &padded_text);
+
+        BinaryCommitment {
+            end_params: setup.end_params,
+            aux_params: [0; 8],
+        }
+    }
+}
+
+#[test]
+pub(crate) fn risc_wrapper_full_test() {
+    let worker = boojum::worker::Worker::new_with_num_threads(32);
+
+    let binary_commitment = binary_commitment_for_testing();
     dbg!(binary_commitment);
 
     let program_proof: execution_utils::unrolled::UnrolledProgramProof =
         deserialize_from_bin_file(RISC_PROOF_PATH).unwrap();
 
     let risc_wrapper_witness =
-        RiscWrapperWitness::from_full_proof(program_proof, &binary_commitment);
+        RiscWrapperWitness::from_full_proof(program_proof, &binary_commitment, false).unwrap();
 
     #[cfg(not(feature = "gpu"))]
     let (risc_wrapper_proof, risc_wrapper_vk) = {
@@ -41,7 +74,7 @@ pub(crate) fn risc_wrapper_full_test() {
             setup_tree,
             vars_hint,
             witness_hints,
-        ) = crate::get_risc_wrapper_setup(&worker, binary_commitment.clone());
+        ) = crate::get_risc_wrapper_setup(&worker, binary_commitment.clone(), false);
 
         let risc_wrapper_proof = crate::prove_risc_wrapper(
             risc_wrapper_witness,
@@ -54,6 +87,7 @@ pub(crate) fn risc_wrapper_full_test() {
             &witness_hints,
             &worker,
             binary_commitment.clone(),
+            false,
         );
 
         let is_valid = crate::verify_risc_wrapper_proof(&risc_wrapper_proof, &risc_wrapper_vk);
@@ -66,7 +100,11 @@ pub(crate) fn risc_wrapper_full_test() {
     let (risc_wrapper_proof, risc_wrapper_vk) = {
         let _prover_context = shivini::ProverContext::create().unwrap();
         let (gpu_setup, gpu_vk, finalization_hint) =
-            crate::gpu::risc_wrapper::get_risc_wrapper_setup(&worker, binary_commitment.clone());
+            crate::gpu::risc_wrapper::get_risc_wrapper_setup(
+                &worker,
+                binary_commitment.clone(),
+                false,
+            );
 
         let risc_wrapper_proof = crate::gpu::risc_wrapper::prove_risc_wrapper(
             risc_wrapper_witness,
@@ -75,6 +113,7 @@ pub(crate) fn risc_wrapper_full_test() {
             &gpu_vk,
             &worker,
             binary_commitment.clone(),
+            false,
         );
 
         let is_valid = crate::verify_risc_wrapper_proof(&risc_wrapper_proof, &gpu_vk);
@@ -90,16 +129,121 @@ pub(crate) fn risc_wrapper_full_test() {
 #[test]
 pub(crate) fn risc_wrapper_setup_test() {
     let worker = boojum::worker::Worker::new();
-    let binary_commitment = BinaryCommitment::from_default_binary();
+
+    // Mirror the production non-check path (`check_aux_params = false` returns
+    // `BinaryCommitment::default()`) so the checked-in VK fixture stays valid.
+    let binary_commitment = BinaryCommitment::default();
 
     let (_finalization_hint, _setup_base, _setup, vk, _setup_tree, _vars_hint, _witness_hints) =
-        crate::get_risc_wrapper_setup(&worker, binary_commitment);
+        crate::get_risc_wrapper_setup(&worker, binary_commitment, false);
 
     serialize_to_bin_file(&vk, RISC_WRAPPER_VK_PATH).unwrap();
 }
 
+/// Off-circuit `check_aux_params` validation in `from_full_proof`: a commitment
+/// whose `aux_params` equals the proof's final registers 18..=25 is accepted,
+/// and any mismatch is rejected up front with a clear error. This mirrors the
+/// in-circuit aux constraint and guards against comparing against the wrong
+/// value (e.g. the proof's `recursion_chain_hash`, a prover-internal field whose
+/// value depends on the unified-recursion iteration count).
+#[test]
+fn check_aux_params_off_circuit_validation() {
+    let program_proof: execution_utils::unrolled::UnrolledProgramProof =
+        deserialize_from_bin_file(RISC_PROOF_PATH).unwrap();
+
+    // The binary chain commitment the program exposes in its final registers.
+    let mut aux_params = [0u32; 8];
+    for i in 0..8 {
+        aux_params[i] = program_proof.register_final_values[18 + i].value;
+    }
+
+    let end_params = binary_commitment_for_testing().end_params;
+
+    // Positive: matching aux_params is accepted.
+    let matching = BinaryCommitment {
+        end_params,
+        aux_params,
+    };
+    RiscWrapperWitness::from_full_proof(program_proof.clone(), &matching, true)
+        .expect("matching aux_params must be accepted in check mode");
+
+    // Negative: a single flipped word is rejected.
+    let mut wrong_aux = aux_params;
+    wrong_aux[0] ^= 1;
+    let mismatched = BinaryCommitment {
+        end_params,
+        aux_params: wrong_aux,
+    };
+    let err = match RiscWrapperWitness::from_full_proof(program_proof, &mismatched, true) {
+        Ok(_) => panic!("mismatched aux_params must be rejected in check mode"),
+        Err(err) => err,
+    };
+    assert!(
+        err.to_string().contains("aux_params"),
+        "unexpected error message: {err}"
+    );
+}
+
+/// Regression guard for the recursion-chain fold depth. `from_base_binary` (the
+/// core of the `compute-aux-params` subcommand) must fold `base -> unrolled`
+/// only; the original `base -> unrolled -> unified` fold produced a value one
+/// fold too far, which failed the register-18..=25 `check_aux_params` check for
+/// real proofs.
+///
+/// The in-repo `security_80` proof fixture is a plain hashed-fibonacci proof
+/// whose registers 18..=25 are zero, so it can't serve as the ground-truth
+/// commitment. Instead we pin the `base -> unrolled` fold that `from_base_binary`
+/// produces for `risc_app`: a regression to a `base -> unrolled -> unified` fold
+/// (or any other fold depth) changes this value and fails the test.
+///
+/// `security_80` only (pins the security_80 verifier binaries). Regenerate with
+/// `compute-aux-params --bin risc_app.bin --text risc_app.text` if `risc_app` or
+/// the pinned `zksync-airbender` rev changes.
+#[cfg(feature = "security_80")]
+#[test]
+fn from_base_binary_aux_params_fold_depth() {
+    use std::io::Read;
+
+    // base -> unrolled fold of risc_app under security_80 + zksync-airbender 67bffee0.
+    const EXPECTED_BASE_UNROLLED_AUX_PARAMS: [u32; 8] = [
+        0x0137db36, 0x3b4d28ab, 0xfc076868, 0x4ebbf3a3, 0x360d11a5, 0x985b897c, 0xbefccda5,
+        0x948d49f6,
+    ];
+
+    let mut binary = vec![];
+    std::fs::File::open(RISC_PROGRAM_BIN_PATH)
+        .unwrap()
+        .read_to_end(&mut binary)
+        .unwrap();
+    let mut text = vec![];
+    std::fs::File::open(RISC_PROGRAM_TEXT_PATH)
+        .unwrap()
+        .read_to_end(&mut text)
+        .unwrap();
+
+    let commitment = BinaryCommitment::from_base_binary(&binary, &text);
+
+    assert_eq!(
+        commitment.aux_params, EXPECTED_BASE_UNROLLED_AUX_PARAMS,
+        "from_base_binary aux_params must be the base -> unrolled fold; a change \
+         here means the recursion-chain fold depth regressed"
+    );
+}
+
 #[test]
 fn test_verifier_inner_function() {
+    run_verifier_inner_function(false);
+}
+
+/// In-circuit coverage of `--check-aux-params` mode: builds the wrapper circuit
+/// with a commitment whose `aux_params` equals the proof's final registers
+/// 18..=25 and asserts the constraint system is satisfied.
+#[test]
+fn test_verifier_inner_function_check_aux_params() {
+    run_verifier_inner_function(true);
+}
+
+fn run_verifier_inner_function(check_aux_params: bool) {
     // allocate CS
     let geometry = CSGeometry {
         num_columns_under_copy_permutation: 180,
@@ -178,39 +322,39 @@ fn test_verifier_inner_function() {
     // let mut owned_cs = builder.build(CircuitResolverOpts::new(1 << 27));
     let mut owned_cs = builder.build(1 << 27);
 
-    // add tables
-    let table = create_range_check_16_bits_table::<3, F>();
-    owned_cs.add_lookup_table::<RangeCheck16BitsTable<3>, 3>(table);
-
-    let table = create_range_check_15_bits_table::<3, F>();
-    owned_cs.add_lookup_table::<RangeCheck15BitsTable<3>, 3>(table);
-
-    let table = create_xor8_table();
-    owned_cs.add_lookup_table::<Xor8Table, 3>(table);
-
-    let table = create_byte_split_table::<F, 4>();
-    owned_cs.add_lookup_table::<ByteSplitTable<4>, 3>(table);
-
-    let table = create_byte_split_table::<F, 7>();
-    owned_cs.add_lookup_table::<ByteSplitTable<7>, 3>(table);
-
-    let table = create_byte_split_table::<F, 1>();
-    owned_cs.add_lookup_table::<ByteSplitTable<1>, 3>(table);
-
     let cs = &mut owned_cs;
 
-    let path = "testing_data/unified_proof_for_hashed_fibonacci.json";
-    // let path = "testing_data/risc_proof_80sb.json";
     let program_proof: execution_utils::unrolled::UnrolledProgramProof =
-        crate::deserialize_from_file(path).unwrap();
-    let binary_commitment = BinaryCommitment::from_default_binary();
+        deserialize_from_bin_file(RISC_PROOF_PATH).unwrap();
+
+    // Commitment matching the checked-in proof fixture for the active security
+    // level (see `binary_commitment_for_testing`).
+    let mut binary_commitment = binary_commitment_for_testing();
+    if check_aux_params {
+        // The program exposes its binary chain commitment in final registers
+        // 18..=25; bake exactly those values so both the off-circuit and
+        // in-circuit aux_params checks are satisfiable.
+        for i in 0..8 {
+            binary_commitment.aux_params[i] = program_proof.register_final_values[18 + i].value;
+        }
+    }
 
     let risc_wrapper_witness =
-        RiscWrapperWitness::from_full_proof(program_proof, &binary_commitment);
+        RiscWrapperWitness::from_full_proof(program_proof, &binary_commitment, check_aux_params)
+            .unwrap();
 
     use crate::RiscWrapper;
 
-    let circuit = RiscWrapper::new(Some(risc_wrapper_witness), true, binary_commitment);
+    let circuit = RiscWrapper::new(
+        Some(risc_wrapper_witness),
+        true,
+        binary_commitment,
+        check_aux_params,
+    );
+
+    // Register the full canonical table set the circuit needs (the manual subset
+    // this test used previously was incomplete for the checked-in proof fixture).
+    circuit.add_tables(cs);
 
     circuit.synthesize_into_cs(cs);
 

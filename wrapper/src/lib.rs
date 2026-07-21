@@ -145,6 +145,7 @@ use proof_compression::serialization::PlonkSnarkVerifierCircuitDeviceSetupWrappe
 pub fn get_risc_wrapper_setup(
     worker: &Worker,
     binary_commitment: BinaryCommitment,
+    check_aux_params: bool,
 ) -> (
     FinalizationHintsForProver,
     SetupBaseStorage<GL>,
@@ -154,7 +155,7 @@ pub fn get_risc_wrapper_setup(
     DenseVariablesCopyHint,
     DenseWitnessCopyHint,
 ) {
-    let circuit = RiscWrapper::new(None, false, binary_commitment);
+    let circuit = RiscWrapper::new(None, false, binary_commitment, check_aux_params);
 
     let geometry = RiscWrapper::geometry();
     let (max_trace_len, num_vars) = circuit.size_hint();
@@ -205,8 +206,14 @@ pub fn prove_risc_wrapper(
     witness_hints: &DenseWitnessCopyHint,
     worker: &Worker,
     binary_commitment: BinaryCommitment,
+    check_aux_params: bool,
 ) -> RiscWrapperProof {
-    let circuit = RiscWrapper::new(Some(risc_wrapper_witness), true, binary_commitment);
+    let circuit = RiscWrapper::new(
+        Some(risc_wrapper_witness),
+        true,
+        binary_commitment,
+        check_aux_params,
+    );
 
     let geometry = RiscWrapper::geometry();
     let (max_trace_len, num_vars) = circuit.size_hint();
