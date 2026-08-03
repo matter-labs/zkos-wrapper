@@ -62,8 +62,8 @@ pub struct SnarkWrapper {
     backend: backend::BackendState,
 }
 
-/// Host-resident setup caches (and their configuration) extracted from a
-/// [`SnarkWrapper`] session.
+/// Host-resident setup caches (plus their configuration and the loaded binary
+/// commitment) extracted from a [`SnarkWrapper`] session.
 ///
 /// Deriving the setup chain from scratch costs minutes, while rebuilding a wrapper from
 /// this cache via [`SnarkWrapper::from_host_cache`] is near-instant. The cache holds no
@@ -71,6 +71,7 @@ pub struct SnarkWrapper {
 /// drop the `SnarkWrapper` after each job and keep only the cache.
 pub struct SnarkWrapperHostCache {
     config: SnarkWrapperConfig,
+    binary_commitment: Option<BinaryCommitment>,
     backend: backend::BackendState,
 }
 
@@ -95,6 +96,7 @@ impl SnarkWrapper {
     /// session. See [`SnarkWrapperHostCache`].
     pub fn from_host_cache(cache: SnarkWrapperHostCache) -> anyhow::Result<Self> {
         let mut wrapper = Self::new(cache.config)?;
+        wrapper.binary_commitment = cache.binary_commitment;
         wrapper.backend = cache.backend;
         Ok(wrapper)
     }
@@ -107,6 +109,7 @@ impl SnarkWrapper {
         self.backend.release_device_state();
         SnarkWrapperHostCache {
             config: self.config,
+            binary_commitment: self.binary_commitment,
             backend: self.backend,
         }
     }
@@ -400,5 +403,73 @@ fn load_binary_commitment(
             )
         }
         _ => anyhow::bail!("Both --bin and --text must be provided together"),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // The small base program shipped with the repo's testing data. Loading its
+    // commitment still computes the recursion-layer setups (minutes in debug,
+    // ~3 min in release — same cost as the from_base_binary tests CI runs).
+    const RISC_PROGRAM_BIN_PATH: &str = "testing_data/risc_app.bin";
+    const RISC_PROGRAM_TEXT_PATH: &str = "testing_data/risc_app.text";
+
+    fn config_with_base_program() -> SnarkWrapperConfig {
+        SnarkWrapperConfig {
+            bin: Some(PathBuf::from(RISC_PROGRAM_BIN_PATH)),
+            text: Some(PathBuf::from(RISC_PROGRAM_TEXT_PATH)),
+            check_aux_params: true,
+            ..SnarkWrapperConfig::default()
+        }
+    }
+
+    #[test]
+    fn host_cache_roundtrip_preserves_binary_commitment() {
+        let mut wrapper =
+            SnarkWrapper::new(config_with_base_program()).expect("wrapper is created");
+        let commitment = wrapper
+            .binary_commitment()
+            .expect("binary commitment loads from testing data");
+
+        let restored = SnarkWrapper::from_host_cache(wrapper.into_host_cache())
+            .expect("wrapper restores from the host cache");
+
+        let restored_commitment = restored
+            .binary_commitment
+            .expect("restoring must not lose the already-loaded binary commitment");
+        assert_eq!(restored_commitment.end_params, commitment.end_params);
+        assert_eq!(restored_commitment.aux_params, commitment.aux_params);
+    }
+
+    #[test]
+    fn host_cache_roundtrip_preserves_config() {
+        let sentinel_vk = RiscWrapperVK::default();
+        let config = SnarkWrapperConfig {
+            threads: Some(2),
+            risc_wrapper_vk: Some(sentinel_vk.clone()),
+            ..config_with_base_program()
+        };
+
+        let wrapper = SnarkWrapper::new(config).expect("wrapper is created");
+        let restored = SnarkWrapper::from_host_cache(wrapper.into_host_cache())
+            .expect("wrapper restores from the host cache");
+
+        assert_eq!(
+            restored.config.bin,
+            Some(PathBuf::from(RISC_PROGRAM_BIN_PATH))
+        );
+        assert_eq!(
+            restored.config.text,
+            Some(PathBuf::from(RISC_PROGRAM_TEXT_PATH))
+        );
+        assert!(restored.config.check_aux_params);
+        assert_eq!(restored.config.threads, Some(2));
+        // A trusted VK provided via the config must survive the roundtrip, so the
+        // restored session keeps resolving it without deriving the setup chain.
+        assert_eq!(restored.config.risc_wrapper_vk, Some(sentinel_vk));
+        // No commitment was loaded before caching, so none should appear after.
+        assert!(restored.binary_commitment.is_none());
     }
 }
