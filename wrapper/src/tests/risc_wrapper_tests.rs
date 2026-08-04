@@ -204,7 +204,7 @@ fn check_aux_params_off_circuit_validation() {
 fn from_base_binary_aux_params_fold_depth() {
     use std::io::Read;
 
-    // base -> unrolled fold of risc_app under security_80 + zksync-airbender 67bffee0.
+    // base -> unrolled fold of risc_app under security_80 + zksync-airbender 3f8f8e54.
     const EXPECTED_BASE_UNROLLED_AUX_PARAMS: [u32; 8] = [
         0x0137db36, 0x3b4d28ab, 0xfc076868, 0x4ebbf3a3, 0x360d11a5, 0x985b897c, 0xbefccda5,
         0x948d49f6,
