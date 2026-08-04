@@ -282,6 +282,9 @@ impl BackendState {
 
         Ok(self.snark.as_ref().expect("phase 3 cache exists"))
     }
+
+    /// No-op on the CPU backend: all cached state is host-resident by construction.
+    pub(crate) fn release_device_state(&mut self) {}
 }
 
 fn load_crs(trusted_setup: &Option<PathBuf>) -> anyhow::Result<Crs<Bn256, CrsForMonomialForm>> {

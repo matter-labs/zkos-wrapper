@@ -356,4 +356,14 @@ impl BackendState {
     fn release_stark_context(&mut self) {
         self.stark_context = None;
     }
+
+    /// Drop everything device-resident, leaving only the host-side setup caches.
+    ///
+    /// The setup caches themselves never hold device memory (shivini's `GpuSetup` is
+    /// host-side data, the CRS and phase-3 setup are pinned host buffers); the STARK
+    /// context is the only member that owns VRAM, and the phase-3 device manager is
+    /// scoped to the proving calls.
+    pub(crate) fn release_device_state(&mut self) {
+        self.release_stark_context();
+    }
 }
