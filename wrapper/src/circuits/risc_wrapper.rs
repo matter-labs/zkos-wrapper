@@ -129,16 +129,15 @@ impl BinaryCommitment {
             IWithoutByteAccessIsaConfigWithDelegation,
         >(&padded_unified_bin, &padded_unified_text);
 
-        // The top unified-recursion verifier exposes, in its final registers
-        // 18..=25, the chain hash of the layers it has verified BENEATH it
-        // (base -> unrolled). It does NOT fold its own `end_params` into that
-        // chain (nothing above it does that fold). So `aux_params` stops at
-        // base -> unrolled; folding the unified layer here (base -> unrolled ->
-        // unified) produced a hash one fold too far, which fails the
-        // register-18..=25 check for real proofs.
+        // The chain the top verifier exposes in registers 18..=25: base -> unrolled -> unified.
+        // Measured against real airbender v0.6.0-rc.1 proofs, those registers hold the full
+        // chain (same value as registers 8..=15), so stopping at `unrolled` rejects every
+        // real proof. `RiscWrapperWitness::from_full_proof` checks this against the proof.
         let (h1, p1) = UnrolledProgramSetup::begin_recursion_chain(&base_setup.end_params);
-        let (aux_params, _) =
+        let (h2, p2) =
             UnrolledProgramSetup::continue_recursion_chain(&unrolled_setup.end_params, &h1, &p1);
+        let (aux_params, _) =
+            UnrolledProgramSetup::continue_recursion_chain(&unified_setup.end_params, &h2, &p2);
 
         Self {
             end_params: unified_setup.end_params,
