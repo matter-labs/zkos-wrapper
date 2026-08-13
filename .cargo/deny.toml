@@ -4,6 +4,14 @@ ignore = [
     "RUSTSEC-2024-0384",
     "RUSTSEC-2024-0370",
     "RUSTSEC-2025-0141", # `bincode` development ceased; 1.3.3/2.0.1 are considered complete by its authors
+    # `ruint` 1.18.0: `Uint::overflowing_shl`/`overflowing_shr` returned false-negative
+    # overflow flags. The shifted values themselves are correct - only the flag is wrong -
+    # so arithmetic here is unaffected. The denial-of-service path is `to_base_be`/string
+    # formatting looping forever, and it requires a no-alloc build at a non-limb-aligned
+    # width with formatting reachable from untrusted input; this crate is an alloc build
+    # and does not format attacker-controlled `Uint`s. `ruint` arrives transitively, so
+    # clearing this needs an upstream bump rather than a change here.
+    "RUSTSEC-2026-0220",
 ]
 [bans]
 multiple-versions = "warn"
