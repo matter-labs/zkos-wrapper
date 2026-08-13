@@ -20,9 +20,8 @@ jobs:
       - name: Compile
         run: cargo build --verbose
       - name: tests
-        # We need to increase the stack size for the tests (due to quotient computation).
-        # 256 MiB, not 64: at `security_100` (the default since v32) `all_layers_full_test`
-        # overflows a 64 MiB stack and aborts the process mid-step.
+        # Increased stack for quotient computation. 256 MiB, not 64: at `security_100`
+        # `all_layers_full_test` overflows 64 MiB and aborts.
         run:  RUST_MIN_STACK=268435456 cargo test all_layers_full_test --release -- --nocapture
       - name: check_aux_params tests
         # Exercises the --check-aux-params path, which the full test above does not

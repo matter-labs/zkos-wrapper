@@ -44,6 +44,5 @@ tempfile = "3"
 gpu = ["shivini", "proof-compression", "zksync-gpu-prover"]
 security_80 = ["unified_reduced_machine_verifier/security_80", "blake_verifier/security_80"]
 security_100 = ["unified_reduced_machine_verifier/security_100", "blake_verifier/security_100"]
-# v32 ships at 100-bit; `security_80` remains selectable via
-# `default-features = false, features = ["security_80"]`.
+# v32 ships at 100-bit; `security_80` stays selectable via `default-features = false`.
 default = ["security_100"]

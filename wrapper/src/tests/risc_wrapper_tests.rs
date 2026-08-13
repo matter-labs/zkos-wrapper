@@ -184,33 +184,22 @@ fn check_aux_params_off_circuit_validation() {
     );
 }
 
-/// Regression guard for the recursion-chain fold depth. `from_base_binary` (the
-/// core of the `compute-aux-params` subcommand) must fold the full
-/// `base -> unrolled -> unified` chain: that is what the top verifier exposes in
-/// registers 18..=25, so stopping at `unrolled` makes the register-18..=25
-/// `check_aux_params` constraint unsatisfiable and rejects every real proof.
+/// Regression guard for the recursion-chain fold depth: `from_base_binary` must fold the
+/// full `base -> unrolled -> unified` chain, since that is what the top verifier exposes in
+/// registers 18..=25. Stopping short makes `check_aux_params` unsatisfiable for real proofs.
 ///
-/// The in-repo proof fixture is a plain hashed-fibonacci proof whose registers
-/// 18..=25 are zero, so it can't serve as the ground-truth commitment. Instead we
-/// pin the fold that `from_base_binary` produces for `risc_app`: stopping a fold
-/// short (or folding further) changes this value and fails the test.
+/// The in-repo proof fixture has zero registers 18..=25, so it can't be the ground truth;
+/// we pin `risc_app`'s fold instead. (For `multiblock_batch.bin` this agrees exactly with
+/// airbender's `ProgramProver::program_commitment()`.)
 ///
-/// The pinned value has been cross-checked against an independent implementation:
-/// for `multiblock_batch.bin` this function and airbender's
-/// `ProgramProver::program_commitment()` - which reads the commitment off the
-/// prover's own setups - agree exactly.
-///
-/// `security_100` only (pins the security_100 verifier binaries; the level selects
-/// the recursion verifier binaries and so changes this value). Regenerate with
-/// `compute-aux-params --bin risc_app.bin --text risc_app.text` if `risc_app` or
-/// the pinned `zksync-airbender` rev changes.
+/// Level-specific. Regenerate with `compute-aux-params --bin risc_app.bin --text
+/// risc_app.text` if `risc_app` or the `zksync-airbender` pin changes.
 #[cfg(feature = "security_100")]
 #[test]
 fn from_base_binary_aux_params_fold_depth() {
     use std::io::Read;
 
-    // base -> unrolled -> unified fold of risc_app under security_100 +
-    // zksync-airbender v0.6.0-rc.1 (3f8f8e54).
+    // risc_app under security_100 + zksync-airbender v0.6.0-rc.2.
     const EXPECTED_BASE_UNROLLED_UNIFIED_AUX_PARAMS: [u32; 8] = [
         0xe0f2bdf9, 0xa49ec0ee, 0xea7286b7, 0xd07a5c54, 0xc93ef0e7, 0xfe486b64, 0x7891b970,
         0xd5678632,
