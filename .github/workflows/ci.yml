@@ -20,20 +20,22 @@ jobs:
       - name: Compile
         run: cargo build --verbose
       - name: tests
-        # We need to increase the stack size for the tests (due to quotient computation)
-        run:  RUST_MIN_STACK=67108864 cargo test all_layers_full_test --release -- --nocapture
+        # We need to increase the stack size for the tests (due to quotient computation).
+        # 256 MiB, not 64: at `security_100` (the default since v32) `all_layers_full_test`
+        # overflows a 64 MiB stack and aborts the process mid-step.
+        run:  RUST_MIN_STACK=268435456 cargo test all_layers_full_test --release -- --nocapture
       - name: check_aux_params tests
         # Exercises the --check-aux-params path, which the full test above does not
         # cover: the off-circuit validation (matching and mismatched aux_params),
         # the in-circuit constraints (prepare_and_allocate_public_inputs with
         # check_aux_params = true, plus the direct PI packing), and the recursion
         # -chain fold depth (from_base_binary aux_params == proof registers 18..=25).
-        run:  RUST_MIN_STACK=67108864 cargo test --release -- --nocapture check_aux_params_off_circuit_validation test_verifier_inner_function_check_aux_params from_base_binary_aux_params_fold_depth
+        run:  RUST_MIN_STACK=268435456 cargo test --release -- --nocapture check_aux_params_off_circuit_validation test_verifier_inner_function_check_aux_params from_base_binary_aux_params_fold_depth
       - name: host cache tests
         # Exercises the SnarkWrapper session-cache API: the into_host_cache /
         # from_host_cache roundtrip must preserve the config (including trusted
         # VKs) and the already-loaded binary commitment.
-        run:  RUST_MIN_STACK=67108864 cargo test --release -- --nocapture host_cache_roundtrip
+        run:  RUST_MIN_STACK=268435456 cargo test --release -- --nocapture host_cache_roundtrip
 
   gpu_check:
     name: gpu_check
