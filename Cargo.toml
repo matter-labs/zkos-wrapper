@@ -27,21 +27,21 @@ snark_wrapper = { git = "https://github.com/matter-labs/zksync-crypto.git", pack
 unified_reduced_machine_verifier = { git = "https://github.com/matter-labs/zksync-airbender", package = "unified_reduced_machine_verifier", features = [
   "proof_utils",
   "blake2_with_compression",
-], default-features = false, tag = "v0.6.0-rc.2" }
+], default-features = false, rev = "67ee094" }
 blake_verifier = { git = "https://github.com/matter-labs/zksync-airbender", package = "blake2_with_compression_verifier", features = [
   "proof_utils",
   "blake2_with_compression",
-], default-features = false, tag = "v0.6.0-rc.2" }
+], default-features = false, rev = "67ee094" }
 execution_utils = { git = "https://github.com/matter-labs/zksync-airbender", package = "execution_utils", features = [
   "prover",
   "verifier_binaries",
-], default-features = false, tag = "v0.6.0-rc.2" }
-setups = { git = "https://github.com/matter-labs/zksync-airbender", package = "setups", tag = "v0.6.0-rc.2" }
-mersenne_field = { git = "https://github.com/matter-labs/zksync-airbender", package = "field", tag = "v0.6.0-rc.2", features = [
+], default-features = false, rev = "67ee094" }
+setups = { git = "https://github.com/matter-labs/zksync-airbender", package = "setups", rev = "67ee094" }
+mersenne_field = { git = "https://github.com/matter-labs/zksync-airbender", package = "field", rev = "67ee094", features = [
   "no_inline",
 ] }
-zkos_verifier_generator = { git = "https://github.com/matter-labs/zksync-airbender", package = "verifier_generator", tag = "v0.6.0-rc.2" }
-prover = { git = "https://github.com/matter-labs/zksync-airbender", package = "prover", tag = "v0.6.0-rc.2" }
+zkos_verifier_generator = { git = "https://github.com/matter-labs/zksync-airbender", package = "verifier_generator", rev = "67ee094" }
+prover = { git = "https://github.com/matter-labs/zksync-airbender", package = "prover", rev = "67ee094" }
 
 # unified_reduced_machine_verifier = { path = "../zksync-airbender/circuit_defs/unrolled_circuits/unified_reduced_machine/verifier", features = [
 #     "proof_utils", "blake2_with_compression"
