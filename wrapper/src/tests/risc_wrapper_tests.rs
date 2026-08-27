@@ -199,10 +199,10 @@ fn check_aux_params_off_circuit_validation() {
 fn from_base_binary_aux_params_fold_depth() {
     use std::io::Read;
 
-    // risc_app under security_100 + zksync-airbender v0.6.0-rc.2.
+    // risc_app under security_100 + zksync-airbender 67ee094.
     const EXPECTED_BASE_UNROLLED_UNIFIED_AUX_PARAMS: [u32; 8] = [
-        0xe0f2bdf9, 0xa49ec0ee, 0xea7286b7, 0xd07a5c54, 0xc93ef0e7, 0xfe486b64, 0x7891b970,
-        0xd5678632,
+        0x00994468, 0x406e9406, 0xad506f8f, 0xf84a89b0, 0x6b2d284a, 0xaae23eed, 0x736bc622,
+        0x3ccb615a,
     ];
 
     let mut binary = vec![];
