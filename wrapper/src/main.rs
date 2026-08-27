@@ -5,6 +5,7 @@ use std::path::PathBuf;
 use tracing::level_filters::LevelFilter;
 use tracing_subscriber::EnvFilter;
 
+use zkos_wrapper::gpu_config::{parse_byte_size, set_max_device_allocation};
 use zkos_wrapper::interface;
 
 #[derive(Parser)]
@@ -17,6 +18,13 @@ struct Cli {
     /// Number of worker threads (defaults to all available cores)
     #[arg(long, global = true)]
     threads: Option<usize>,
+
+    /// Cap shivini's GPU device memory pool. Accepts decimal (`32G`, `32GB`) or
+    /// binary (`32Gi`, `32GiB`) Kubernetes-style sizes; bare integers are bytes.
+    /// When unset, falls back to the `ZKOS_WRAPPER_MAX_DEVICE_ALLOCATION` env var,
+    /// then to shivini's default (grab all free device memory).
+    #[arg(long, global = true, value_parser = parse_byte_size)]
+    max_device_allocation: Option<usize>,
 
     #[command(subcommand)]
     command: Commands,
@@ -249,6 +257,10 @@ fn main() -> anyhow::Result<()> {
     init_tracing()?;
 
     let cli = Cli::parse();
+
+    if let Some(bytes) = cli.max_device_allocation {
+        set_max_device_allocation(bytes);
+    }
 
     match cli.command {
         Commands::ProveAll {

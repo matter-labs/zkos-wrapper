@@ -10,6 +10,7 @@ compile_error!("features `security_80` and `security_100` are mutually exclusive
 compile_error!("one of `security_80` or `security_100` must be enabled");
 
 pub mod circuits;
+pub mod gpu_config;
 mod inner_verifiers;
 pub mod interface;
 pub mod transcript;
@@ -583,8 +584,9 @@ pub fn prove_risc_wrapper_with_snark(
 
     #[cfg(feature = "gpu")]
     let (compression_proof, compression_vk) = {
-        let config =
-            shivini::ProverContextConfig::default().with_smallest_supported_domain_size(1 << 15);
+        let config = crate::gpu::context::apply_env_overrides(
+            shivini::ProverContextConfig::default().with_smallest_supported_domain_size(1 << 15),
+        );
         let _prover_context = shivini::ProverContext::create_with_config(config).unwrap();
 
         let (setup, compression_vk, finalization) =
